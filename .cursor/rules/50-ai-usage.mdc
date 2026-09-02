@@ -1,0 +1,64 @@
+---
+description: Capture AI usage notes on demand; never write the log unprompted
+alwaysApply: true
+---
+
+# AI usage logging
+
+The brief requires a declared, honest record of how AI assistants were used
+(AI_USAGE.md). Two triggers, and hard limits on what you may write.
+
+## Trigger: `LOG:`
+
+When my message starts with `LOG:` — and ONLY then — append one line to
+`docs/ai-usage-notes.md`, creating the file if needed. Do nothing else: no
+code changes, no commentary, no summary. Just the append, then stop.
+
+Format, one line, tab-separated:
+
+```
+<ISO date>	<session id, e.g. S5>	<kind>	<text I gave you>
+```
+
+`kind` is one of: `accepted` · `rejected` · `verified` · `corrected-me`
+
+Examples of what I will type and what you write:
+
+```
+LOG: rejected a free-form SQL tool — injection surface, unbounded scans
+→ 2026-09-03	S4	rejected	a free-form SQL tool — injection surface, unbounded scans
+
+LOG: verified the chunk boundaries against 3 known tables by hand
+→ 2026-09-03	S2	verified	the chunk boundaries against 3 known tables by hand
+
+LOG: corrected-me it was right that the breaker needed a half-open probe
+→ 2026-09-04	S5	corrected-me	it was right that the breaker needed a half-open probe
+```
+
+Infer the session id from the branch, the recent commits, or the work in
+progress. If you cannot, write `?` — do not ask me, it breaks my flow.
+
+## Trigger: `LOG?`
+
+Print the contents of `docs/ai-usage-notes.md` and nothing else.
+
+## What you must NEVER do
+
+- **Never append to the notes file unprompted.** Not at the end of a session,
+  not after a big change, not because it seems helpful. Only on `LOG:`.
+- **Never edit `AI_USAGE.md` directly.** That file is compiled by
+  `scripts/ai_usage_draft.py` and finished by hand. You do not write it.
+- **Never invent, embellish, or rephrase what I gave you.** Copy my text. If I
+  wrote three words, log three words. You are a typist here, not an author.
+- **Never write a `rejected` or `verified` entry I did not dictate.** You cannot
+  know what I verified — I did that, not you. Fabricating it would make the one
+  document whose entire value is honesty into a liability.
+- **Never summarise your own contribution favourably.** If I ask what you did on
+  a task, answer plainly and include what you got wrong.
+
+## Why this is constrained
+
+AI_USAGE.md is graded on judgment, not on volume. A log written by the assistant
+reads like one — uniform voice, no rejections, every entry flattering. The
+timeline is already in `git log`; what only I can supply is what I turned down
+and how I checked. Your job is to make capturing that cost one second.
