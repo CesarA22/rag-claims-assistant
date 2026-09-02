@@ -18,21 +18,23 @@ requirements:
   - id: R-03
     title: Policyholder personal data never appears in an answer
     status: planned
-    session: S2
-    files: []
+    session: S4
+    files:
+      - app/safety/redact.py
+      - app/retrieval/ingest.py
     tests: [T-04, T-18]
 
   - id: R-04
     title: At most US$0.05 per question and p95 latency under 8 s
     status: planned
-    session: S2
+    session: S4
     files: []
     tests: []
 
   - id: R-05
     title: Bounded cost-aware retry and degradation
     status: planned
-    session: S2
+    session: S4
     files: []
     tests: [T-05, T-06, T-07, T-08, T-09]
 
@@ -51,3 +53,11 @@ requirements:
       - app/llm/fake.py
       - app/main.py
     tests: [T-11]
+
+  - id: R-08
+    title: Grounded, table-aware ingestion
+    status: active
+    files:
+      - app/retrieval/ingest.py
+      - app/safety/redact.py
+    tests: [T-15]
