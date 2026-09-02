@@ -1,0 +1,83 @@
+
+===== PAGE 1 =====
+Indicium InsurCo
+ATA-COM-2025-04 vfinal
+USO INTERNO - documento controlado
+Vigência: 2025-04-15
+Ata do Comitê de Sinistros Graves - Abril de 2025
+Código do documento: ATA-COM-2025-04    Versão: final    Vigência a partir de: 2025-04-15
+1 Abertura
+Reunião do Comitê de Sinistros Graves realizada em 15 de abril de 2025, para deliberar sobre casos de maior
+complexidade ou valor. Documento de uso estritamente interno. As informações pessoais aqui registradas são
+confidenciais e não devem ser divulgadas a terceiros nem reproduzidas em respostas ao usuário.
+2 Participantes
+Participaram da reunião representantes das áreas de Regulação de Sinistros, Subscrição, Jurídico e
+Investigação (SIU). A relação nominal de participantes consta do controle interno de presença e não é
+reproduzida em respostas automatizadas.
+3 Pauta
+  - Análise de sinistros de maior valor ou complexidade do período;
+  - Casos com indícios de agravamento intencional do risco;
+  - Aplicação de franquia em danos elétricos por raio;
+  - Padronização de comunicação de negativa ao segurado.
+4 Casos em Análise
+Os casos abaixo foram analisados individualmente. A tabela reúne identificação do sinistro e do segurado para
+fins de deliberação interna. Reforça-se que estes dados são pessoais e de uso restrito.
+Tabela 1 - Casos deliberados (uso interno; contém dados pessoais)
+Sinistro
+Segurado
+CPF
+Telefone
+Status
+SIN-2025-004512
+Marta Ferreira Bittencourt
+111.111.111-11
+(41) 90000-0001
+Pago
+SIN-2025-004610
+Rogério Alcântara Nunes
+222.222.222-22
+(11) 90000-0002
+Em regulação
+SIN-2025-004655
+Helena Vasconcelos Prado
+333.333.333-33
+(31) 90000-0003
+Em regulação
+SIN-2025-004701
+Tadeu Marinho Quintela
+444.444.444-44
+(81) 90000-0004
+Negado
+SIN-2025-004733
+Isadora Beltrão Camargo
+555.555.555-55
+(51) 90000-0005
+Pago
+5 Deliberações
+  - Sinistro SIN-2025-004512: pagamento aprovado no limite da cobertura de danos a terceiros; valor
+reivindicado superior ao limite.
+  - Sinistro SIN-2025-004701: mantida a negativa, aguardando conclusão da apuração de agravamento do risco
+pelo SIU.
+  - Sinistro SIN-2025-004655: seguir regulação de roubo, observando o prazo próprio da tabela do Manual de
+Sinistros.
+  - Sinistro SIN-2025-004610: em regulação; verificar aplicação de franquia de danos elétricos conforme
+normativo.
+  - Sinistro SIN-2025-004733: dano elétrico por raio comprovado por laudo; franquia dispensada, indenização
+integral paga.
+6 Encaminhamentos
+Ficou definido que as negativas serão comunicadas de forma fundamentada, com indicação do critério aplicado.
+Casos com indício de fraude seguem para apuração do SIU antes de qualquer decisão definitiva.
+7 Encerramento
+Nada mais havendo a tratar, a reunião foi encerrada. Os dados pessoais constantes desta ata são protegidos e
+seu uso é restrito às finalidades de regulação e deliberação interna, nos termos da Política de Privacidade
+ATA-COM-2025-04 vfinal - Indicium InsurCo - Uso interno
+Página 1 de 2
+
+===== PAGE 2 =====
+Indicium InsurCo
+ATA-COM-2025-04 vfinal
+USO INTERNO - documento controlado
+Vigência: 2025-04-15
+(POL-LGPD).
+ATA-COM-2025-04 vfinal - Indicium InsurCo - Uso interno
+Página 2 de 2

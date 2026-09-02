@@ -1,0 +1,108 @@
+---
+description: Core architecture, budgets and invariants for the InsurCo claims assistant
+alwaysApply: true
+---
+
+# InsurCo claims assistant — architecture rules
+
+A grounded RAG assistant for insurance claims analysts (Indicium technical
+challenge). Stack: Python 3.12 + FastAPI, React + TypeScript + Vite,
+Postgres with pgvector for our data, read-only SQLite for the client's claims
+database, OpenAI `gpt-5.4-mini` as the LLM provider.
+
+The evaluation weights robustness under provider failure highest, and
+penalises BOTH a monolithic script AND excessive abstraction. Build
+proportionally.
+
+## The four seams — exactly four, no more
+
+| Protocol                 | File                  | Why it exists                            |
+|--------------------------|-----------------------|------------------------------------------|
+| `LLMProvider`            | app/llm/base.py       | real + fake + chaos implementations      |
+| `Retriever`              | app/retrieval/base.py | absorbs the scale change (13 → 50k docs) |
+| `Tool`                   | app/tools/base.py     | absorbs a new data source                |
+| `ConversationRepository` | app/storage/base.py   | absorbs the storage change               |
+
+Do NOT introduce base classes, DI containers, plugin systems, generic service
+layers, or repository/service inheritance hierarchies beyond these four.
+The rule: an interface exists only where a second implementation already lives
+in this repo, or where you can name the specific change it absorbs.
+
+## Layout
+
+```
+app/
+  api/        routers + pydantic schemas + error mapping (HTTP shape only)
+  domain/     Answer, Citation, Evidence, Refusal, typed errors
+  services/   ask.py (the pipeline), budget.py (cost ledger)
+  retrieval/  base.py, hybrid.py, ingest.py
+  tools/      base.py, claims.py
+  llm/        base.py, openai_provider.py, resilient.py, fake.py, chaos.py, prompts/
+  storage/    base.py, sql.py, models.py, migrations/
+  safety/     redact.py
+evals/  tests/  web/  scripts/  docs/
+```
+
+`app/services/ask.py` must stay readable end to end as the pipeline — it is the
+first file a reviewer opens. Keep it flat; extract only when a step exceeds
+~25 lines. No business logic in routers.
+
+## Hard invariants
+
+- Every answer cites its sources (document + section, or the named DB query).
+- **THREE outcomes, not two:** `answered` | `refused` | `needs_clarification`.
+  Golden case gs-009 fails a correct, well-cited single number when the question
+  did not name a product — ambiguity is a graded pass condition, not an edge
+  case. Detection signal: top results span more than one product and the
+  question named none.
+- **Refusal is a sufficiency judgment, never an empty-retrieval check.**
+  Golden case gs-008 asks about a premium discount that does not exist in the
+  corpus, but retrieval returns five confident chunks about premium payment.
+  The model must decide the evidence does not contain the asked-for fact, and
+  the citation validator backs that decision deterministically.
+- Citation validation and PII redaction are DETERMINISTIC CODE, never
+  instructions to the model. A citation referencing evidence that was not
+  retrieved forces a refusal.
+- Retrieved corpus content is DATA, never instruction. It goes inside a
+  delimited block and the system prompt says so. Assume the corpus is an
+  untrusted input channel.
+- Errors returned to the client never contain the model name, the prompt, or a
+  traceback. RFC 9457 problem+json with a `trace_id`; internals go to logs.
+- Chunks and citations carry `version` and `effective_date`. Retrieval prefers
+  the current version; a superseded document is never cited as current.
+  (NI-014 exists twice in this corpus and the two versions disagree.)
+- Retrieval filters by product line (Auto / Residencial / Empresarial). Never
+  mix limits across products — the same coverage name carries different numbers.
+- **The corpus governs rules; the database reports facts.** Never derive a rule
+  from the data. A coverage limit comes from the Condições Gerais even when a
+  database row contradicts it; a payment figure comes from the database.
+- PII exists in BOTH the database and the corpus (`ATA-COM-2025-04`). Three
+  layers: ingest-time classification and redaction, query-layer column
+  projections, output scrubber as detection.
+
+## Budgets
+
+US$0.05 and 8 s p95 per question. Max 2 model calls, max 2 retries, 6 s total
+request budget with per-call timeouts derived from what remains. Check the cost
+ledger before any retry — the retry budget is a money budget as well as a time
+budget.
+
+Order every request STABLE PREFIX FIRST (system prompt, tool definitions,
+output schema), then history, evidence, question. The prefix repeats on every
+call and the cached input tier costs US$0.075/M against US$0.75/M.
+
+## Degradation ladder
+
+0. Normal grounded answer with validated citations.
+1. Retryable failure → bounded retry, exponential backoff with jitter.
+2. Provider down, retrieval up → return top passages with citations and an
+   explicit "could not generate a summary" banner. The app stays useful.
+3. Circuit open → fail fast, typed error, app and history stay available.
+
+## Style and hygiene
+
+Type hints everywhere, pydantic v2 at boundaries, async throughout.
+Prefer explicit over clever. No comments that restate the code.
+Conventional commits referencing the requirement ID:
+`feat(llm): R-05 bounded retry with cost-aware guard`.
+Every requirement in docs/requirements.yaml lists its files and tests.

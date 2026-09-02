@@ -1,0 +1,62 @@
+
+===== PAGE 1 =====
+Indicium InsurCo
+NI-014 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-06-01
+Normativo Interno de Prazos de Comunicação de Sinistro
+Código do documento: NI-014    Versão: 2.0    Vigência a partir de: 2025-06-01
+1 Objeto
+Este normativo estabelece o prazo e a forma de comunicação (aviso) de sinistro pelo segurado à Seguradora,
+aplicável a todos os produtos, e substitui integralmente a versão 1.0.
+2 Definições
+Aviso de sinistro é a comunicação formal sobre a ocorrência de um evento potencialmente coberto.
+Considera-se tempestivo o aviso realizado dentro do prazo previsto nesta versão vigente do normativo.
+3 Prazo de Comunicação
+O segurado deve comunicar a ocorrência do sinistro à Seguradora no prazo de 3 dias úteis, contados da data
+em que tomar conhecimento do evento.
+Este prazo prevalece sobre qualquer disposição anterior em contrário, inclusive sobre o prazo previsto na versão
+1.0 deste normativo.
+4 Forma de Comunicação
+O aviso pode ser feito pelos canais oficiais de atendimento. O protocolo gerado comprova a data do aviso para
+fins de contagem de prazo.
+5 Abrangência
+Este normativo aplica-se de forma uniforme a todos os produtos comercializados pela Seguradora (Auto,
+Residencial e Empresarial) e a todos os canais de aviso disponibilizados ao segurado.
+6 Contagem do Prazo
+O prazo previsto nesta versão é contado em dias úteis, excluindo-se sábados, domingos e feriados nacionais. O
+termo inicial é a data em que o segurado toma conhecimento do evento; a data do protocolo do aviso comprova
+a observância do prazo.
+7 Disposições Transitórias
+Esta versão 2.0 substitui a versão 1.0 (vigência 2023-01-01). A partir da vigência desta versão, o prazo previsto
+na versão anterior deixa de ser aplicável. Em caso de dúvida sobre qual prazo observar, prevalece sempre a
+versão com data de vigência mais recente.
+8 Histórico de Versões
+Para eliminar dúvidas de vigência, registra-se abaixo o histórico de versões deste normativo. A situação indica
+qual versão deve ser observada.
+Tabela 1 - Histórico de versões
+Versão
+Vigência
+Situação
+1.0
+2023-01-01
+Superada
+2.0
+2025-06-01
+Vigente
+9 Referências
+  - Manual de Regulação de Sinistros (MAN-SIN), para o fluxo de regulação;
+  - Condições Gerais de cada produto, para as regras de cobertura;
+  - Política de Privacidade (POL-LGPD), para o tratamento de dados do aviso.
+NI-014 v2.0 - Indicium InsurCo - Uso interno
+Página 1 de 2
+
+===== PAGE 2 =====
+Indicium InsurCo
+NI-014 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-06-01
+10 Vigência
+Este normativo entra em vigor em 2025-06-01.
+NI-014 v2.0 - Indicium InsurCo - Uso interno
+Página 2 de 2

@@ -1,0 +1,70 @@
+
+===== PAGE 1 =====
+Indicium InsurCo
+NI-022 v1.3
+USO INTERNO - documento controlado
+Vigência: 2024-09-01
+Normativo de Franquias e Participação Obrigatória do Segurado
+Código do documento: NI-022    Versão: 1.3    Vigência a partir de: 2024-09-01
+1 Objeto
+Este normativo consolida as franquias e a participação obrigatória do segurado por produto e cobertura. Franquia é o valor
+de participação do segurado em cada sinistro indenizável, deduzido da indenização.
+2 Regras Gerais
+A franquia incide por evento, isoladamente. Coberturas de Responsabilidade Civil Facultativa (RCF) não possuem franquia.
+A franquia não se aplica a coberturas expressamente isentas neste normativo.
+3 Tabela de Franquias
+Tabela 1 - Franquias por produto e cobertura
+Produto
+Cobertura
+Franquia
+Auto
+Casco (colisão)
+R$ 3.500,00
+Auto
+Cobertura de Vidros
+R$ 150,00
+Residencial
+Danos Elétricos (3)
+R$ 250,00
+Residencial
+Roubo e Furto Qualificado
+R$ 400,00
+Residencial
+Cobertura de Vidros
+R$ 100,00
+Residencial
+Vendaval, furacão e granizo
+R$ 500,00
+Empresarial
+Incêndio e explosão
+R$ 5.000,00
+Empresarial
+Equipamentos Eletrônicos
+R$ 1.500,00
+As franquias acima podem ser revistas na renovação. Observar as notas ao pé desta página.
+(1) Os valores de franquia são expressos em reais e referem-se à data de vigência deste normativo.
+(2) Em perda total, aplica-se a regra específica do produto, podendo a franquia ser dispensada conforme a apólice.
+(3) A franquia da cobertura de Danos Elétricos (Seguro Residencial) não se aplica quando o sinistro decorrer comprovadamente de descarga atmosférica (raio),
+mediante laudo técnico, hipótese em que a indenização é integral.
+NI-022 v1.3 - Indicium InsurCo - Uso interno
+Página 1 de 2
+
+===== PAGE 2 =====
+Indicium InsurCo
+NI-022 v1.3
+USO INTERNO - documento controlado
+Vigência: 2024-09-01
+4 Casos Práticos
+Exemplo 1: em um dano elétrico residencial comum, decorrente de oscilação de energia, aplica-se a franquia prevista na
+Tabela 1 para Danos Elétricos.
+Exemplo 2: em um dano elétrico residencial decorrente de raio comprovado por laudo técnico, observa-se a nota (3),
+hipótese em que a franquia não se aplica e a indenização é integral.
+Exemplo 3: em sinistro de responsabilidade civil facultativa, não há incidência de franquia, por se tratar de cobertura isenta.
+5 Revisão de Franquias
+As franquias podem ser revistas na renovação, considerando a sinistralidade e o perfil de risco. Alterações são comunicadas
+ao segurado antes da renovação e passam a valer para eventos ocorridos a partir da nova vigência.
+6 Disposições Finais
+Este normativo consolida e substitui orientações internas anteriores sobre franquias. Casos omissos serão resolvidos pela
+área técnica, observadas as Condições Gerais de cada produto.
+NI-022 v1.3 - Indicium InsurCo - Uso interno
+Página 2 de 2

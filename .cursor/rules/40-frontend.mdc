@@ -1,0 +1,49 @@
+---
+description: Chat UI — behaviour over aesthetics, five explicit message states
+globs: web/**
+---
+
+# Front-end
+
+The brief: "We do not evaluate aesthetics, we evaluate behaviour: the interface
+visually distinguishes loading, error and refusal states, and the user always
+understands what is happening."
+
+So: do not spend time on visual polish. Spend it on state legibility.
+
+## Every message is a state machine
+
+`idle | sending | complete | refused | needs_clarification | failed | degraded`
+
+Each state gets a visually distinct, unmistakable treatment:
+
+- **sending** — skeleton bubble, live elapsed-seconds counter, Cancel button.
+  The counter is what makes an 8 s budget feel honest rather than broken.
+- **complete** — answer text with numbered citation chips beneath. Clicking a
+  chip opens a panel with the snippet, document, section, page, version and
+  effective date.
+- **refused** — NEUTRAL AMBER card, visually unlike an error, HTTP 200.
+  "Not found in the available sources" plus what was searched. A refusal is a
+  correct outcome and must never render red.
+- **needs_clarification** — a distinct card that states the premise or asks the
+  question back, with the choices as clickable chips ("Auto" / "Residencial").
+  Graded by golden case gs-009: answering a single unqualified number FAILS
+  even when the number is correct.
+- **failed** — red card with the safe message from the error taxonomy, the
+  trace ID, and a Retry button that reuses the same `client_message_id`.
+- **degraded** — banner explaining the assistant is unavailable, with the
+  retrieved excerpts and their citations still rendered below it.
+
+Plus a global connection banner driven by `/healthz`, so an open circuit is
+visible before the analyst types.
+
+## Constraints
+
+- Keep it to ~5 components. React + TypeScript + Vite + TanStack Query.
+  Tailwind for speed. No component library, no design system, no animation work.
+- `client_message_id` is generated client-side (uuid) and reused on retry —
+  idempotency is enforced by a unique constraint server-side.
+- Two component tests only (T-15): refusal renders amber and not as an error;
+  failure renders a working Retry.
+- Never render a raw error object. The API returns a safe message; display it
+  verbatim and show the trace ID separately.

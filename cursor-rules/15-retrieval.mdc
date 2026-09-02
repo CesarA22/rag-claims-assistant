@@ -1,0 +1,78 @@
+---
+description: Ingestion and retrieval rules derived from the actual InsurCo corpus
+globs: app/retrieval/**
+---
+
+# Retrieval and ingestion
+
+The corpus is 13 pt-BR controlled documents, ~50 pages. It is structurally
+clean and semantically booby-trapped. Seven traps are planted in it.
+
+## Ingest order — this order, not another
+
+1. **Metadata by regex.** Every document carries a controlled header. This
+   matches 13/13 with no model call:
+
+   ```
+   Código do documento: (?P<code>[A-Z0-9\-]+)\s+
+   Versão: (?P<version>\S+)\s+
+   Vigência a partir de: (?P<effective>\d{4}-\d{2}-\d{2})
+   ```
+
+   Also derive: `product` from the code (CG-AUTO → Auto, CG-RES → Residencial,
+   CG-EMP → Empresarial, everything else → All), `doc_role`
+   (normative | pointer | minutes | glossary), and `superseded` — declared in
+   the "Histórico de Versões" table ("Superada" / "Vigente"), falling back to
+   latest-effective-date-wins.
+
+2. **Strip repeated header/footer lines** (a line appearing >= page_count times
+   is boilerplate — roughly 15% of the text). Strip from the body, KEEP as
+   metadata.
+
+3. **`page.find_tables()` BEFORE prose.** Every limit and deductible in this
+   corpus lives in a table, and `get_text()` flattens tables into orphan cells
+   — rows and columns are destroyed and adjacency becomes a lie. Each table is
+   ONE atomic chunk rendered as Markdown, carrying its caption, its column
+   headers, and any footnote whose marker appears in a cell.
+   The canonical case: NI-022 Tabela 1 row `Danos Elétricos (3) · R$ 250,00`
+   is WRONG without note (3), which waives the deductible entirely for
+   lightning damage evidenced by a technical report.
+
+4. **Prose: split on numbered headings** (1, 2.1, 2.2.1 — every document uses
+   them). Keep the heading path in metadata. Cap ~1200 chars, overlap only
+   within prose, never across a heading boundary.
+
+5. **PII scan per chunk** (CPF / phone / e-mail). Set `contains_pii` and redact
+   the identifiers from the indexed text, keeping the surrounding text usable.
+   `ATA-COM-2025-04` §4 contains a table of five claims with full names, CPFs
+   and phone numbers matching the claims database exactly. A database-only PII
+   defence leaks the moment retrieval surfaces this document.
+
+6. Embed + `to_tsvector('portuguese', ...)`.
+
+After ingest, emit a report: chunks per document, tables found, footnotes
+attached, PII chunks flagged. Read it before moving on.
+
+## Retrieval
+
+- **Hybrid is required, not preferred.** This corpus turns on exact terms that
+  embeddings blur and that are legally opposite: `aviso` vs `regulação`,
+  `furto simples` vs `furto qualificado`, `RCF-DM` vs `RCF-DC`, document codes
+  like `NI-014`. pgvector cosine + Portuguese tsvector, fused with RRF.
+- **Filter `superseded` before ranking**, unless the question is explicitly
+  historical. NI-014 v1.0 (5 dias úteis) and v2.0 (3 dias úteis) are both in
+  the corpus; the correct answer is 3, cited to v2.0 with its effective date.
+- **Filter by product** when named or inferable. Cobertura de Vidros is
+  R$ 5.000 / R$ 150 on Auto, R$ 3.000 / R$ 100 on Residencial, and absent on
+  Empresarial. If results span more than one product and the question did not
+  name one, ASK — do not silently pick.
+- **Boost by `doc_role`:** normative > minutes > FAQ > glossary. The FAQ
+  restates questions almost verbatim so it ranks first on lexical match, and it
+  states in its own §1 that normatives prevail over it. It must never be the
+  sole citation for a number. The glossary states it does not replace the
+  Condições Gerais.
+- **Exclude or redact `contains_pii` chunks** according to the question.
+
+Every one of these precedence rules is stated in the corpus itself
+(MAN-SIN §3, NI-014 v2 §7, FAQ §1, GLOS §1) — you are implementing the
+client's policy, not inventing one.

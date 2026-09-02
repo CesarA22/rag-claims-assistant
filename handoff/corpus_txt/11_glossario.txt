@@ -1,0 +1,62 @@
+
+===== PAGE 1 =====
+Indicium InsurCo
+GLOS-2024 v1.1
+USO INTERNO - documento controlado
+Vigência: 2024-02-01
+Glossário de Termos de Seguro
+Código do documento: GLOS-2024    Versão: 1.1    Vigência a partir de: 2024-02-01
+1 Apresentação
+Este glossário padroniza a terminologia usada nos documentos e sistemas da Indicium InsurCo. As definições têm caráter
+explicativo e não substituem as Condições Gerais de cada produto.
+2 Termos
+Apólice
+Documento que formaliza o contrato de seguro, com as condições particulares do risco.
+Franquia
+Valor de participação obrigatória do segurado em cada sinistro indenizável, deduzido da indenização.
+Sinistralidade
+Razão entre o valor pago em sinistros e o prêmio ganho no período de referência.
+Regulação de sinistro
+Processo de análise que determina a procedência e o valor da indenização.
+Valor reivindicado
+Valor pleiteado pelo segurado no aviso de sinistro, antes da regulação.
+Valor pago
+Valor efetivamente indenizado após a regulação, podendo ser inferior ao reivindicado.
+RCF-DM
+Responsabilidade Civil Facultativa por Danos Materiais causados a terceiros.
+RCF-DC
+Responsabilidade Civil Facultativa por Danos Corporais causados a terceiros.
+Furto qualificado
+Furto praticado mediante rompimento de obstáculo, escalada ou chave falsa, com vestígios.
+Prazo de regulação
+Período máximo para a Seguradora concluir a análise e pagar ou negar o sinistro.
+Aviso de sinistro
+Comunicação formal do segurado à Seguradora sobre a ocorrência de um evento potencialmente coberto.
+Prêmio
+Valor pago pelo segurado à Seguradora como contraprestação pela garantia contratada.
+Limite máximo de indenização
+Valor máximo que a Seguradora paga em cada cobertura, conforme a apólice.
+Salvados
+Bens remanescentes de um sinistro que, em caso de indenização integral, passam a pertencer à Seguradora.
+GLOS-2024 v1.1 - Indicium InsurCo - Uso interno
+Página 1 de 2
+
+===== PAGE 2 =====
+Indicium InsurCo
+GLOS-2024 v1.1
+USO INTERNO - documento controlado
+Vigência: 2024-02-01
+Sub-rogação
+Transferência à Seguradora dos direitos do segurado contra terceiros responsáveis, até o valor pago.
+Vistoria prévia
+Inspeção do bem antes da aceitação do risco, cujo laudo integra a subscrição.
+SIU
+Setor de Investigação de sinistros, responsável por apurar indícios de fraude.
+PII
+Sigla para dados pessoais identificáveis, como nome, CPF e telefone, protegidos por lei.
+Perda total
+Situação em que o custo de reparo supera o percentual definido do valor do bem, ensejando indenização integral.
+Contraproposta
+Oferta da Seguradora com condições ajustadas de franquia, limite ou prêmio, em resposta à proposta original.
+GLOS-2024 v1.1 - Indicium InsurCo - Uso interno
+Página 2 de 2

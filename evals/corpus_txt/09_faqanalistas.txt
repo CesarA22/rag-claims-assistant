@@ -1,0 +1,110 @@
+
+===== PAGE 1 =====
+Indicium InsurCo
+FAQ-SIN-2025 v5.0
+USO INTERNO - documento controlado
+Vigência: 2025-05-01
+FAQ dos Analistas de Sinistros
+Código do documento: FAQ-SIN-2025    Versão: 5.0    Vigência a partir de: 2025-05-01
+1 Orientações Gerais
+Este FAQ reúne dúvidas recorrentes dos analistas de sinistros. As respostas remetem sempre ao documento
+normativo aplicável. Em caso de conflito entre este FAQ e um documento normativo, prevalece o documento
+normativo.
+O objetivo é agilizar consultas do dia a dia, não substituir a leitura das Condições Gerais, dos normativos e do
+Manual de Regulação de Sinistros.
+2 Referência Rápida por Assunto
+Antes de responder, confirme sempre a fonte no documento indicado abaixo.
+Tabela 1 - Onde encontrar cada assunto
+Assunto
+Documento de referência
+Prazo de aviso de sinistro
+Normativo NI-014 (versão vigente)
+Prazos de regulação
+Manual de Regulação de Sinistros (MAN-SIN)
+Limites e franquias de coberturas
+Condições Gerais do produto
+Franquias e isenções
+Normativo de Franquias (NI-022)
+Reajuste de prêmio
+Comunicado de Reajuste (COM-REAJ)
+Proteção de dados pessoais
+Política de Privacidade (POL-LGPD)
+3 Perguntas e Respostas
+Pergunta: onde encontro o prazo de aviso de sinistro?
+Resposta: no Normativo NI-014, sempre na versão
+vigente. Havendo mais de uma versão no repositório,
+use a de data de vigência mais recente.
+Pergunta: o claim_amount do banco é o valor que
+pagamos? Resposta: não. O campo claim_amount
+registra o valor reivindicado pelo segurado. O valor
+efetivamente pago fica na tabela de pagamentos, no
+campo paid_amount.
+Pergunta: posso divulgar nome e CPF do segurado
+numa resposta? Resposta: não. Dados pessoais não
+podem aparecer em respostas, conforme a Política de
+Privacidade (POL-LGPD).
+Pergunta: como trato indícios de fraude? Resposta:
+suspenda a regulação, registre e encaminhe ao SIU.
+Não negue por conta própria.
+Pergunta: qual o prazo de regulação de roubo de
+veículo? Resposta: consulte a tabela de prazos do
+Manual de Sinistros; roubo e furto de auto tem prazo
+próprio, diferente do prazo base.
+Pergunta: a cobertura de vidros tem o mesmo limite em
+todos os produtos? Resposta: não. O limite varia por
+produto; consulte as Condições Gerais do produto
+específico.
+Pergunta: quando a franquia de danos elétricos é
+dispensada? Resposta: quando o dano decorre de raio
+comprovado por laudo; ver nota de rodapé do
+Normativo de Franquias.
+Pergunta: perguntas sem resposta no corpus, o que
+faço? Resposta: recuse de forma transparente e não
+invente. Informe que a informação não consta nas
+fontes disponíveis.
+Pergunta: onde vejo o limite de danos a terceiros do
+auto? Resposta: na tabela de coberturas das Condições
+Gerais do Seguro Auto, linha RCF-DM.
+Pergunta: qual a diferença entre RCF-DM e RCF-DC?
+Resposta: RCF-DM cobre danos materiais a terceiros;
+RCF-DC cobre danos corporais a terceiros. São limites
+distintos.
+Pergunta: o prazo de regulação é o mesmo que o prazo
+de aviso? Resposta: não. O prazo de aviso é do
+segurado para comunicar (NI-014). O prazo de
+regulação é da Seguradora para concluir a análise
+(Manual de Sinistros).
+Pergunta: como conto o prazo de regulação? Resposta:
+da entrega da documentação completa. Pedidos de
+documento complementar suspendem a contagem.
+Pergunta: posso pagar acima do limite da cobertura?
+Resposta: não. O pagamento observa o limite máximo
+da cobertura, ainda que o valor reivindicado seja maior.
+Pergunta: furto simples é coberto no residencial?
+Resposta: não. Apenas furto qualificado, com vestígios
+de arrombamento, escalada ou chave falsa.
+Pergunta: e a franquia em coberturas de RC? Resposta:
+coberturas de responsabilidade civil facultativa não
+possuem franquia.
+Pergunta: onde acho a documentação mínima por tipo
+de sinistro? Resposta: na tabela de documentação do
+Manual de Regulação de Sinistros.
+Pergunta: existe carro reserva no auto? Resposta: sim,
+quando contratado; consulte a tabela de coberturas do
+Seguro Auto para o número de diárias.
+Pergunta: como registro a decisão? Resposta: toda
+decisão deve ser registrada no sistema, com
+fundamento, para fins de auditoria.
+FAQ-SIN-2025 v5.0 - Indicium InsurCo - Uso interno
+Página 1 de 2
+
+===== PAGE 2 =====
+Indicium InsurCo
+FAQ-SIN-2025 v5.0
+USO INTERNO - documento controlado
+Vigência: 2025-05-01
+Pergunta: posso reabrir um sinistro encerrado?
+Resposta: sim, mediante fato ou documento novo
+relevante; a reanálise reinicia o prazo de regulação.
+FAQ-SIN-2025 v5.0 - Indicium InsurCo - Uso interno
+Página 2 de 2

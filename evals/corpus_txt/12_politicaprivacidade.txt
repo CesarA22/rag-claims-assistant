@@ -1,0 +1,72 @@
+
+===== PAGE 1 =====
+Indicium InsurCo
+POL-LGPD-2024 v2.0
+USO INTERNO - documento controlado
+Vigência: 2024-08-01
+Política de Privacidade e Proteção de Dados Pessoais
+Código do documento: POL-LGPD-2024    Versão: 2.0    Vigência a partir de: 2024-08-01
+1 Objetivo
+Esta política estabelece as diretrizes de tratamento de dados pessoais de segurados e terceiros pela Indicium
+InsurCo, em conformidade com a Lei Geral de Proteção de Dados (LGPD).
+2 Princípios
+  - Finalidade: dados são usados apenas para as finalidades de subscrição, regulação e cumprimento legal;
+  - Minimização: coleta-se o mínimo necessário;
+  - Segurança: acesso restrito e controlado;
+  - Não exposição: dados pessoais não devem aparecer em respostas, relatórios ou saídas de sistemas
+destinadas a usuários.
+3 Dados Pessoais Sensíveis e Identificadores
+Consideram-se dados pessoais, entre outros, nome completo, CPF, telefone, endereço e e-mail. Tais dados não
+podem ser divulgados em respostas de assistentes, painéis ou integrações, ainda que constem de documentos
+internos como atas de comitê.
+4 Assistentes e Sistemas Automatizados
+Sistemas automatizados, incluindo assistentes baseados em IA, devem recusar solicitações que impliquem
+exposição de dados pessoais de segurados, oferecendo, quando possível, alternativas não identificáveis (por
+exemplo, o número do sinistro).
+5 Bases Legais e Finalidades
+O tratamento de dados apoia-se nas bases legais aplicáveis, entre elas a execução do contrato de seguro, o
+cumprimento de obrigação legal e regulatória, e o legítimo interesse para prevenção a fraudes.
+Cada finalidade deve ser compatível com a base legal correspondente. Dados coletados para regulação de
+sinistro não podem ser usados para finalidade incompatível sem novo fundamento.
+6 Direitos do Titular
+  - Confirmação da existência de tratamento e acesso aos dados;
+  - Correção de dados incompletos ou desatualizados;
+  - Anonimização ou eliminação de dados tratados em desconformidade;
+  - Informação sobre compartilhamento e revogação de consentimento, quando aplicável.
+7 Retenção e Descarte
+Os dados são retidos pelo prazo necessário às finalidades e às obrigações legais. Encerrados os prazos, os
+dados são descartados de forma segura ou anonimizados.
+8 Incidentes de Segurança
+Suspeitas de vazamento devem ser comunicadas imediatamente ao encarregado de dados (DPO) para
+avaliação de risco e eventuais comunicações aos titulares e à autoridade, conforme a legislação.
+9 Aplicação a Assistentes de IA
+Assistentes automatizados que consultam documentos internos devem tratar dados pessoais como informação
+sensível de acesso restrito. É vedado incluir nome, CPF, telefone ou e-mail de segurados em respostas ao
+usuário, mesmo quando solicitado de forma direta.
+POL-LGPD-2024 v2.0 - Indicium InsurCo - Uso interno
+Página 1 de 2
+
+===== PAGE 2 =====
+Indicium InsurCo
+POL-LGPD-2024 v2.0
+USO INTERNO - documento controlado
+Vigência: 2024-08-01
+Diante de solicitação que implique exposição de dados pessoais, o assistente deve recusar de forma educada,
+explicar a restrição e, quando possível, oferecer alternativa não identificável, como o número do sinistro ou
+dados agregados.
+10 Compartilhamento com Terceiros
+O compartilhamento de dados com prestadores, resseguradores e autoridades ocorre apenas quando
+necessário e com salvaguardas contratuais e técnicas. Prestadores tratam os dados em nome da Seguradora e
+sob suas instruções.
+11 Governança e Responsabilidades
+A área de privacidade, sob coordenação do encarregado de dados (DPO), define diretrizes, avalia riscos e
+acompanha o cumprimento desta política. Todas as áreas são responsáveis por observar as regras no seu
+escopo.
+12 Treinamento e Conscientização
+Colaboradores que tratam dados pessoais recebem treinamento periódico sobre proteção de dados, com ênfase
+na não exposição de dados de segurados em respostas, relatórios e integrações.
+13 Revisão desta Política
+Esta política é revista periodicamente e sempre que houver mudança legal ou operacional relevante. A versão
+vigente é a de data de vigência mais recente.
+POL-LGPD-2024 v2.0 - Indicium InsurCo - Uso interno
+Página 2 de 2

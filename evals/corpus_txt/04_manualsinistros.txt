@@ -1,0 +1,542 @@
+
+===== PAGE 1 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+Manual de Regulação de Sinistros
+Código do documento: MAN-SIN-2025    Versão: 2.0    Vigência a partir de: 2025-03-01
+1 Finalidade
+Este manual orienta os analistas na regulação de sinistros, padronizando o fluxo
+desde o aviso até o pagamento ou a negativa. Aplica-se a todos os produtos da
+Indicium InsurCo e deve ser lido em conjunto com as Condições Gerais de cada
+produto, com o Normativo de Franquias (NI-022) e com o Normativo de Prazos
+de Comunicação (NI-014).
+A regulação de sinistros é atividade sensível, que combina rigor técnico,
+agilidade e tratamento justo do segurado. O objetivo do manual é reduzir a
+variabilidade entre analistas, garantir a rastreabilidade das decisões e assegurar
+que casos semelhantes recebam tratamento semelhante, preservando a
+experiência do segurado e a sustentabilidade técnica da carteira.
+1.1 Princípios da Regulação
+A regulação observa os seguintes princípios: legalidade e aderência às
+Condições 
+Gerais; 
+boa-fé 
+objetiva; 
+fundamentação 
+de 
+toda 
+decisão;
+proporcionalidade na solicitação de documentos; proteção de dados pessoais; e
+tempestividade, com respeito aos prazos aplicáveis. O analista deve buscar a
+verdade do evento, sem presumir má-fé do segurado, mas também sem deixar
+de investigar quando houver indícios consistentes.
+2 Fluxo de Regulação
+O fluxo compreende: recebimento do aviso, abertura do sinistro, análise
+documental, vistoria (quando aplicável), decisão e comunicação ao segurado.
+Cada etapa deve ser registrada no sistema de sinistros, com data, responsável
+e fundamento, de modo a permitir auditoria posterior.
+2.1 Abertura do Sinistro
+Recebido o aviso, o analista confere a vigência da apólice na data do evento, a
+existência da cobertura acionada e a compatibilidade preliminar entre o relato e
+o tipo de sinistro. Estando presentes esses elementos, o sinistro é aberto no
+sistema e recebe número único, no formato SIN-AAAA-NNNNNN, que passa a
+identificá-lo em todas as etapas seguintes.
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 1 de 13
+
+===== PAGE 2 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+2.2 Triagem e Priorização
+Os sinistros são triados por complexidade e por valor estimado. Casos de maior
+valor ou complexidade podem ser encaminhados ao Comitê de Sinistros
+Graves. A triagem não altera os prazos de regulação, mas orienta a alocação de
+esforço e a necessidade de vistoria ou perícia.
+3 Aviso de Sinistro
+O prazo para o segurado comunicar o sinistro é definido no Normativo Interno
+de Prazos de Comunicação de Sinistro (NI-014), em sua versão vigente. O
+analista deve verificar a versão vigente do normativo antes de recusar um aviso
+por intempestividade, atentando para o fato de que pode haver mais de uma
+versão do normativo no repositório documental.
+Havendo mais de uma versão do NI-014, prevalece sempre a de data de
+vigência mais recente. A comunicação fora do prazo não implica negativa
+automática de cobertura: cabe avaliar se a intempestividade efetivamente
+prejudicou a regulação, nos termos da legislação e das Condições Gerais.
+4 Prazos de Regulação
+O prazo de regulação é o período máximo para a Seguradora concluir a análise
+e efetuar o pagamento ou a negativa, contado da entrega da documentação
+completa. Os prazos por tipo de sinistro constam da tabela abaixo. O prazo
+base legal é de 30 dias corridos, podendo ser suspenso para solicitação de
+documentos complementares, hipótese em que a contagem é retomada a partir
+do atendimento da solicitação.
+Tabela 1 - Prazos de regulação por tipo de sinistro
+Tipo de sinistro
+Prazo de regulação
+Colisão (Auto)
+30 dias corridos
+Roubo e Furto (Auto)
+45 dias corridos
+Danos Elétricos (Residencial)
+30 dias corridos
+Incêndio (Residencial e Empresarial)
+60 dias corridos
+Responsabilidade Civil
+45 dias corridos
+Lucros Cessantes (Empresarial)
+60 dias corridos
+Os prazos da Tabela 1 são a referência oficial para cada tipo de evento e não
+devem ser confundidos com o prazo de aviso, que é obrigação do segurado e
+consta do NI-014. O analista deve controlar o prazo de regulação de cada
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 2 de 13
+
+===== PAGE 3 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+sinistro sob sua responsabilidade e sinalizar, com antecedência, os casos em
+risco de atraso.
+4.1 Suspensão e Retomada de Prazo
+A solicitação de documento complementar essencial suspende o prazo de
+regulação. A suspensão deve ser registrada no sistema, com indicação clara do
+documento pendente e da data da solicitação. Solicitações genéricas ou
+repetidas, sem justificativa técnica, são vedadas, por prejudicarem o segurado e
+a qualidade do atendimento.
+5 Documentação
+A documentação mínima varia por tipo de sinistro e inclui aviso, documentos do
+segurado, comprovação do evento e orçamentos. Documentos pessoais
+coletados são tratados conforme a Política de Privacidade (POL-LGPD), com
+acesso restrito e finalidade limitada à regulação. O analista deve solicitar
+apenas o necessário, evitando a coleta excessiva de dados.
+6 Prevenção e Combate a Fraudes
+6.1 Indicadores de alerta
+São indicadores de alerta, entre outros: divergência entre o relato e os vestígios,
+documentação inconsistente, histórico atípico de sinistros, aviso imediatamente
+após o início ou às vésperas do término da vigência, e resistência injustificada à
+vistoria. A presença de um indicador isolado não caracteriza fraude, mas
+recomenda atenção redobrada.
+6.2 Procedimento do analista
+Ao identificar indícios de fraude, o analista deve suspender o prazo de
+regulação, registrar os indícios no sistema e encaminhar o caso ao setor de
+investigação (SIU) para apuração. O analista não deve negar o sinistro por
+conta própria; a negativa depende da conclusão da apuração pelo SIU. Toda a
+tramitação deve ser documentada, preservando-se a confidencialidade e a
+imparcialidade da apuração.
+6.3 Tratamento do Resultado da Apuração
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 3 de 13
+
+===== PAGE 4 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+Concluída a apuração pelo SIU, o resultado orienta a decisão final: confirmada a
+fraude, aplica-se a perda de direitos prevista nas Condições Gerais, com
+negativa fundamentada; não confirmada, a regulação prossegue normalmente,
+retomando-se o prazo. Em qualquer caso, a comunicação ao segurado deve ser
+clara e respeitosa, sem juízos de valor não comprovados.
+7 Pagamento
+Concluída a regulação com deferimento, o pagamento é registrado na tabela de
+pagamentos do sistema. O valor pago pode ser inferior ao valor reivindicado
+pelo segurado, em razão de franquia, limite de cobertura e critério de
+indenização. O pagamento deve observar os dados bancários validados do
+beneficiário e os controles internos antifraude.
+Atenção: o valor reivindicado pelo segurado e o valor efetivamente pago são
+grandezas distintas. Relatórios que confundem os dois campos produzem
+números incorretos. O valor reivindicado é registrado no cadastro do sinistro; o
+valor pago é o registrado na tabela de pagamentos. Indicadores gerenciais de
+desembolso devem sempre utilizar o valor pago.
+8 Documentação por Tipo de Sinistro
+A tabela a seguir resume a documentação mínima por tipo de evento.
+Documentos adicionais podem ser solicitados conforme a complexidade,
+sempre de forma fundamentada e proporcional.
+Tabela 2 - Documentação mínima por tipo de sinistro
+Tipo de sinistro
+Documentação mínima
+Colisão (Auto)
+Aviso, CNH, CRLV, boletim ou declaração, orçamentos
+Roubo e Furto (Auto)
+Aviso, boletim de ocorrência, CRLV, chaves, termo de baixa
+Danos Elétricos
+Aviso, laudo técnico, notas dos bens, fotos
+Incêndio
+Aviso, laudo do corpo de bombeiros, comprovação dos bens
+Responsabilidade Civil
+Aviso, comprovação do dano a terceiro, orçamentos
+9 Vistoria e Perícia
+A vistoria verifica a existência e a extensão do dano, a compatibilidade com o
+relato e a preexistência de avarias. Pode ser presencial ou digital, conforme a
+natureza do evento. A perícia técnica é acionada em casos de maior
+complexidade, dano estrutural ou dúvida sobre a causa. Os laudos integram o
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 4 de 13
+
+===== PAGE 5 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+processo e fundamentam a decisão.
+10 Formas de Indenização
+A indenização pode ser realizada por reparo, reposição, prestação de serviço
+equivalente ou pagamento em dinheiro, conforme a cobertura acionada e a
+natureza do dano. Nas coberturas patrimoniais, observa-se o limite máximo de
+indenização e a franquia aplicável. Em perda total, não há incidência de franquia
+e os salvados passam a pertencer à Seguradora.
+11 Comunicação ao Segurado
+Toda decisão de deferimento, deferimento parcial ou negativa deve ser
+comunicada ao segurado de forma clara e fundamentada, com indicação do
+critério aplicado e, quando cabível, dos canais de recurso. A comunicação deve
+evitar jargões e explicar, em linguagem acessível, o motivo da decisão e os
+próximos passos.
+12 Reabertura e Reanálise
+O sinistro encerrado pode ser reaberto mediante apresentação de fato ou
+documento novo relevante. A reanálise observa os mesmos prazos de
+regulação contados da nova documentação. A reabertura deve ser registrada,
+preservando-se o histórico da decisão anterior para fins de auditoria.
+13 Recursos e Segunda Análise
+O segurado que discordar da decisão pode solicitar reanálise pelos canais de
+atendimento e, persistindo a divergência, recorrer à Ouvidoria. A segunda
+análise é conduzida por profissional distinto do que proferiu a decisão original,
+assegurando 
+imparcialidade. 
+Os 
+prazos 
+de 
+resposta 
+observam 
+a
+regulamentação aplicável.
+14 Indicadores de Qualidade e SLA
+A qualidade da regulação é acompanhada por indicadores como tempo médio
+de regulação, taxa de reabertura, taxa de reclamação e aderência aos prazos
+da Tabela 1. Metas de nível de serviço (SLA) são definidas por tipo de sinistro e
+monitoradas periodicamente, subsidiando ações de melhoria contínua e de
+capacitação das equipes.
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 5 de 13
+
+===== PAGE 6 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+15 Prestadores e Rede Referenciada
+A regulação pode envolver prestadores de serviço, como oficinas, vistoriadores
+e peritos, que atuam sob contrato e sob as instruções da Seguradora. Os
+prestadores devem observar padrões de qualidade, prazos e proteção de
+dados. A escolha de prestador referenciado não afasta o direito do segurado de
+indicar alternativa, nos termos das Condições Gerais.
+16 Registro e Auditoria
+Todas as etapas devem ser registradas no sistema de sinistros, permitindo
+auditoria posterior. A rastreabilidade da decisão é requisito de qualidade da
+regulação. Auditorias periódicas verificam a aderência a este manual, a
+consistência das decisões e a correta utilização dos campos do sistema,
+inclusive a distinção entre valor reivindicado e valor pago.
+17 Proteção de Dados na Regulação
+Os dados pessoais coletados na regulação são de uso restrito. É vedada a
+divulgação de nome, CPF, telefone e demais dados pessoais em respostas,
+relatórios ou integrações destinadas a usuários, conforme a Política de
+Privacidade (POL-LGPD). Assistentes automatizados que apoiam a regulação
+devem recusar solicitações que impliquem exposição de dados pessoais de
+segurados.
+18 Canais de Aviso e Atendimento
+O aviso de sinistro pode ser recebido por diferentes canais oficiais: central
+telefônica, aplicativo, portal do segurado, corretor e atendimento presencial.
+Independentemente do canal, o analista deve garantir o registro imediato do
+aviso no sistema, com a geração do número do sinistro e do protocolo, que
+asseguram a rastreabilidade e a comprovação da data de comunicação.
+Cada canal possui particularidades operacionais, mas o padrão de qualidade e
+os prazos são únicos. O analista deve confirmar os dados de contato do
+segurado e orientar sobre os próximos passos e a documentação necessária,
+de forma clara e acessível, evitando solicitações desnecessárias.
+19 Regulação de Sinistros de Automóvel
+Nos sinistros de colisão, a regulação verifica a dinâmica do evento, a
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 6 de 13
+
+===== PAGE 7 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+compatibilidade dos danos com o relato e a existência de terceiros envolvidos. A
+vistoria do veículo é regra, salvo dano de pequena monta com documentação
+suficiente. Em danos parciais, a indenização observa o custo de reparo,
+deduzida a franquia, até o limite da cobertura de Casco.
+Nos sinistros de roubo e furto, a regulação exige boletim de ocorrência,
+comprovação da propriedade, entrega de chaves e documentos, e baixa do
+veículo, quando aplicável. O prazo de regulação desse tipo de evento é
+específico e consta da Tabela 1, sendo distinto do prazo aplicável à colisão. O
+analista deve controlar esse prazo próprio e sinalizar riscos de atraso.
+Nos sinistros de responsabilidade civil (danos a terceiros), a regulação apura a
+responsabilidade do segurado e a extensão do dano ao terceiro, observando os
+limites das coberturas RCF-DM e RCF-DC. O pagamento a terceiros observa a
+apuração da responsabilidade e a documentação comprobatória do prejuízo.
+20 Regulação de Sinistros Residenciais
+Nos danos elétricos, a regulação analisa o laudo técnico, as notas fiscais dos
+bens atingidos e o nexo entre o evento e o dano. A franquia aplicável e as
+eventuais isenções constam do Normativo de Franquias (NI-022), inclusive a
+hipótese de dano por descarga atmosférica comprovada por laudo. O analista
+deve conferir a documentação técnica antes de decidir.
+Nos sinistros de incêndio, a regulação considera o laudo do corpo de
+bombeiros, a comprovação dos bens e a apuração da causa. Nos sinistros de
+roubo e furto qualificado, verifica-se a existência de vestígios de arrombamento,
+escalada ou uso de chave falsa, requisito da cobertura, além da preexistência e
+da propriedade dos bens.
+21 Regulação de Sinistros Empresariais
+Nos sinistros empresariais, a complexidade costuma ser maior, envolvendo
+múltiplas coberturas e valores expressivos. Na cobertura de Lucros Cessantes,
+a regulação apura a margem de contribuição perdida no período de
+indenização, respeitado o período de franquia previsto nas Condições Gerais do
+produto. A perícia contábil pode ser necessária.
+Nos sinistros de incêndio e de responsabilidade civil operacional, a regulação
+analisa a causa, a extensão do dano e a eventual responsabilidade de terceiros.
+Casos empresariais de maior valor são candidatos naturais ao Comitê de
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 7 de 13
+
+===== PAGE 8 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+Sinistros Graves, que delibera de forma colegiada.
+22 Cálculo da Indenização e Deduções
+O cálculo da indenização parte do prejuízo apurado, aplica o limite máximo da
+cobertura acionada, deduz a franquia quando cabível e considera eventuais
+salvados aproveitados. O resultado é o valor a ser pago, que deve ser
+registrado na tabela de pagamentos. Em nenhuma hipótese a indenização
+supera o prejuízo efetivo ou o limite da cobertura.
+É indispensável distinguir o valor reivindicado pelo segurado, registrado no
+cadastro do sinistro, do valor efetivamente pago, registrado no pagamento.
+Análises gerenciais que confundem esses campos superestimam o desembolso
+da Seguradora. Todo indicador financeiro deve utilizar o valor pago, e não o
+valor reivindicado.
+23 Salvados e Ressarcimento
+Na indenização integral, os salvados passam a pertencer à Seguradora, que
+providencia a documentação de transferência e a destinação dos bens. O
+produto da venda de salvados compõe a recuperação de sinistros e deve ser
+corretamente registrado. O analista orienta o segurado quanto à entrega dos
+bens, documentos e acessórios.
+O ressarcimento junto a terceiros responsáveis, por meio da sub-rogação, é
+etapa relevante para a sustentabilidade da carteira. Após o pagamento, o caso é
+encaminhado à área de ressarcimento, com a documentação que comprova o
+pagamento e a responsabilidade do terceiro.
+24 Comunicação de Negativa
+A negativa de cobertura deve ser sempre fundamentada, com indicação da
+cláusula ou do fato que a motiva, em linguagem clara e respeitosa. A
+comunicação informa ao segurado os canais de reanálise e recurso. Negativas
+genéricas, sem fundamento específico, são vedadas e comprometem a
+qualidade e a imagem da Seguradora.
+Antes de comunicar a negativa, o analista deve revisar a completude da
+apuração e, quando houver indício de fraude, aguardar a conclusão do SIU. A
+negativa precipitada, sem apuração adequada, é fonte frequente de
+reclamações e de reversões em segunda análise.
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 8 de 13
+
+===== PAGE 9 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+25 Boas Práticas e Erros Comuns
+São boas práticas: registrar tudo no sistema, fundamentar cada decisão,
+solicitar apenas a documentação necessária, comunicar-se com clareza e
+respeitar os prazos da Tabela 1. São erros comuns: confundir valor reivindicado
+com valor pago, negar sem apuração, solicitar documentos repetidamente e
+deixar de conferir a versão vigente do normativo de prazos de aviso.
+A consistência entre analistas é objetivo permanente. Casos semelhantes
+devem 
+receber 
+tratamento 
+semelhante. 
+Divergências 
+recorrentes 
+de
+entendimento devem ser levadas à coordenação para padronização, evitando
+decisões conflitantes na mesma carteira.
+26 Checklist do Analista
+  - Confirmar vigência da apólice na data do evento;
+  - Confirmar a existência da cobertura acionada;
+  - Conferir a versão vigente do NI-014 antes de avaliar tempestividade do aviso;
+  - Solicitar somente a documentação mínima aplicável ao tipo de sinistro;
+  - Registrar suspensões de prazo com o documento pendente identificado;
+  - Distinguir valor reivindicado (cadastro do sinistro) de valor pago (pagamento);
+  - Fundamentar a decisão e comunicá-la de forma clara;
+  - Encaminhar ao SIU os casos com indícios de fraude, sem negar por conta
+própria.
+27 Perguntas Frequentes Operacionais
+Como saber qual prazo de aviso aplicar? Consulte o NI-014 e utilize sempre a
+versão de data de vigência mais recente; havendo mais de uma versão no
+repositório, a mais recente prevalece. O prazo de aviso é obrigação do
+segurado e não se confunde com o prazo de regulação, que é da Seguradora.
+O prazo de regulação de roubo é igual ao de colisão? Não. Cada tipo de sinistro
+tem prazo próprio na Tabela 1. O analista deve consultar a tabela para o tipo
+específico do evento, evitando aplicar o prazo base a um evento que possui
+prazo diferenciado.
+Posso informar ao gestor o total pago somando o campo de valor do sinistro?
+Não. Esse campo registra o valor reivindicado. Some sempre o valor pago da
+tabela de pagamentos para obter o desembolso real.
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 9 de 13
+
+===== PAGE 10 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+28 Comitê de Sinistros Graves
+O Comitê de Sinistros Graves delibera sobre casos de maior valor,
+complexidade ou repercussão. Suas atas são documentos de uso interno e
+contêm dados pessoais de segurados, que não podem ser divulgados a
+terceiros nem reproduzidos em respostas a usuários. O encaminhamento ao
+Comitê observa os critérios de triagem deste manual.
+As deliberações do Comitê orientam a decisão do analista, mas não afastam a
+responsabilidade de fundamentar e registrar cada caso individualmente. O sigilo
+das informações discutidas é condição essencial de funcionamento do Comitê.
+29 Melhoria Contínua e Treinamento
+A qualidade da regulação é aprimorada continuamente por meio de indicadores,
+auditorias e treinamento das equipes. Erros recorrentes identificados em
+auditoria geram ações corretivas e atualização deste manual. Novos analistas
+passam por capacitação antes de assumir a regulação autônoma de sinistros.
+30 Glossário Operacional
+Aviso: comunicação do sinistro pelo segurado. Regulação: processo de
+apuração e decisão. Deferimento: aprovação da indenização. Negativa: recusa
+fundamentada de cobertura. Salvados: bens remanescentes que passam à
+Seguradora na indenização integral. Sub-rogação: transferência à Seguradora
+dos direitos do segurado contra terceiros responsáveis, até o valor pago. Valor
+reivindicado: valor pleiteado pelo segurado, antes da regulação. Valor pago:
+valor efetivamente indenizado, registrado na tabela de pagamentos.
+31 Anexo A - Exemplos Resolvidos de Regulação
+Exemplo 1 (colisão parcial de auto). O segurado avisa colisão com danos ao
+para-choque e à porta dianteira. A vistoria confirma a compatibilidade dos danos
+com o relato. Como se trata de dano parcial, a indenização corresponde ao
+custo de reparo, deduzida a franquia da cobertura de Casco. O prazo de
+regulação aplicável é o da colisão, conforme a Tabela 1. Registrada a decisão, o
+pagamento é lançado na tabela de pagamentos.
+Exemplo 2 (roubo de veículo). O segurado comunica o roubo e apresenta
+boletim de ocorrência. A regulação exige a documentação específica desse tipo
+de evento, incluindo entrega de chaves e documentos. O prazo de regulação do
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 10 de 13
+
+===== PAGE 11 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+roubo é próprio e distinto do prazo da colisão, devendo ser consultado na
+Tabela 1. Confirmada a cobertura e cumpridas as exigências, procede-se à
+indenização integral, sem franquia, com transferência dos direitos à Seguradora.
+Exemplo 3 (dano elétrico residencial por oscilação). O segurado relata queima
+de eletrodomésticos após oscilação de energia. A regulação analisa o laudo
+técnico e as notas dos bens. Aplica-se a franquia de danos elétricos prevista no
+Normativo de Franquias, por não se tratar de descarga atmosférica. A
+indenização observa o limite da cobertura, deduzida a franquia.
+Exemplo 4 (dano elétrico residencial por raio). O segurado relata dano elétrico
+após tempestade, com laudo que comprova descarga atmosférica. Nessa
+hipótese, conforme a nota específica do Normativo de Franquias, a franquia de
+danos elétricos não se aplica, e a indenização é integral, observado o limite da
+cobertura. O analista deve conferir o laudo antes de dispensar a franquia.
+Exemplo 5 (danos a terceiros acima do limite). O segurado causa danos
+materiais a terceiro em valor superior ao limite da cobertura de danos materiais
+a terceiros do Seguro Auto. A indenização ao terceiro observa o teto da
+cobertura; o valor que exceder o limite não é de responsabilidade da
+Seguradora. O valor efetivamente pago é registrado na tabela de pagamentos e
+não se confunde com o valor reivindicado.
+Exemplo 6 (aviso com dúvida de prazo). O segurado comunica o sinistro e o
+analista tem dúvida sobre a tempestividade. Antes de qualquer recusa por
+intempestividade, o analista consulta o NI-014 na versão vigente. Havendo mais
+de uma versão no repositório, prevalece a de data de vigência mais recente. A
+intempestividade, por si só, não implica negativa automática.
+Exemplo 7 (indícios de fraude). Durante a regulação, o analista identifica
+divergências entre o relato e os vestígios. Em vez de negar por conta própria,
+suspende o prazo, registra os indícios e encaminha ao SIU. Concluída a
+apuração sem confirmação de fraude, a regulação prossegue; confirmada a
+fraude, aplica-se a perda de direitos, com negativa fundamentada.
+Exemplo 8 (documentação incompleta). Falta documento essencial para a
+decisão. O analista solicita o documento específico, registra a suspensão do
+prazo e retoma a contagem após o atendimento. Solicitações repetidas e
+genéricas são evitadas, por prejudicarem o segurado e a qualidade do
+atendimento.
+Exemplo 9 (pergunta gerencial sobre desembolso). A gestão solicita o total pago
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 11 de 13
+
+===== PAGE 12 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+em sinistros do período. O relatório correto soma o valor pago da tabela de
+pagamentos, e não o valor reivindicado do cadastro de sinistros. A confusão
+entre os dois campos produziria um total superestimado e incorreto.
+Exemplo 10 (perda total de auto). O custo de reparo, somado aos salvados,
+atinge o percentual de indenização integral. O sinistro é tratado como perda
+total: não incide franquia, a indenização observa o valor de mercado
+referenciado e os salvados passam à Seguradora, mediante entrega do veículo,
+documentos e chaves.
+32 Anexo B - Requisitos das Comunicações ao Segurado
+Comunicação de deferimento: deve informar a aprovação, o valor a ser pago, a
+forma e o prazo de pagamento, e o canal de contato para dúvidas. Deve deixar
+claro que o valor pago decorre da apuração da regulação, observados limite e
+franquia.
+Comunicação de deferimento parcial: deve explicar, de forma objetiva, quais
+itens foram cobertos e quais não foram, com o fundamento de cada exclusão ou
+dedução, evitando termos vagos. O segurado deve compreender por que o valor
+pago difere do valor reivindicado.
+Comunicação de negativa: deve indicar a cláusula ou o fato que motiva a
+recusa, em linguagem clara e respeitosa, e informar os canais de reanálise e de
+recurso à Ouvidoria. Negativas sem fundamento específico são vedadas.
+Comunicação de solicitação de documentos: deve especificar exatamente quais
+documentos são necessários e por quê, informando que o prazo de regulação
+fica suspenso até o atendimento. Deve evitar solicitações genéricas ou já
+atendidas.
+33 Anexo C - Perguntas Frequentes Ampliadas
+O segurado pode acompanhar o andamento do sinistro? Sim, pelos canais
+oficiais, informando o número do sinistro. O analista deve manter o status
+atualizado no sistema, o que viabiliza um acompanhamento transparente e
+reduz reclamações.
+É possível pagar parte da indenização e continuar apurando o restante? Em
+casos específicos, admite-se pagamento parcial incontroverso enquanto se
+apura a parcela controvertida, desde que devidamente registrado. O pagamento
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 12 de 13
+
+===== PAGE 13 =====
+Indicium InsurCo
+MAN-SIN-2025 v2.0
+USO INTERNO - documento controlado
+Vigência: 2025-03-01
+parcial é lançado como tal na tabela de pagamentos.
+Como tratar reclamação registrada em órgão de defesa do consumidor? A
+reclamação deve ser respondida no prazo regulatório, de forma fundamentada,
+com base no histórico registrado no sistema. A qualidade do registro ao longo
+da regulação é decisiva para uma resposta consistente.
+34 Anexo D - Boas Práticas de Registro no Sistema
+O registro no sistema é a memória do sinistro. Cada interação, solicitação,
+decisão e pagamento deve ser lançado com data, responsável e fundamento.
+Um registro completo permite que qualquer analista compreenda o histórico do
+caso e sustente a decisão perante auditoria, Ouvidoria ou órgão regulador.
+Os campos devem ser preenchidos com precisão, respeitada a semântica de
+cada um. O valor reivindicado é lançado no cadastro do sinistro; o valor
+efetivamente pago é lançado na tabela de pagamentos. Inverter ou confundir
+esses campos compromete relatórios gerenciais e indicadores de desembolso.
+Anotações livres devem ser objetivas e impessoais, sem juízos de valor não
+comprovados sobre o segurado. Dados pessoais registrados são de uso restrito
+e não podem ser reproduzidos em respostas a usuários ou em relatórios de
+acesso amplo, conforme a Política de Privacidade (POL-LGPD).
+Antes de encerrar o sinistro, o analista deve revisar a completude do registro:
+aviso, documentação, vistoria ou perícia, decisão fundamentada, comunicação
+ao segurado e, quando houver, pagamento. O encerramento com registro
+incompleto é causa recorrente de reabertura e de dificuldade na segunda
+análise.
+MAN-SIN-2025 v2.0 - Indicium InsurCo - Uso interno
+Página 13 de 13

@@ -1,0 +1,62 @@
+
+===== PAGE 1 =====
+Indicium InsurCo
+MAN-SUB-2024 v1.2
+USO INTERNO - documento controlado
+Vigência: 2024-10-01
+Manual de Subscrição e Aceitação de Riscos
+Código do documento: MAN-SUB-2024    Versão: 1.2    Vigência a partir de: 2024-10-01
+1 Finalidade
+Este manual orienta a análise e a aceitação de riscos (subscrição) nos produtos da Indicium InsurCo, definindo alçadas,
+critérios e documentação.
+2 Fluxo de Subscrição
+2.1 Recebimento da proposta
+A proposta é recebida pela área comercial e encaminhada à subscrição, que verifica completude e enquadramento.
+2.2 Análise de risco
+2.2.1 Critérios objetivos
+São critérios objetivos: perfil do bem segurado, localização, histórico de sinistros e valor em risco.
+2.2.1.2 Vistoria prévia
+Para riscos empresariais acima de determinado valor em risco, a vistoria prévia é obrigatória e seu laudo integra a decisão.
+3 Alçadas de Aceitação
+Tabela 1 - Alçadas de aceitação por valor em risco
+Faixa de valor em risco
+Alçada
+Até R$ 500.000,00
+Analista de subscrição
+De R$ 500.000,01 a R$ 2.000.000,00
+Coordenação
+Acima de R$ 2.000.000,00
+Comitê de Subscrição
+4 Recusa e Contraproposta
+A subscrição pode recusar o risco ou apresentar contraproposta com ajuste de franquia, limite ou prêmio. A recusa deve ser
+fundamentada e registrada.
+5 Documentação Mínima
+  - Proposta preenchida e assinada;
+  - Documentos do proponente;
+  - Laudo de vistoria, quando exigido;
+  - Informações de histórico de sinistros.
+6 Precificação e Fatores de Risco
+O prêmio é definido a partir de fatores de risco objetivos, como perfil do bem, localização, uso e histórico de sinistros. A
+subscrição deve documentar os fatores considerados para permitir auditoria posterior.
+6.1 Agravantes e Atenuantes
+São agravantes, entre outros, a alta exposição do bem e o histórico elevado de sinistros. São atenuantes medidas de proteção
+e ausência de sinistralidade relevante no período.
+7 Renovação
+Na renovação, a subscrição reavalia o risco e pode ajustar franquia, limite ou prêmio, observando a política de reajuste por
+sinistralidade e a atualização monetária dos valores.
+MAN-SUB-2024 v1.2 - Indicium InsurCo - Uso interno
+Página 1 de 2
+
+===== PAGE 2 =====
+Indicium InsurCo
+MAN-SUB-2024 v1.2
+USO INTERNO - documento controlado
+Vigência: 2024-10-01
+8 Vedações
+É vedado aceitar riscos em desacordo com as alçadas, sem a documentação mínima, ou com informações que se saibam
+inexatas. A violação sujeita o responsável às medidas internas cabíveis.
+9 Proteção de Dados na Subscrição
+Os dados pessoais coletados na subscrição seguem a Política de Privacidade (POL-LGPD) e não podem ser expostos em
+respostas de sistemas ou relatórios destinados a usuários.
+MAN-SUB-2024 v1.2 - Indicium InsurCo - Uso interno
+Página 2 de 2

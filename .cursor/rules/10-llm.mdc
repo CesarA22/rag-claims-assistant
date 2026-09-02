@@ -1,0 +1,51 @@
+---
+description: Provider isolation, retry policy and resilience rules
+globs: app/llm/**
+---
+
+# LLM layer
+
+This is the ONLY place the OpenAI SDK may be imported — specifically
+`app/llm/openai_provider.py`. Nothing outside `app/llm/` imports `openai`.
+If a task seems to need the SDK elsewhere, the answer is a method on
+`LLMProvider`, not an import.
+
+## Implementations
+
+- `openai_provider.py` — thin adapter. Maps SDK exceptions to typed domain
+  errors (`ProviderTimeout`, `ProviderUnavailable`, `RateLimited`,
+  `InvalidRequest`) and SDK usage to our `Usage` object. No policy lives here.
+- `resilient.py` — the decorator holding ALL policy: timeout budget, selective
+  bounded retry, circuit breaker, degradation. Everything above it is oblivious.
+- `fake.py` — scriptable double for tests. Queue holds responses or exceptions.
+- `chaos.py` — deliberate failure injection driven by env vars
+  (`CHAOS_TIMEOUT_RATE`, `CHAOS_500_RATE`, `CHAOS_LATENCY_MS`). Used for the
+  outage demo and manual soak testing.
+
+## Retry policy — precise
+
+- Retry ONLY on: 429, 5xx, timeouts, connection errors.
+- NEVER retry: any 4xx, content-policy refusals, schema validation failures.
+  A malformed request will be malformed the second time, at full price.
+- Max 2 retries. Exponential backoff WITH jitter (without jitter, everything
+  that failed together retries together).
+- Before starting a retry, check both remaining time budget and remaining cost
+  budget. If either would be breached, degrade instead of retrying.
+
+## Circuit breaker
+
+Closed → open after N consecutive failures → half-open probe after a short
+window. Thresholds are configuration, never hardcoded constants in logic —
+they are guesses that production data would replace.
+
+## Prompts
+
+Prompts live in `app/llm/prompts/*.md`, loaded and hashed at startup. The hash
+is stored as `prompt_version` on every message row. Never inline a prompt as a
+string literal. Keep prompts short: every token is paid for on every question.
+
+Request structured output with a JSON schema AND validate the parsed object
+yourself, failing closed on a mismatch. Provider-side schema enforcement is
+very good and is not a guarantee.
+
+Temperature 0 on the answering call.

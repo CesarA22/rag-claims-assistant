@@ -1,0 +1,76 @@
+
+===== PAGE 1 =====
+Indicium InsurCo
+COM-REAJ-2025 v1.0
+USO INTERNO - documento controlado
+Vigência: 2025-01-01
+Comunicado de Reajuste Anual de Prêmios
+Código do documento: COM-REAJ-2025    Versão: 1.0    Vigência a partir de: 2025-01-01
+1 Comunicado
+A Indicium InsurCo comunica a política de reajuste anual de prêmios para o ciclo de 2025. O reajuste é aplicado
+na renovação de cada apólice, conforme a sinistralidade do risco no período de referência.
+2 Critério de Reajuste
+A sinistralidade é a razão entre o valor pago em sinistros e o prêmio ganho no período. O percentual de reajuste
+aplicável por faixa de sinistralidade consta da tabela a seguir.
+Tabela 1 - Reajuste por faixa de sinistralidade
+Faixa de sinistralidade
+Percentual de reajuste
+0% a 30%
+5,0%
+31% a 60%
+9,5%
+61% a 100%
+18,0%
+acima de 100%
+27,0%
+3 Período de Referência
+A sinistralidade é apurada com base nos doze meses anteriores à data-base da renovação. Para apólices
+novas, sem histórico suficiente, aplica-se a faixa inicial até a formação de histórico próprio.
+4 Exemplos de Aplicação
+Exemplo 1: uma apólice com sinistralidade apurada de 45% enquadra-se na faixa de 31% a 60% e recebe o
+reajuste correspondente a essa faixa.
+Exemplo 2: uma apólice com sinistralidade de 80% enquadra-se na faixa de 61% a 100%. Exemplo 3:
+sinistralidade de 120% enquadra-se na faixa acima de 100%.
+5 Perguntas Frequentes
+O reajuste por sinistralidade é cumulativo com a atualização monetária? Não. São grandezas distintas: a
+atualização monetária corrige valores nominais, enquanto o reajuste por sinistralidade reflete o comportamento
+do risco.
+O reajuste altera os limites de cobertura? Não. Os limites permanecem os das Condições Gerais; o reajuste
+incide sobre o prêmio.
+6 Metodologia de Cálculo
+O prêmio reajustado é obtido aplicando-se o percentual da faixa sobre o prêmio da vigência anterior. A faixa é
+determinada pela sinistralidade apurada no período de referência. Não há reajuste retroativo: o novo valor vale a
+partir da renovação.
+Tabela 2 - Exemplos de enquadramento por faixa
+Sinistralidade apurada
+Faixa
+Percentual
+22%
+0% a 30%
+5,0%
+48%
+31% a 60%
+9,5%
+80%
+61% a 100%
+18,0%
+135%
+acima de 100%
+27,0%
+7 Cronograma
+Os reajustes são aplicados individualmente na data de renovação de cada apólice ao longo do ciclo de 2025. O
+COM-REAJ-2025 v1.0 - Indicium InsurCo - Uso interno
+Página 1 de 2
+
+===== PAGE 2 =====
+Indicium InsurCo
+COM-REAJ-2025 v1.0
+USO INTERNO - documento controlado
+Vigência: 2025-01-01
+segurado é comunicado com antecedência da renovação, com o novo prêmio e a faixa aplicada.
+8 Disposições Finais
+Este comunicado tem caráter informativo e não altera as Condições Gerais dos produtos. Dúvidas devem ser
+encaminhadas à área comercial. Prevalecem, em qualquer caso, as regras das Condições Gerais e dos
+normativos vigentes.
+COM-REAJ-2025 v1.0 - Indicium InsurCo - Uso interno
+Página 2 de 2

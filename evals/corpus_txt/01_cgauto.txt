@@ -1,0 +1,571 @@
+
+===== PAGE 1 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+Condições Gerais do Seguro Auto
+Código do documento: CG-AUTO-2024    Versão: 3.2    Vigência a partir de: 2024-01-01
+1 Disposições Preliminares
+As presentes Condições Gerais regem o contrato de Seguro Auto celebrado entre a
+Indicium InsurCo Seguros S.A., doravante denominada Seguradora, e o Segurado
+identificado na apólice. Aplicam-se subsidiariamente a legislação vigente e as normas da
+Superintendência de Seguros Privados (SUSEP), bem como o Código de Defesa do
+Consumidor, no que couber.
+O contrato de seguro tem por objetivo garantir ao Segurado, até os limites máximos de
+indenização contratados, o pagamento de indenização por prejuízos involuntários
+decorrentes dos riscos cobertos e expressamente indicados na apólice. O seguro não tem
+finalidade de enriquecimento; a indenização recompõe o patrimônio afetado, não
+podendo, em nenhuma hipótese, superar o prejuízo efetivamente apurado nem o limite
+máximo de indenização da cobertura acionada.
+O presente documento é parte integrante da apólice e prevalece sobre materiais
+promocionais, peças publicitárias e informações verbais prestadas por intermediários.
+Em caso de divergência entre este documento e as condições particulares da apólice,
+prevalecem as condições particulares, por refletirem o ajuste específico celebrado entre
+as partes para aquele risco determinado.
+A aceitação do seguro está sujeita à análise do risco pela Seguradora. A contratação
+pressupõe que o Segurado prestou informações verdadeiras, completas e exatas na
+proposta, das quais dependem a aceitação do risco e a fixação do prêmio. A inexatidão
+ou a omissão de informações relevantes pode acarretar as consequências previstas na
+legislação e nestas Condições Gerais, inclusive a perda do direito à indenização.
+1.1 Estrutura deste Documento
+Este documento está organizado em seções numeradas hierarquicamente. As definições
+dos principais termos utilizados constam da seção de Glossário. As coberturas, os limites
+máximos de indenização e as franquias constam da Tabela 1. As exclusões, gerais e
+específicas, estão reunidas na seção de Exclusões. O procedimento de sinistro, incluindo
+aviso, regulação, formas de indenização e prazos, está descrito na seção de Sinistro.
+Recomenda-se a leitura integral deste documento antes da contratação e sempre que
+houver dúvida quanto à extensão das coberturas. A qualquer tempo, o Segurado pode
+solicitar esclarecimentos aos canais oficiais de atendimento da Seguradora, indicados na
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 1 de 15
+
+===== PAGE 2 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+seção própria e na apólice.
+2 Do Contrato e da Vigência
+2.1 Vigência
+A vigência padrão de uma apólice de Seguro Auto é de 12 meses, contados a partir das
+24 horas da data de início informada na apólice até as 24 horas da data de término. A
+renovação não é automática e depende de manifestação expressa das partes. A cobertura
+somente produz efeitos para eventos ocorridos dentro do período de vigência,
+ressalvadas as disposições legais aplicáveis.
+Quando a apólice for contratada com início de vigência a partir da data de aceitação da
+proposta, a Seguradora poderá conceder cobertura provisória no intervalo entre o
+protocolo da proposta e a formalização da apólice, nos termos e limites definidos nas
+condições particulares. A recusa da proposta, quando ocorrer, encerra qualquer cobertura
+provisória eventualmente concedida, respeitados os efeitos já produzidos.
+2.2 Aceitação e Recusa
+A proposta de seguro será analisada pela área de subscrição. A Seguradora tem o prazo
+de 15 dias para manifestar recusa; o silêncio implica aceitação tácita, nos termos da
+regulamentação aplicável. A eventual solicitação de documentos ou informações
+complementares suspende esse prazo, que volta a correr a partir do atendimento da
+solicitação.
+A recusa de proposta será comunicada ao proponente de forma fundamentada. A não
+aceitação de determinado risco não configura discriminação, mas decorre de critérios
+técnicos e atuariais de subscrição, descritos no Manual de Subscrição da Seguradora.
+2.3 Proposta e Declarações do Segurado
+A proposta é o documento pelo qual o proponente manifesta a intenção de contratar o
+seguro, declarando as informações necessárias à análise e à aceitação do risco. O
+Segurado é responsável pela veracidade e pela completude das informações prestadas,
+inclusive quanto ao perfil do condutor principal, à utilização do veículo, à existência de
+dispositivos de segurança e ao local de pernoite habitual.
+Se o Segurado, por si ou por seu representante, fizer declarações inexatas ou omitir
+circunstâncias que possam influir na aceitação da proposta ou no valor do prêmio,
+perderá o direito à garantia, além de ficar obrigado ao prêmio vencido, na forma da lei.
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 2 de 15
+
+===== PAGE 3 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+Se a inexatidão ou a omissão não decorrer de má-fé, a Seguradora poderá, conforme o
+caso, resolver o contrato ou cobrar a diferença de prêmio, mesmo após a ocorrência do
+sinistro.
+2.4 Renovação
+A renovação do seguro depende de manifestação expressa das partes e de nova análise de
+risco. Na renovação, a Seguradora poderá ajustar prêmio, franquia e limites, observadas
+a política de reajuste por sinistralidade e a atualização monetária dos valores. A ausência
+de renovação não gera direito a qualquer indenização por eventos ocorridos após o
+término da vigência.
+2.5 Documentos que Integram o Contrato
+Integram o contrato de seguro a proposta, estas Condições Gerais, as condições
+particulares e especiais aplicáveis, os eventuais endossos emitidos ao longo da vigência e
+a apólice. Os endossos formalizam alterações contratuais e prevalecem sobre as
+disposições que expressamente modificarem, mantidas as demais inalteradas.
+3 Coberturas
+As coberturas contratadas, seus limites máximos de indenização e as respectivas
+franquias constam da tabela abaixo. Coberturas não listadas na apólice não são devidas.
+O limite máximo de indenização é o valor teto que a Seguradora pagará em cada
+cobertura, isoladamente, por evento coberto, ainda que o prejuízo apurado seja superior.
+Tabela 1 - Coberturas, limites e franquias do Seguro Auto
+Cobertura
+Limite máximo de indenização
+Franquia
+Casco - Colisão, incêndio e roubo/furto
+100% do valor de mercado referenciado
+(Tabela FIPE)
+R$ 3.500,00
+RCF-DM - Danos Materiais a Terceiros
+R$ 100.000,00
+não há
+RCF-DC - Danos Corporais a Terceiros
+R$ 150.000,00
+não há
+Danos Morais a Terceiros
+R$ 20.000,00
+não há
+Cobertura de Vidros
+R$ 5.000,00
+R$ 150,00
+Carro Reserva
+15 diárias
+não há
+Assistência 24 horas
+conforme plano contratado
+não há
+A cobertura de Casco observa o valor de mercado referenciado na data do sinistro. As
+coberturas de Responsabilidade Civil Facultativa (RCF-DM e RCF-DC) indenizam
+terceiros prejudicados, observados os limites da tabela. Os valores da Tabela 1 são a
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 3 de 15
+
+===== PAGE 4 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+única fonte oficial dos limites e franquias; nenhuma outra parte deste documento
+reproduz esses valores, para evitar divergências.
+3.1 Casco
+A cobertura de Casco garante os prejuízos causados ao veículo segurado por colisão,
+capotagem, abalroamento, incêndio, explosão, queda de raio e suas consequências, bem
+como por roubo ou furto, total ou parcial, observadas as condições e exclusões deste
+documento. A indenização de Casco toma por base o valor de mercado referenciado do
+veículo na data do sinistro, aplicando-se a franquia indicada na Tabela 1 nos casos de
+dano parcial.
+Nos danos parciais, a Seguradora indeniza o custo de reparo do veículo, deduzida a
+franquia, até o limite do valor de mercado referenciado. Quando o custo estimado de
+reparo, somado a eventuais salvados, atingir ou superar o percentual de indenização
+integral previsto nas condições particulares, o sinistro será tratado como perda total,
+hipótese em que não incide franquia e a indenização observa o valor de mercado
+referenciado.
+A cobertura de Casco pressupõe a conservação e a manutenção adequadas do veículo.
+Danos preexistentes, desgaste natural de peças, falhas mecânicas ou elétricas não
+decorrentes de evento coberto e lucros cessantes não estão amparados por esta cobertura,
+salvo cobertura adicional expressamente contratada.
+3.2 Responsabilidade Civil Facultativa por Danos Materiais (RCF-DM)
+A cobertura de RCF-DM reembolsa as quantias pelas quais o Segurado vier a ser
+responsável civilmente, em sentença judicial transitada em julgado ou em acordo
+autorizado pela Seguradora, por danos materiais involuntariamente causados a terceiros
+em decorrência do uso do veículo segurado. O limite máximo de indenização desta
+cobertura é o indicado na Tabela 1, e a ele se sujeita o total de indenizações por evento,
+ainda que haja mais de um terceiro prejudicado.
+Consideram-se danos materiais a terceiros os prejuízos causados a bens de propriedade
+de terceiros, inclusive a outros veículos, edificações e bens móveis. Não se enquadram
+nesta cobertura os danos causados a bens do próprio Segurado, de seus familiares
+residentes ou de pessoas legalmente responsáveis pelo veículo, nem os danos ao veículo
+segurado, amparados pela cobertura de Casco.
+3.3 Responsabilidade Civil Facultativa por Danos Corporais (RCF-DC)
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 4 de 15
+
+===== PAGE 5 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+A cobertura de RCF-DC reembolsa as quantias pelas quais o Segurado vier a ser
+responsável civilmente por danos corporais involuntariamente causados a terceiros em
+decorrência do uso do veículo segurado, observado o limite máximo de indenização
+indicado na Tabela 1. Incluem-se despesas médico-hospitalares, indenizações por
+incapacidade e demais verbas de natureza corporal reconhecidas judicialmente ou em
+acordo autorizado.
+As coberturas de RCF-DM e RCF-DC são autônomas e possuem limites próprios, não se
+comunicando entre si. O esgotamento do limite de uma cobertura não amplia o limite da
+outra. As indenizações a terceiros observam a apuração da responsabilidade civil do
+Segurado, cabendo à Seguradora acompanhar a defesa dos interesses envolvidos.
+3.4 Danos Morais a Terceiros
+Quando expressamente contratada, a cobertura de Danos Morais a Terceiros garante o
+reembolso de indenizações por danos morais pelas quais o Segurado seja
+responsabilizado, em decorrência de evento coberto envolvendo o veículo segurado,
+observado o limite indicado na Tabela 1. A cobertura pressupõe o reconhecimento da
+responsabilidade do Segurado nos termos da lei.
+3.5 Cobertura de Vidros
+A Cobertura de Vidros, quando contratada, garante o reparo ou a substituição de vidros e
+componentes correlatos do veículo, na forma detalhada na seção de Exclusões e Regras
+Especiais. O limite e a franquia específicos desta cobertura constam da Tabela 1 e são
+próprios do Seguro Auto, não se confundindo com os de outros produtos da Seguradora.
+3.6 Carro Reserva e Assistência 24 Horas
+As coberturas de Carro Reserva e de Assistência 24 Horas, quando contratadas,
+disponibilizam serviços de mobilidade e socorro ao Segurado, conforme o número de
+diárias e o plano indicados na Tabela 1 e nas condições particulares. Tais serviços
+observam disponibilidade regional dos prestadores e não substituem as coberturas
+patrimoniais de Casco e de responsabilidade civil.
+4 Exclusões e Regras Especiais
+Não estão cobertos os danos decorrentes de dolo do Segurado, uso do veículo em
+competições, e condução por pessoa sem habilitação válida, entre outras hipóteses
+previstas nesta seção. As exclusões têm por finalidade delimitar o risco assumido pela
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 5 de 15
+
+===== PAGE 6 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+Seguradora e devem ser interpretadas em conjunto com as coberturas contratadas.
+4.1 Agravamento do Risco
+O Segurado deve comunicar previamente qualquer alteração que agrave o risco, sob pena
+de perda do direito à indenização. Consideram-se agravamento, entre outros, a alteração
+do uso declarado do veículo, a mudança do condutor principal ou do local de pernoite
+habitual, e a instalação de equipamentos que aumentem a exposição a roubo ou furto.
+Comunicado o agravamento, a Seguradora poderá, no prazo legal, manter o contrato,
+eventualmente mediante cobrança de diferença de prêmio, ou dele se retratar, mediante
+aviso escrito, observados os efeitos legais da retratação. O agravamento não comunicado
+que tenha contribuído para o sinistro pode acarretar a perda do direito à indenização.
+4.2 Cobertura de Vidros
+4.2.1 Escopo
+A Cobertura de Vidros abrange o reparo ou a substituição de para-brisas, vidros laterais,
+traseiros e, quando expressamente indicado, faróis, lanternas e retrovisores. A cobertura
+destina-se a danos súbitos e acidentais, não amparando desgaste, riscos superficiais ou
+danos preexistentes.
+4.2.1.3 Limites e reparos
+O limite da Cobertura de Vidros do Seguro Auto consta da Tabela 1. A opção por reparo,
+quando tecnicamente possível, é preferencial à substituição. A franquia específica de
+vidros consta da mesma tabela. A utilização desta cobertura, quando prevista nas
+condições particulares, não impacta a classe de bônus do Segurado.
+4.3 Exclusões Gerais
+Salvo disposição expressa em contrário nas condições particulares, estão excluídos de
+todas as coberturas os prejuízos direta ou indiretamente relacionados a:
+  - atos dolosos, fraude ou má-fé do Segurado, do condutor ou de seus beneficiários;
+  - uso do veículo em competições, provas de velocidade, apostas ou treinos, ainda que
+não oficiais;
+  - condução por pessoa sem habilitação legal ou com habilitação incompatível com a
+categoria do veículo;
+  - condução sob efeito de álcool, substâncias entorpecentes ou tóxicas, quando
+comprovada e relacionada ao sinistro;
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 6 de 15
+
+===== PAGE 7 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+  - operações de guerra, comoção civil, atos terroristas, revolução e suas consequências;
+  - danos nucleares, radioativos e de contaminação por qualquer natureza;
+  - transporte de carga em desacordo com a legislação ou com o uso declarado;
+  - desgaste natural, depreciação, defeito de fabricação, vício próprio e falta de
+manutenção;
+  - lucros cessantes, multas, fianças e despesas não expressamente cobertas.
+A relação de exclusões gerais acima não é exaustiva; outras exclusões podem constar das
+condições particulares e especiais, sempre com destaque. Em caso de dúvida sobre o
+alcance de uma exclusão, prevalece a interpretação mais favorável ao Segurado, nos
+termos da legislação de defesa do consumidor.
+4.4 Prejuízos não Indenizáveis
+Não são indenizáveis os prejuízos ocorridos fora do período de vigência, os que
+excederem os limites máximos de indenização contratados, os decorrentes de riscos não
+cobertos e os agravados por conduta do Segurado que tenha concorrido para o resultado.
+A indenização observa sempre a efetiva extensão do dano coberto, deduzidas franquia e
+eventuais salvados aproveitados.
+5 Sinistro
+O aviso de sinistro deve observar o prazo do Normativo Interno de Prazos de
+Comunicação de Sinistro (NI-014) em sua versão vigente. A regulação segue o Manual
+de Regulação de Sinistros (MAN-SIN). O Segurado deve adotar as providências ao seu
+alcance para minorar as consequências do sinistro e evitar o agravamento dos prejuízos.
+A indenização será paga em até 30 dias corridos após a entrega completa da
+documentação, ressalvadas as hipóteses de suspensão do prazo para solicitação de
+documentos complementares. A contagem do prazo observa o Manual de Regulação de
+Sinistros e a regulamentação aplicável.
+5.1 Documentos do Sinistro
+A relação de documentos varia conforme o tipo de evento e consta do Manual de
+Regulação de Sinistros. A ausência de documento essencial pode suspender o prazo de
+regulação até o saneamento da pendência. Os documentos apresentados devem ser
+legíveis e compatíveis com o evento declarado.
+5.2 Regulação do Sinistro
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 7 de 15
+
+===== PAGE 8 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+A regulação é o processo pelo qual a Seguradora apura as causas e as circunstâncias do
+sinistro, verifica a cobertura e determina o valor da indenização. A regulação pode
+incluir vistoria do veículo, análise de documentos, oitiva de envolvidos e, quando
+necessário, perícia técnica. O Segurado deve colaborar com a regulação, fornecendo as
+informações e os documentos solicitados.
+Identificados indícios de fraude, agravamento intencional do risco ou inconsistências
+relevantes, a Seguradora poderá aprofundar a apuração, hipótese em que o prazo de
+regulação pode ser suspenso, nos termos do Manual de Regulação de Sinistros. A
+conclusão da regulação resultará em deferimento, deferimento parcial ou negativa,
+sempre de forma fundamentada.
+5.3 Formas de Indenização
+A indenização poderá ser realizada, a critério técnico e conforme a natureza do dano,
+mediante reparo do veículo em oficina, reposição de peças, prestação de serviço
+equivalente ou pagamento em dinheiro. Nas indenizações por reparo, a Seguradora
+poderá indicar oficinas referenciadas, sem prejuízo do direito do Segurado de escolher
+outra oficina, observadas as condições da apólice.
+5.4 Perda Total e Salvados
+Configurada a perda total, a indenização observa o valor de mercado referenciado do
+veículo na data do sinistro, sem incidência de franquia, e os salvados passam a pertencer
+à Seguradora, que providenciará a documentação necessária à transferência. O Segurado
+deve entregar o veículo, seus documentos, chaves e acessórios, livres de ônus, como
+condição para o pagamento da indenização integral.
+5.5 Sub-rogação no Sinistro
+Paga a indenização, a Seguradora fica sub-rogada, até o limite do valor pago, nos direitos
+e ações do Segurado contra os terceiros responsáveis pelo prejuízo. O Segurado deve
+abster-se de qualquer ato que possa prejudicar esse direito e colaborar com a Seguradora
+no exercício da sub-rogação, quando solicitado.
+6 Franquia e Participação Obrigatória
+A franquia é o valor de participação obrigatória do Segurado em cada sinistro
+indenizável de determinadas coberturas, deduzido da indenização. Os valores de franquia
+constam da Tabela 1 e são detalhados no Normativo de Franquias (NI-022), que também
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 8 de 15
+
+===== PAGE 9 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+dispõe sobre eventuais isenções e reduções. A franquia incide por evento, isoladamente,
+e não se aplica às coberturas de responsabilidade civil facultativa.
+Em caso de dois ou mais eventos independentes na mesma vigência, a franquia incide em
+cada um deles. Na perda total do veículo, não há incidência de franquia, observadas as
+regras específicas da cobertura de Casco.
+7 Prêmio, Bônus e Reajuste
+7.1 Composição e Pagamento do Prêmio
+O prêmio é a contraprestação devida pelo Segurado e é calculado a partir de fatores de
+risco objetivos, como perfil do condutor, características do veículo, localização e
+histórico de sinistros. O prêmio poderá ser pago em parcela única ou de forma
+fracionada, conforme o número de parcelas e as condições previstas nas condições
+particulares da apólice.
+7.2 Bônus
+O Segurado poderá ter direito a bônus, expresso em classes, como reconhecimento pela
+ausência de sinistros indenizáveis em vigências anteriores. A classe de bônus é aplicada
+na renovação e influencia o cálculo do prêmio. A ocorrência de sinistro indenizável pode
+reduzir a classe de bônus na renovação seguinte, conforme critérios técnicos.
+7.3 Reajuste e Atualização de Valores
+Os limites máximos de indenização e as franquias podem ser atualizados monetariamente
+na renovação, conforme índice previsto na apólice. A atualização monetária não se
+confunde com o reajuste por sinistralidade, tratado em comunicado próprio da
+Seguradora. Nenhum reajuste altera as coberturas contratadas durante a vigência em
+curso.
+8 Atendimento, SAC e Ouvidoria
+A Seguradora disponibiliza canais oficiais de atendimento e Serviço de Atendimento ao
+Consumidor (SAC) para informações, dúvidas, reclamações e cancelamentos. Persistindo
+a insatisfação após o atendimento inicial, o Segurado pode recorrer à Ouvidoria,
+instância de segunda análise que atua com independência, nos prazos e na forma da
+regulamentação aplicável.
+As manifestações registradas recebem número de protocolo, que comprova a data e o
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 9 de 15
+
+===== PAGE 10 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+teor do contato. A Seguradora mantém registro das manifestações para fins de melhoria
+contínua e de atendimento às exigências regulatórias.
+9 Condutores
+A apólice indica o condutor principal, assim entendido aquele que utiliza o veículo com
+maior frequência, e pode contemplar condutores eventuais. A prestação de informações
+inexatas sobre o condutor principal ou sobre a faixa etária dos condutores habituais
+constitui agravamento do risco e pode acarretar a perda do direito à indenização, na
+forma da lei e destas Condições Gerais.
+As características do condutor principal, como idade, tempo de habilitação e histórico de
+condução, integram a análise de risco e a base de cálculo do prêmio. A inclusão, como
+condutor habitual, de pessoa com perfil diverso do declarado deve ser comunicada à
+Seguradora para reavaliação do risco e eventual ajuste de prêmio, sob pena de
+agravamento não comunicado.
+Salvo cláusula específica, a cobertura alcança condutores eventuais habilitados e
+autorizados pelo Segurado, respeitado o perfil declarado e as demais condições da
+apólice. A condução por pessoa não habilitada, ou habilitada em categoria incompatível
+com o veículo, configura hipótese de exclusão, nos termos da seção de Exclusões.
+10 Coberturas Adicionais
+Mediante contratação expressa e pagamento do prêmio correspondente, o Segurado pode
+ampliar a proteção por meio de coberturas adicionais, cujas condições específicas
+prevalecem sobre as gerais no que forem incompatíveis. As coberturas adicionais
+observam limites e franquias próprios, indicados nas condições particulares.
+São exemplos de coberturas adicionais usualmente oferecidas: Acidentes Pessoais de
+Passageiros (APP), que garante indenização por morte ou invalidez de ocupantes do
+veículo; Despesas Extraordinárias, que cobre gastos emergenciais decorrentes de sinistro
+coberto; e Proteção de Acessórios e Equipamentos, que ampara itens instalados e
+declarados. A não contratação de uma cobertura adicional implica ausência de garantia
+para o respectivo risco.
+As coberturas adicionais não ampliam automaticamente os limites das coberturas básicas
+nem alteram as exclusões gerais, salvo quando expressamente previsto. A leitura
+conjunta das coberturas básicas, adicionais e das exclusões é indispensável para a correta
+compreensão da extensão da garantia.
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 10 de 15
+
+===== PAGE 11 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+11 Inspeção e Vistoria Prévia
+A aceitação do risco pode depender de inspeção ou vistoria prévia do veículo, cujo laudo
+integra a análise de subscrição. A vistoria prévia verifica a existência, o estado de
+conservação e a preexistência de avarias do veículo, prevenindo litígios futuros quanto à
+origem dos danos.
+A recusa injustificada do Segurado em submeter o veículo à vistoria prévia, quando
+exigida, pode impedir a aceitação do risco ou restringir determinadas coberturas. As
+avarias preexistentes identificadas na vistoria são registradas e não são objeto de
+indenização em sinistros posteriores.
+12 Endossos e Alterações Contratuais
+Alterações no contrato durante a vigência, tais como inclusão ou exclusão de coberturas,
+mudança de condutor principal, alteração de uso ou substituição do veículo segurado, são
+formalizadas por endosso. O endosso pode implicar ajuste de prêmio, a maior ou a
+menor, apurado proporcionalmente ao período remanescente de vigência.
+O endosso somente produz efeitos após sua emissão e comunicação ao Segurado.
+Enquanto não formalizada a alteração, prevalecem as condições anteriormente
+contratadas. Solicitações de alteração devem ser feitas pelos canais oficiais, com a
+documentação pertinente.
+13 Reintegração da Importância Segurada
+Ocorrido sinistro parcial indenizável, a importância segurada da cobertura acionada fica
+reduzida do valor da indenização paga, pelo período remanescente de vigência, salvo
+reintegração expressamente contratada. A reintegração restabelece o limite original
+mediante pagamento de prêmio adicional proporcional.
+Na ausência de reintegração, novos sinistros na mesma cobertura observam o limite
+remanescente. O Segurado deve avaliar, com apoio do intermediário, a conveniência da
+reintegração diante do perfil de utilização do seguro.
+14 Perguntas Frequentes do Segurado
+O que fazer imediatamente após um sinistro? Preserve a segurança das pessoas, acione as
+autoridades quando cabível, registre boletim de ocorrência nos casos de roubo, furto ou
+colisão com terceiros, e comunique o sinistro à Seguradora dentro do prazo do normativo
+vigente, reunindo a documentação aplicável.
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 11 de 15
+
+===== PAGE 12 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+A indenização pode ser menor do que o valor que solicitei? Sim. A indenização observa
+o limite máximo da cobertura, a franquia aplicável e o valor efetivamente apurado do
+prejuízo. O valor solicitado pelo Segurado (reivindicado) não vincula a Seguradora, que
+indeniza conforme as Condições Gerais e a apuração da regulação.
+Posso escolher a oficina para o reparo? Sim, observadas as condições da apólice. A
+Seguradora pode indicar oficinas referenciadas, com garantia de serviço, sem prejuízo do
+direito de o Segurado optar por outra oficina, hipótese em que podem incidir condições
+específicas quanto a peças e garantia.
+O que acontece se eu atrasar o pagamento do prêmio? O não pagamento pode acarretar a
+suspensão ou o cancelamento da cobertura, observados os avisos legais. Ocorrendo
+sinistro com prêmio em atraso, a Seguradora pode deduzir da indenização as parcelas
+vencidas, até o limite do prêmio devido.
+15 Âmbito Geográfico
+As coberturas contratadas valem exclusivamente para sinistros ocorridos no território
+nacional, salvo condição particular em contrário expressamente averbada na apólice.
+Eventos ocorridos fora do âmbito geográfico contratado não geram direito à indenização,
+ainda que o aviso seja tempestivo.
+16 Comunicação entre as Partes
+As comunicações entre Segurado e Seguradora serão feitas por escrito, pelos canais
+oficiais indicados na apólice, e produzem efeito a partir do recebimento.
+É dever do Segurado manter seus dados de contato atualizados junto à Seguradora, sob
+pena de se considerarem válidas as comunicações enviadas ao último endereço
+informado.
+17 Pagamento do Prêmio
+O prêmio é a contraprestação devida pelo Segurado. O não pagamento nas datas
+acordadas pode acarretar suspensão ou cancelamento da cobertura, observados os avisos
+legais.
+Ocorrendo sinistro dentro do período de cobertura com prêmio em atraso, a Seguradora
+poderá deduzir da indenização as parcelas vencidas até o limite do prêmio devido.
+18 Atualização de Valores
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 12 de 15
+
+===== PAGE 13 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+Os limites máximos de indenização e as franquias podem ser atualizados monetariamente
+na renovação, conforme índice previsto na apólice.
+A atualização monetária dos valores não se confunde com o reajuste por sinistralidade,
+tratado em comunicado próprio.
+19 Perda de Direitos
+O Segurado perde o direito à indenização se agravar intencionalmente o risco, prestar
+declarações inexatas ou omitir circunstâncias relevantes que influam na aceitação ou no
+valor do prêmio.
+A prática de fraude ou tentativa de fraude para obter ou aumentar a indenização acarreta
+a perda de todos os direitos relativos ao sinistro.
+20 Concorrência de Apólices
+Havendo mais de uma apólice cobrindo o mesmo risco e interesse, a indenização total
+não poderá exceder o prejuízo efetivamente apurado, rateando-se entre as seguradoras.
+O Segurado deve informar a existência de outras apólices que cubram o mesmo
+interesse.
+21 Sub-rogação
+Paga a indenização, a Seguradora fica sub-rogada, até o limite do valor pago, nos direitos
+e ações do Segurado contra os responsáveis pelo prejuízo.
+O Segurado não poderá praticar ato que prejudique o direito de sub-rogação da
+Seguradora.
+22 Prescrição
+Os prazos de prescrição são os estabelecidos em lei. A contagem observa a legislação
+civil e as normas aplicáveis ao contrato de seguro.
+A recusa formal de cobertura pela Seguradora é marco relevante para a contagem de
+prazos, nos termos da lei.
+23 Cancelamento e Rescisão
+O contrato pode ser cancelado por acordo entre as partes, com devolução proporcional
+do prêmio não decorrido, observados os critérios da apólice.
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 13 de 15
+
+===== PAGE 14 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+A Seguradora poderá rescindir o contrato nas hipóteses previstas em lei e na apólice,
+mediante aviso prévio.
+24 Resolução de Conflitos
+Eventuais dúvidas ou divergências podem ser encaminhadas aos canais de atendimento e
+ouvidoria da Seguradora antes de medidas judiciais.
+Fica eleito o foro do domicílio do Segurado para dirimir controvérsias oriundas deste
+contrato.
+25 Proteção de Dados Pessoais
+O tratamento de dados pessoais do Segurado observa a Política de Privacidade
+(POL-LGPD) e a legislação de proteção de dados.
+Dados pessoais coletados para fins de subscrição e regulação não serão divulgados a
+terceiros nem expostos em respostas de sistemas, salvo obrigação legal.
+26 Anexo I - Guia Rápido do Segurado em Caso de Sinistro
+Este anexo resume, em linguagem simples, as orientações práticas ao Segurado diante de
+um sinistro. Ele não substitui as cláusulas contratuais; em caso de divergência,
+prevalecem as disposições das seções anteriores e das condições particulares.
+Passo 1 - Garanta a segurança. Priorize a integridade das pessoas envolvidas. Sinalize o
+local, acione socorro médico se necessário e evite expor-se a novos riscos. A preservação
+da vida e da segurança vem antes de qualquer providência relativa ao seguro.
+Passo 2 - Acione as autoridades quando cabível. Em casos de roubo, furto, colisão com
+terceiros ou vítimas, registre boletim de ocorrência. O documento é essencial para a
+regulação e comprova as circunstâncias do evento.
+Passo 3 - Comunique o sinistro no prazo. Avise a Seguradora pelos canais oficiais dentro
+do prazo do normativo vigente, guardando o número de protocolo. A comunicação
+tempestiva evita discussões sobre eventual prejuízo à regulação.
+Passo 4 - Reúna a documentação. Separe os documentos aplicáveis ao tipo de evento,
+conforme orientação da Seguradora. A entrega completa da documentação inicia a
+contagem do prazo de regulação e agiliza a decisão.
+Passo 5 - Acompanhe a regulação. Utilize o número do sinistro para acompanhar o
+andamento. Em caso de dúvida sobre a decisão, procure os canais de atendimento e, se
+necessário, a Ouvidoria. Lembre-se de que a indenização observa o limite da cobertura e
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 14 de 15
+
+===== PAGE 15 =====
+Indicium InsurCo
+CG-AUTO-2024 v3.2
+USO INTERNO - documento controlado
+Vigência: 2024-01-01
+a franquia, podendo diferir do valor solicitado.
+CG-AUTO-2024 v3.2 - Indicium InsurCo - Uso interno
+Página 15 de 15

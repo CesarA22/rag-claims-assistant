@@ -1,0 +1,82 @@
+---
+description: Claims database tool — no generated SQL, PII excluded, the two semantic traps
+globs: app/tools/**
+---
+
+# Tools layer — the claims database (`claims.db`)
+
+SQLite, read-only, 4 tables: `policyholders` (3200), `policies` (4200),
+`claims` (10000), `payments` (5369). Connection MUST be
+`sqlite3.connect("file:claims.db?mode=ro", uri=True)`. This is the CLIENT'S
+system of record: never written to, never migrated, never "cleaned up".
+
+## The model NEVER writes SQL
+
+Only named entries in a `QUERIES` registry, each with an explicit column
+projection and a hard LIMIT. Never a dynamic query builder, never string
+interpolation into SQL, never `text()` with an f-string, never a "just this
+once" free-form query tool.
+
+Reasons: injection surface; unbounded scans against an 8 s latency budget;
+auditability (a citation reads `claims.get_claim_payment(claim_number=
+"SIN-2025-004512")`, which a generated query cannot); and testability.
+
+## The query set
+
+```
+get_claim(claim_number)             claim_type, status, dates, claim_amount,
+                                    product, policy_number
+get_claim_payment(claim_number)     paid_amount, payment_date, payment_type
+                                    [JOIN payments] — the ONLY source for "paid"
+list_claims_by_policy(policy_number, limit<=20)
+claims_summary(product?, claim_type?, date_from?, date_to?)
+                                    count, sum/avg(paid_amount) [JOIN payments]
+get_policy(policy_number)           product, dates, status, annual_premium
+count_claims(product?, claim_type?, status?, dates?)
+```
+
+Validate parameters strictly: an unknown query name or a bad parameter is
+rejected before touching the database, and that rejection is tested.
+Every result carries the query name and bound parameters for the citation.
+
+## Two semantic traps — both are tested
+
+**1. `claims.claim_amount` is the amount CLAIMED, not paid.** The paid figure
+is `payments.paid_amount`. Across the database: claimed R$ 742,810,745.82 vs
+paid R$ 287,169,468.19 — a 159% error if confused. `get_claim` MUST return this
+field with an explicit label ("valor reivindicado pelo segurado, antes da
+regulação"), because a bare number invites the model to reproduce exactly the
+confusion the data dictionary warns about.
+
+**2. `status = 'Pago'` is NOT how you find paid claims.** The data dictionary's
+consistency note omits `Pago parcial` (772 rows), which DOES have payments.
+Statuses are: Aberto, Em regulação, Negado, Pago (4597), Pago parcial (772).
+`WHERE status='Pago'` undercounts by 13.9% (614 vs 713 fire claims).
+**Never express "paid" as a status literal — always JOIN `payments`.**
+
+## PII is excluded at the query layer
+
+Every projection MUST exclude `policyholders.name`, `.cpf`, `.phone`,
+`.email`. The model must never RECEIVE a personal identifier, so it cannot
+leak one. `city`, `state` and `birth_date` are also not returned by default.
+`app/safety/redact.py` runs a second regex pass over the final answer; a match
+there means a hole upstream, so FAIL the turn rather than silently masking.
+
+Note that PII also exists in the CORPUS (`ATA-COM-2025-04`), so this layer
+alone is not sufficient — see `15-retrieval.mdc`.
+
+## The corpus governs rules; the database reports facts
+
+Never derive a rule from the data. The synthetic data honours some corpus
+rules and not others: RCF-DM is correctly capped at R$ 100,000 (0 rows above),
+but glass payments reach R$ 85,869 against a stated R$ 5,000 limit, and the
+Danos Elétricos deductible is not modelled consistently.
+
+"Qual o limite de vidros no Auto?" → R$ 5.000,00, from CG-AUTO Tabela 1.
+"Qual o maior valor pago em vidros?" → a database question.
+Blending the two produces a confident, wrong, unauditable answer.
+
+Showcase case for the walkthrough: `SIN-2025-004512` — RCF-DM, claimed
+R$ 120,000, paid R$ 100,000, exactly the CG-AUTO cap. It appears in the data
+dictionary, the committee minutes and the database at once. An answer citing
+the payment AND the clause that capped it is the best demonstration in the kit.

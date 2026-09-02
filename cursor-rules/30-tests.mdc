@@ -1,0 +1,70 @@
+---
+description: Test isolation, naming and the failure-flow requirement
+globs: tests/**, evals/**
+---
+
+# Tests and evals
+
+## Never call a real API
+
+Use `app/llm/fake.py`. The suite must pass with sockets disabled:
+`pytest --disable-socket -q`. This is wired into CI — it is the mechanical
+proof that the external dependency is isolated, which the brief explicitly
+asks us to demonstrate.
+
+The single exception is one `respx` transport-level test proving the real
+adapter maps 429 and 500 to the right domain errors. That test mocks the
+transport; it still opens no socket.
+
+## Time is not real here
+
+A timeout test raises the timeout immediately. Never `sleep`. Never assert on
+wall-clock duration. Backoff delays are injected, not waited on.
+
+## Naming and traceability
+
+Every test docstring names the requirement it covers (R-01 … R-07) and its
+test ID (T-01 … T-15) from docs/requirements.yaml. `scripts/traceability.py`
+reads these; a requirement with no test fails the check in CI.
+
+## Required coverage — do not ship without these
+
+- T-05 timeout → typed error, retry attempted, user-safe message (MANDATORY,
+  the brief requires at least one failure-flow test)
+- T-06 three failures → exactly two retries, then degrade
+- T-07 a 400 → zero retries
+- T-08 breaker opens, provider not called again
+- T-09 provider down + retrieval up → excerpts with citations
+- T-10 error payloads contain no model name, prompt or traceback
+- T-03 invented citation ID → forced refusal
+- T-04 claims row with a CPF → value absent from the response
+- T-16 **topically related but non-answering evidence → refuse** (gs-008).
+  This is the one that matters. "Retrieval returned nothing → refuse" is
+  necessary but NOT sufficient: for the real refusal case retrieval returns
+  five confident chunks. Feed the fake five on-topic premium chunks and assert
+  a refusal with no invented percentage.
+- T-17 **ambiguous question → needs_clarification** (gs-009). A single
+  unqualified number FAILS even when correct and well cited.
+- T-18 **corpus PII → refuse** (gs-010). The committee minutes are legitimately
+  retrieved; assert no CPF pattern and none of the five names in the response.
+
+Fifteen focused tests, each mapped to a requirement. Not sixty. Coverage
+theatre reads as padding.
+
+## Evals — four tiers, do not collapse them
+
+- Tier 0 `evals/retrieval.py` — recall@k and MRR against `expected_source`.
+  No model, free, deterministic. Gates at recall@5 >= 0.90 in CI.
+- Tier 1 `tests/pipeline/` — cassette replay of recorded provider responses,
+  keyed on sha256 of (model + messages + tools). Deterministic regression over
+  the full pipeline. A prompt change invalidates cassettes — that failure is
+  correct behaviour, re-record deliberately.
+- Tier 2 `evals/run_golden.py` — live API, the 10 golden cases plus 5 authored.
+  Produces EVALS.md. Run three times, report variance.
+- Tier 3 `evals/boundary.py` — adversarial, pass/fail, blocks submission:
+  PII bait, prompt injection planted in a chunk, instruction override,
+  out-of-scope, absent-answer, stale-version trap, cross-product trap,
+  citation forgery, concurrency.
+
+Thresholds are fixed BEFORE the first run and never revised after seeing
+results. Report misses with a diagnosis rather than moving the line.
