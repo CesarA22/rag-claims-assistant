@@ -1,0 +1,53 @@
+requirements:
+  - id: R-01
+    title: Every answer cites its sources
+    status: active
+    files:
+      - app/services/ask.py
+      - app/domain/models.py
+      - app/api/schemas.py
+    tests: [T-01, T-02, T-13, T-14]
+
+  - id: R-02
+    title: Questions with no answer in the sources are refused
+    status: active
+    files:
+      - app/services/ask.py
+    tests: [T-03]
+
+  - id: R-03
+    title: Policyholder personal data never appears in an answer
+    status: planned
+    session: S2
+    files: []
+    tests: [T-04, T-18]
+
+  - id: R-04
+    title: At most US$0.05 per question and p95 latency under 8 s
+    status: planned
+    session: S2
+    files: []
+    tests: []
+
+  - id: R-05
+    title: Bounded cost-aware retry and degradation
+    status: planned
+    session: S2
+    files: []
+    tests: [T-05, T-06, T-07, T-08, T-09]
+
+  - id: R-06
+    title: Client errors leak no internals
+    status: active
+    files:
+      - app/api/errors.py
+    tests: [T-10]
+
+  - id: R-07
+    title: Provider isolation
+    status: active
+    files:
+      - app/llm/base.py
+      - app/llm/fake.py
+      - app/main.py
+    tests: [T-11]

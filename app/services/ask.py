@@ -16,7 +16,7 @@ from app.domain.models import (
     Turn,
     TurnStatus,
 )
-from app.llm.base import Completion, LLMProvider, Message, Usage
+from app.llm.base import Completion, LLMProvider, Message
 from app.retrieval.base import Retriever
 from app.storage.base import ConversationRepository
 
