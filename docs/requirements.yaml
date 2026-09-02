@@ -61,3 +61,13 @@ requirements:
       - app/retrieval/ingest.py
       - app/safety/redact.py
     tests: [T-15]
+
+  - id: R-09
+    title: Hybrid retrieval with precedence filters
+    status: active
+    files:
+      - app/retrieval/hybrid.py
+      - app/retrieval/embeddings.py
+      - app/storage/db.py
+      - evals/retrieval_baseline.py
+    tests: [T-19]

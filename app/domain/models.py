@@ -8,6 +8,7 @@ TurnStatus = Literal[
     "pending", "answered", "refused", "needs_clarification", "failed"
 ]
 Product = Literal["Auto", "Residencial", "Empresarial", "All"]
+DocRole = Literal["normative", "pointer", "minutes", "glossary"]
 
 
 class Evidence(BaseModel):
@@ -21,6 +22,8 @@ class Evidence(BaseModel):
     text: str
     superseded: bool = False
     source_kind: Literal["corpus", "claims"] = "corpus"
+    doc_role: DocRole = "normative"
+    contains_pii: bool = False
 
 
 class Citation(BaseModel):

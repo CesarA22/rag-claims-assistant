@@ -1,11 +1,10 @@
-"""Ingest the InsurCo corpus. Steps 1–5 of `.cursor/rules/15-retrieval.mdc`.
-
-Step 6 (embed + to_tsvector) lands in S3. This module's only IO is reading PDFs.
-"""
+"""Ingest the InsurCo corpus. Steps 1–6 of `.cursor/rules/15-retrieval.mdc`."""
 
 from __future__ import annotations
 
 import argparse
+import asyncio
+import os
 import re
 import sys
 import warnings
@@ -15,6 +14,7 @@ from pathlib import Path
 from typing import Literal
 
 import pymupdf
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from app.domain.models import Product
@@ -589,22 +589,116 @@ def report(docs: list[DocumentIngest]) -> str:
     return "\n".join(rows)
 
 
+_UPSERT = """
+INSERT INTO chunks (
+  id, document_code, document_title, section, version, effective_date,
+  product, doc_role, chunk_kind, text, superseded, contains_pii, pii_kinds,
+  caption, footnotes, page_from, page_to, embedding
+) VALUES (
+  $1, $2, $3, $4, $5, $6,
+  $7, $8, $9, $10, $11, $12, $13,
+  $14, $15, $16, $17, $18
+)
+ON CONFLICT (id) DO UPDATE SET
+  document_code = EXCLUDED.document_code,
+  document_title = EXCLUDED.document_title,
+  section = EXCLUDED.section,
+  version = EXCLUDED.version,
+  effective_date = EXCLUDED.effective_date,
+  product = EXCLUDED.product,
+  doc_role = EXCLUDED.doc_role,
+  chunk_kind = EXCLUDED.chunk_kind,
+  text = EXCLUDED.text,
+  superseded = EXCLUDED.superseded,
+  contains_pii = EXCLUDED.contains_pii,
+  pii_kinds = EXCLUDED.pii_kinds,
+  caption = EXCLUDED.caption,
+  footnotes = EXCLUDED.footnotes,
+  page_from = EXCLUDED.page_from,
+  page_to = EXCLUDED.page_to,
+  embedding = COALESCE(EXCLUDED.embedding, chunks.embedding)
+"""
+
+
+async def write_index(
+    docs: list[DocumentIngest],
+    *,
+    embed: bool,
+) -> tuple[int, int]:
+    from app.llm.openai_provider import EMBED_MODEL
+    from app.retrieval.embeddings import EmbeddingCache
+    from app.storage.db import connect
+
+    chunks = [chunk for doc in docs for chunk in doc.chunks]
+    if embed:
+        cache = EmbeddingCache(model=os.getenv("EMBED_MODEL", EMBED_MODEL))
+        vectors: list[list[float] | None] = await cache.embed(
+            [chunk.text for chunk in chunks]
+        )
+        embedded = len(vectors)
+    else:
+        vectors = [None] * len(chunks)
+        embedded = 0
+
+    records = [
+        (
+            chunk.id,
+            chunk.document_code,
+            chunk.document_title,
+            chunk.section,
+            chunk.version,
+            chunk.effective_date,
+            chunk.product,
+            chunk.doc_role,
+            chunk.chunk_kind,
+            chunk.text,
+            chunk.superseded,
+            chunk.contains_pii,
+            chunk.pii_kinds,
+            chunk.caption,
+            chunk.footnotes,
+            chunk.page_from,
+            chunk.page_to,
+            vector,
+        )
+        for chunk, vector in zip(chunks, vectors, strict=True)
+    ]
+    async with connect() as pool:
+        async with pool.acquire() as conn:
+            async with conn.transaction():
+                await conn.executemany(_UPSERT, records)
+    return len(chunks), embedded
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Ingest data/corpus/*.pdf (steps 1–5).")
+    load_dotenv()
+    parser = argparse.ArgumentParser(
+        description="Ingest data/corpus/*.pdf and upsert into Postgres (write is the default)."
+    )
     parser.add_argument("corpus", nargs="?", default="data/corpus", type=Path)
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Print the report and write nothing. The only mode in S2.",
+        help="Print the report and write nothing.",
+    )
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        default=True,
+        help="Upsert chunks into Postgres. Default; ignored with --dry-run.",
+    )
+    parser.add_argument(
+        "--no-embed",
+        action="store_true",
+        help="Store NULL embeddings. Lexical search still works; vector arm is skipped.",
     )
     args = parser.parse_args(argv)
     docs = ingest_corpus(args.corpus)
     print(report(docs))
-    if not args.dry_run:
-        print(
-            "index write is S3; rerun with --dry-run. Nothing was stored.",
-            file=sys.stderr,
-        )
+    if args.dry_run:
+        return 0
+    n_chunks, n_embedded = asyncio.run(write_index(docs, embed=not args.no_embed))
+    print(f"wrote {n_chunks} chunks ({n_embedded} embedded)", file=sys.stderr)
     return 0
 
 

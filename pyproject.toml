@@ -12,6 +12,10 @@ dependencies = [
     "uvicorn[standard]>=0.32",
     "pydantic>=2.9",
     "pymupdf>=1.24",
+    "asyncpg>=0.30",
+    "pgvector>=0.3",
+    "openai>=1.50",
+    "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]
@@ -35,4 +39,13 @@ testpaths = ["tests"]
 pythonpath = ["."]
 # Windows asyncio needs a localhost socketpair to build the event loop.
 # Outbound hosts (the OpenAI API) stay blocked.
-addopts = ["--disable-socket", "--allow-unix-socket", "--allow-hosts=127.0.0.1,::1"]
+addopts = [
+    "--disable-socket",
+    "--allow-unix-socket",
+    "--allow-hosts=127.0.0.1,::1",
+    "-m",
+    "not db",
+]
+markers = [
+    "db: talks to Postgres; excluded from the default socket-disabled run",
+]

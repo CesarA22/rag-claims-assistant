@@ -51,3 +51,41 @@ chunks therefore also blank any column whose header matches
 `Segurado|Nome|CPF|Telefone|E-?mail`. All thirteen table headers were checked:
 exactly one matches (`['Sinistro','Segurado','CPF','Telefone','Status']`).
 The rule cannot quietly eat a `Cobertura` column.
+
+## S3 — retrieval
+
+### OR the Portuguese tsquery
+
+`plainto_tsquery` ANDs every lexeme. It is not a BM25 substitute. Against this
+corpus, 7 of 10 golden questions return zero rows under AND semantics.
+`replace(plainto_tsquery('portuguese', q)::text, '&', '|')::tsquery` ORs the
+lexemes and lets `ts_rank_cd` rank, which is the partial-overlap behaviour
+that produced the 100% BM25 baseline. `websearch_to_tsquery` also ANDs bare
+terms and does not fix this.
+
+### `ts_rank_cd` normalization 32
+
+Default is 0 — no length normalization, so long chunks win on term count.
+BM25 had `b=0.75`. `ts_rank_cd(tsv, q, 32)` is `rank/(rank+1)`, the usual
+choice that keeps the lexical arm comparable to the baseline it is measured
+against.
+
+### `rrf_k = 15`, not 60
+
+The paper's 60 is tuned for large candidate pools. With 50 candidates from
+~200 chunks, ranks 1 and 50 differ by less than 2× at k=60, so fusion barely
+discriminates and the Python role boost (0.70–1.00) would dominate it. At
+k=15 the same ranks differ by ~4×.
+
+### `exclude_pii=False` by default
+
+Identifiers are redacted at ingest. `gs-010` expects `ATA-COM-2025-04` back;
+excluding PII chunks by default would silently zero a graded case. The flag
+exists for questions that should not retrieve the minutes at all.
+
+### Cache miss raises, never embeds zeros
+
+`--no-embed` stores NULL. A disk-cache miss with no `OPENAI_API_KEY` raises
+`MissingEmbeddingError`. Either path is loud; a zero vector would make
+pgvector return NaN and corrupt RRF silently.
+

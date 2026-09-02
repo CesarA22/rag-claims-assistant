@@ -23,8 +23,8 @@ wall-clock duration. Backoff delays are injected, not waited on.
 
 ## Naming and traceability
 
-Every test docstring names the requirement it covers (R-01 … R-08) and its
-test ID (T-01 … T-15) from docs/requirements.yaml. `scripts/traceability.py`
+Every test docstring names the requirement it covers (R-01 … R-09) and its
+test ID (T-01 … T-19) from docs/requirements.yaml. `scripts/traceability.py`
 reads these; a requirement with no test fails the check in CI.
 
 ## Required coverage — do not ship without these
