@@ -17,6 +17,10 @@ If a task seems to need the SDK elsewhere, the answer is a method on
   `InvalidRequest`) and SDK usage to our `Usage` object. No policy lives here.
 - `resilient.py` — the decorator holding ALL policy: timeout budget, selective
   bounded retry, circuit breaker, degradation. Everything above it is oblivious.
+  `timeout_s` on `LLMProvider.complete` is owned here: only the decorator
+  computes remaining budget and passes a deadline down. `ask.py` (and anything
+  else above the decorator) must never pass `timeout_s` — if it does, budget
+  policy has leaked into the pipeline and the seam is cosmetic.
 - `fake.py` — scriptable double for tests. Queue holds responses or exceptions.
 - `chaos.py` — deliberate failure injection driven by env vars
   (`CHAOS_TIMEOUT_RATE`, `CHAOS_500_RATE`, `CHAOS_LATENCY_MS`). Used for the
