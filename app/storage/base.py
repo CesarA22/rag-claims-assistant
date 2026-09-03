@@ -32,6 +32,10 @@ class ConversationRepository(Protocol):
         usage: Usage,
         latency_ms: int,
         model: str = "",
+        *,
+        cost_usd: float = 0.0,
+        degraded: bool = False,
+        reason: str | None = None,
     ) -> Turn: ...
 
     async def fail_turn(self, turn: Turn, error_code: str) -> Turn: ...

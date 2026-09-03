@@ -74,6 +74,10 @@ class InMemoryConversationRepository:
         usage: Usage,
         latency_ms: int,
         model: str = "",
+        *,
+        cost_usd: float = 0.0,
+        degraded: bool = False,
+        reason: str | None = None,
     ) -> Turn:
         updated = turn.model_copy(
             update={
@@ -84,6 +88,9 @@ class InMemoryConversationRepository:
                 "prompt_tokens": usage.prompt_tokens,
                 "cached_prompt_tokens": usage.cached_prompt_tokens,
                 "completion_tokens": usage.completion_tokens,
+                "cost_usd": cost_usd,
+                "degraded": degraded,
+                "reason": reason,
             }
         )
         self._store(updated)

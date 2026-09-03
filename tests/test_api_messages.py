@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 
 from httpx import AsyncClient
 
@@ -83,19 +84,25 @@ async def test_in_flight_duplicate_returns_pending(llm: FakeProvider):
 
 
 async def test_provider_failure_is_problem_json_and_persists_failed(
-    client: AsyncClient, llm: FakeProvider, repo: InMemoryConversationRepository
+    client: AsyncClient, llm: FakeProvider, repo: InMemoryConversationRepository, caplog
 ):
     """T-10 / R-06: provider failure is problem+json with a trace_id and no internals."""
     leak = (
         "openai gpt-5.4-mini failed; prompt=You are an internal assistant; "
         "traceback: File app/llm/openai_provider.py line 1"
     )
-    llm.enqueue(ProviderUnavailable(leak))
-
-    response = await client.post(
-        PATH,
-        json={"content": VIGENCIA, "client_message_id": "cm-fail"},
+    llm.enqueue(
+        ProviderUnavailable(
+            leak,
+            context={"model": "gpt-5.4-mini", "prompt": "You are an internal assistant"},
+        )
     )
+
+    with caplog.at_level(logging.WARNING):
+        response = await client.post(
+            PATH,
+            json={"content": VIGENCIA, "client_message_id": "cm-fail"},
+        )
     assert response.status_code == 503
     assert response.headers["content-type"].startswith("application/problem+json")
     body = response.json()
@@ -110,6 +117,9 @@ async def test_provider_failure_is_problem_json_and_persists_failed(
     assert "prompt" not in dumped
     assert "traceback" not in dumped
     assert "you are an internal assistant" not in dumped
+
+    assert "gpt-5.4-mini" in caplog.text
+    assert "You are an internal assistant" in caplog.text
 
     turn = repo.get_turn("c-1", "cm-fail")
     assert turn is not None

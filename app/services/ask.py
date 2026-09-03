@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import time
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError
 
-from app.domain.errors import InsurCoError
+from app.domain.errors import CircuitOpen, InsurCoError, ProviderDegraded
 from app.domain.models import (
     Answer,
     Citation,
@@ -16,8 +17,9 @@ from app.domain.models import (
     Turn,
     TurnStatus,
 )
-from app.llm.base import Completion, LLMProvider, Message
+from app.llm.base import Completion, LLMProvider, Message, Usage
 from app.retrieval.base import Retriever
+from app.services.budget import current_budget
 from app.storage.base import ConversationRepository
 
 _PROMPTS = Path(__file__).resolve().parents[1] / "llm" / "prompts"
@@ -45,6 +47,9 @@ DRAFT_SCHEMA: dict[str, Any] = {
 _CITATION_REFUSAL = (
     "Não foi possível validar as citações da resposta. "
     "As fontes recuperadas não sustentam o que foi gerado."
+)
+_DEGRADED_BANNER = (
+    "Não foi possível gerar um resumo. Seguem os trechos recuperados das fontes."
 )
 
 
@@ -74,6 +79,7 @@ class AskResult(BaseModel):
     cached_prompt_tokens: int = 0
     completion_tokens: int = 0
     degraded: bool = False
+    reason: str | None = None
 
 
 def _system_prompt() -> str:
@@ -115,6 +121,14 @@ def validate_citations(draft: Draft, evidence: list[Evidence]) -> Answer:
     if not citations:
         return Answer(outcome="refused", text=_CITATION_REFUSAL, citations=[])
     return Answer(outcome="answered", text=draft.answer, citations=citations)
+
+
+def excerpts_answer(evidence: list[Evidence]) -> Answer:
+    return Answer(
+        outcome="answered",
+        text=_DEGRADED_BANNER,
+        citations=[citation_from_evidence(item) for item in evidence],
+    )
 
 
 def build_messages(
@@ -172,6 +186,9 @@ def _from_turn(turn: Turn, *, trace_id: str, provider: str) -> AskResult:
         prompt_tokens=turn.prompt_tokens,
         cached_prompt_tokens=turn.cached_prompt_tokens,
         completion_tokens=turn.completion_tokens,
+        cost_usd=turn.cost_usd,
+        degraded=turn.degraded,
+        reason=turn.reason,
     )
 
 
@@ -208,22 +225,47 @@ async def ask(
         return _pending(begun.turn, trace_id=trace_id, provider=provider_name)
 
     turn = begun.turn
+    evidence: list[Evidence] = []
+    spent_usd = 0.0
+    budget_cm = (
+        llm.start_question() if hasattr(llm, "start_question") else nullcontext()
+    )
     try:
-        history = await repo.recent_messages(conversation_id)
-        evidence = await retriever.search(content)
-        messages = build_messages(history, evidence, content)
-        completion = await llm.complete(messages, schema=DRAFT_SCHEMA)
-        draft = _parse_draft(completion)
-        answer = validate_citations(draft, evidence)
-        latency_ms = int((time.perf_counter() - started) * 1000)
-        turn = await repo.complete_turn(
-            turn,
-            answer,
-            completion.usage,
-            latency_ms,
-            model=completion.model,
-        )
-        return _from_turn(turn, trace_id=trace_id, provider=provider_name)
+        with budget_cm:
+            history = await repo.recent_messages(conversation_id)
+            evidence = await retriever.search(content)
+            messages = build_messages(history, evidence, content)
+            completion = await llm.complete(messages, schema=DRAFT_SCHEMA)
+            spent = current_budget()
+            if spent is not None:
+                spent_usd = spent.spent_usd
+            draft = _parse_draft(completion)
+            answer = validate_citations(draft, evidence)
+            latency_ms = int((time.perf_counter() - started) * 1000)
+            turn = await repo.complete_turn(
+                turn,
+                answer,
+                completion.usage,
+                latency_ms,
+                model=completion.model,
+                cost_usd=spent_usd,
+            )
+            return _from_turn(turn, trace_id=trace_id, provider=provider_name)
+    except (ProviderDegraded, CircuitOpen) as exc:
+        if evidence:
+            latency_ms = int((time.perf_counter() - started) * 1000)
+            turn = await repo.complete_turn(
+                turn,
+                excerpts_answer(evidence),
+                Usage(),
+                latency_ms,
+                cost_usd=spent_usd,
+                degraded=True,
+                reason=exc.code,
+            )
+            return _from_turn(turn, trace_id=trace_id, provider=provider_name)
+        await repo.fail_turn(turn, exc.code)
+        raise
     except InsurCoError as exc:
         await repo.fail_turn(turn, exc.code)
         raise

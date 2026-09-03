@@ -34,6 +34,21 @@ class MetaOut(BaseModel):
     cost_usd: float
     usage: UsageOut
     degraded: bool = False
+    reason: str | None = None
+
+
+class BreakerOut(BaseModel):
+    state: str
+    consecutive_failures: int
+    opened_at: float | None = None
+    reset_in_s: float = 0.0
+
+
+class HealthOut(BaseModel):
+    status: str
+    breaker: BreakerOut
+    provider: str
+    degraded_since: float | None = None
 
 
 class AnswerEnvelope(BaseModel):

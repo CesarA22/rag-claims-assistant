@@ -1,9 +1,44 @@
 from fastapi import APIRouter, Request
 
-from app.api.schemas import AnswerEnvelope, CitationOut, MessageRequest, MetaOut, UsageOut
+from app.api.schemas import (
+    AnswerEnvelope,
+    BreakerOut,
+    CitationOut,
+    HealthOut,
+    MessageRequest,
+    MetaOut,
+    UsageOut,
+)
 from app.services.ask import AskResult, ask
 
 router = APIRouter()
+
+
+@router.get("/healthz", response_model=HealthOut)
+async def healthz(request: Request) -> HealthOut:
+    llm = request.app.state.llm
+    breaker = getattr(llm, "breaker", None)
+    if breaker is None:
+        snapshot = {
+            "state": "closed",
+            "consecutive_failures": 0,
+            "opened_at": None,
+            "reset_in_s": 0.0,
+        }
+    else:
+        snapshot = breaker.snapshot()
+    status = "ok" if snapshot["state"] == "closed" else "degraded"
+    return HealthOut(
+        status=status,
+        breaker=BreakerOut(
+            state=snapshot["state"],
+            consecutive_failures=snapshot["consecutive_failures"],
+            opened_at=snapshot["opened_at"],
+            reset_in_s=snapshot["reset_in_s"],
+        ),
+        provider=request.app.state.provider_name,
+        degraded_since=snapshot["opened_at"],
+    )
 
 
 @router.post(
@@ -58,5 +93,6 @@ def _to_envelope(result: AskResult) -> AnswerEnvelope:
                 completion_tokens=result.completion_tokens,
             ),
             degraded=result.degraded,
+            reason=result.reason,
         ),
     )

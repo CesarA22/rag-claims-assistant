@@ -60,3 +60,6 @@ class Turn(BaseModel):
     prompt_tokens: int = 0
     cached_prompt_tokens: int = 0
     completion_tokens: int = 0
+    cost_usd: float = 0.0
+    degraded: bool = False
+    reason: str | None = None
