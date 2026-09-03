@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from app.retrieval.ingest import DocumentIngest, _norm, ingest_corpus
+from app.safety.redact import scan
 
 CORPUS = Path(__file__).resolve().parents[1] / "data" / "corpus"
 
@@ -95,6 +96,27 @@ def assert_gs009_vidros_both_products(docs: list[DocumentIngest]) -> None:
     assert "3.000" in res
 
 
+def assert_ni022_one_table_with_lightning_note(docs: list[DocumentIngest]) -> None:
+    ni = _by_code(docs, "NI-022", "1.3")
+    tables = [chunk for chunk in ni.chunks if chunk.chunk_kind == "table"]
+    assert len(tables) == 1
+    blob = tables[0].text + "\n" + "\n".join(tables[0].footnotes)
+    assert "descarga atmosf" in blob.lower()
+
+
+def assert_cg_auto_one_coverage_table(docs: list[DocumentIngest]) -> None:
+    auto = _by_code(docs, "CG-AUTO-2024", "3.2")
+    tables = [chunk for chunk in auto.chunks if chunk.chunk_kind == "table"]
+    assert len(tables) == 1
+
+
+def assert_ata_table_flagged_but_scan_clean(docs: list[DocumentIngest]) -> None:
+    ata = _by_code(docs, "ATA-COM-2025-04", "final")
+    table = next(chunk for chunk in ata.chunks if chunk.chunk_kind == "table")
+    assert table.contains_pii
+    assert scan(table.text) == set()
+
+
 CASES: dict[str, Callable[[list[DocumentIngest]], None]] = {
     "thirteen_tables_no_ladder": assert_thirteen_tables_no_ladder,
     "ni022_note_three_only": assert_ni022_note_three_only,
@@ -103,6 +125,9 @@ CASES: dict[str, Callable[[list[DocumentIngest]], None]] = {
     "boilerplate_stripped": assert_boilerplate_stripped,
     "gs004_rcf_rows_together": assert_gs004_rcf_rows_together,
     "gs009_vidros_both_products": assert_gs009_vidros_both_products,
+    "ni022_one_table_with_lightning_note": assert_ni022_one_table_with_lightning_note,
+    "cg_auto_one_coverage_table": assert_cg_auto_one_coverage_table,
+    "ata_table_flagged_but_scan_clean": assert_ata_table_flagged_but_scan_clean,
 }
 
 
