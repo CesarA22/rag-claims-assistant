@@ -8,7 +8,7 @@ TurnStatus = Literal[
     "pending", "answered", "refused", "needs_clarification", "failed"
 ]
 Product = Literal["Auto", "Residencial", "Empresarial", "All"]
-DocRole = Literal["normative", "pointer", "minutes", "glossary"]
+DocRole = Literal["normative", "pointer", "minutes", "glossary", "database"]
 
 
 class Evidence(BaseModel):
