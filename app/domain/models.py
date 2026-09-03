@@ -56,6 +56,7 @@ class Turn(BaseModel):
     answer: Answer | None = None
     error_code: str | None = None
     model: str = ""
+    prompt_version: str = ""
     latency_ms: int = 0
     prompt_tokens: int = 0
     cached_prompt_tokens: int = 0

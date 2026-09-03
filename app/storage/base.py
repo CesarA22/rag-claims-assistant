@@ -12,11 +12,25 @@ class BeginTurnResult(BaseModel):
 
 
 class ConversationRepository(Protocol):
+    async def history(self, conversation_id: str) -> list[Turn]:
+        """Every turn, oldest first, including failed and pending.
+
+        Distinct from recent_messages on purpose. This renders for a human, so
+        it shows a failure with its error_code and a turn still running. That is
+        why `failed` has been in TurnStatus since S1.
+        """
+        ...
+
     async def recent_messages(
         self,
         conversation_id: str,
         token_budget: int = 2000,
-    ) -> list[HistoryMessage]: ...
+    ) -> list[HistoryMessage]:
+        """Context for the model. Excludes failed and pending turns — a failure
+        is not a conversational turn, and replaying one invites the model to
+        apologise for an error the analyst never saw.
+        """
+        ...
 
     async def begin_turn(
         self,
@@ -34,6 +48,7 @@ class ConversationRepository(Protocol):
         model: str = "",
         *,
         cost_usd: float = 0.0,
+        prompt_version: str = "",
         degraded: bool = False,
         reason: str | None = None,
     ) -> Turn: ...

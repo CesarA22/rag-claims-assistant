@@ -14,8 +14,6 @@ from __future__ import annotations
 import re
 from datetime import date
 
-import pytest
-
 from app.domain.models import Evidence
 from app.llm.fake import FakeProvider
 from app.retrieval.memory import InMemoryRetriever
@@ -184,11 +182,6 @@ async def _ask(llm: FakeProvider, content: str, chunks: list[Evidence]):
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="R-02: no sufficiency gate in ask.py — validate_citations honours the "
-    "draft outcome whenever cited ids resolve. Owed by S6b.",
-)
 async def test_on_topic_non_answering_evidence_is_refused():
     """T-16 / R-02: five confident premium chunks that do not answer → refusal, no invented percentage."""
     retriever = InMemoryRetriever(PREMIUM_CHUNKS)
@@ -208,11 +201,6 @@ async def test_on_topic_non_answering_evidence_is_refused():
     assert "5%" not in answer
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="R-02: no ambiguity gate in ask.py — nothing compares Evidence.product "
-    "across the retrieved set. Owed by S6b.",
-)
 async def test_ambiguous_question_needs_clarification():
     """T-17 / R-02: a correct, well-cited single number FAILS when the evidence spans two products."""
     products = {chunk.product for chunk in GLASS_CHUNKS}
@@ -262,12 +250,6 @@ async def test_product_agnostic_evidence_still_answers():
     assert result.citations
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="R-03: no corpus-PII gate — redact() never runs in the pipeline, and "
-    "citation_from_evidence copies evidence.text into snippet unfiltered. "
-    "Owed by S6b.",
-)
 async def test_corpus_pii_is_refused_and_never_rendered():
     """T-18 / R-03: minutes PII is legitimately retrieved; no CPF and no name reaches the caller."""
     assert MINUTES_CHUNKS[0].contains_pii is True

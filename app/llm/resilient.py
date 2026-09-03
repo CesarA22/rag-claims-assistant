@@ -24,7 +24,7 @@ from app.domain.errors import (
     ProviderUnavailable,
     RateLimited,
 )
-from app.llm.base import Completion, Message
+from app.llm.base import Completion, Message, prompt_fingerprint
 from app.services.budget import Pricing, QuestionBudget, current_budget, question_budget
 
 logger = logging.getLogger(__name__)
@@ -271,8 +271,10 @@ class ResilientProvider:
         return self._rand() * cap
 
     def _log_context(self, messages: list[Message]) -> dict[str, Any]:
-        prompt = messages[0].content if messages else ""
-        return {"model": self.config.model, "prompt": prompt}
+        # Hash and evidence ids, never prompt text. messages[0] used to be logged
+        # as "the prompt"; it happened to be the system message, so the corpus
+        # stayed out of the log by accident rather than by control.
+        return {"model": self.config.model, **prompt_fingerprint(messages)}
 
     def _degraded(
         self,

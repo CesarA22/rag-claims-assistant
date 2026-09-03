@@ -25,7 +25,7 @@ from app.domain.errors import (
     ProviderUnavailable,
     RateLimited,
 )
-from app.llm.base import Completion, Message, Usage
+from app.llm.base import Completion, Message, Usage, prompt_fingerprint
 
 EMBED_MODEL = "text-embedding-3-small"
 EMBED_DIM = 1536
@@ -87,7 +87,7 @@ class OpenAIProvider:
         if timeout_s is not None:
             kwargs["timeout"] = timeout_s
 
-        log_context = {"model": self.model, "prompt": instructions or (messages[0].content if messages else "")}
+        log_context = {"model": self.model, **prompt_fingerprint(messages)}
         try:
             response = await self._client.responses.create(**kwargs)
         except APITimeoutError as exc:

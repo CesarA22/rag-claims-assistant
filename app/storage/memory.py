@@ -18,6 +18,9 @@ class InMemoryConversationRepository:
     def get_turn(self, conversation_id: str, client_message_id: str) -> Turn | None:
         return self._by_client.get((conversation_id, client_message_id))
 
+    async def history(self, conversation_id: str) -> list[Turn]:
+        return [self._by_id[tid] for tid in self._order.get(conversation_id, [])]
+
     async def recent_messages(
         self,
         conversation_id: str,
@@ -76,6 +79,7 @@ class InMemoryConversationRepository:
         model: str = "",
         *,
         cost_usd: float = 0.0,
+        prompt_version: str = "",
         degraded: bool = False,
         reason: str | None = None,
     ) -> Turn:
@@ -84,6 +88,7 @@ class InMemoryConversationRepository:
                 "status": answer.outcome,
                 "answer": answer,
                 "model": model,
+                "prompt_version": prompt_version,
                 "latency_ms": latency_ms,
                 "prompt_tokens": usage.prompt_tokens,
                 "cached_prompt_tokens": usage.cached_prompt_tokens,

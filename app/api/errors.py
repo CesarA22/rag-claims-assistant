@@ -42,7 +42,17 @@ _DETAILS = {
     "internal_error": "The request could not be completed.",
 }
 
-_LOG_CONTEXT_KEYS = ("model", "prompt", "upstream_status", "attempt", "latency_ms")
+# The allowlist IS the control. "prompt" is deliberately absent: the rendered
+# prompt carries the retrieved corpus, and redact() does not remove names. A
+# hash and the evidence ids are both safer and more useful to debug with.
+_LOG_CONTEXT_KEYS = (
+    "model",
+    "prompt_hash",
+    "evidence_ids",
+    "upstream_status",
+    "attempt",
+    "latency_ms",
+)
 
 
 class JsonFormatter(logging.Formatter):
@@ -87,11 +97,15 @@ class TraceIdMiddleware(BaseHTTPMiddleware):
 def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(InsurCoError)
     async def handle_insurco_error(request: Request, exc: InsurCoError) -> JSONResponse:
+        # Filtered here as well as in the formatter, so an un-allowlisted key
+        # never reaches the LogRecord at all — a second handler added later
+        # cannot serialise what was never attached.
+        safe = {k: v for k, v in exc.context.items() if k in _LOG_CONTEXT_KEYS}
         extra = {
             "event": "typed_error",
             "trace_id": getattr(request.state, "trace_id", None),
             "error_code": exc.code,
-            **exc.context,
+            **safe,
         }
         logger.warning("typed_error code=%s %s", exc.code, exc, extra=extra)
         return problem_response(request, exc.code)

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import time
 from contextlib import nullcontext
 from pathlib import Path
@@ -19,6 +21,8 @@ from app.domain.models import (
 )
 from app.llm.base import Completion, LLMProvider, Message, Usage
 from app.retrieval.base import Retriever
+from app.safety.redact import redact
+from app.services import grounding
 from app.services.budget import current_budget
 from app.storage.base import ConversationRepository
 
@@ -50,6 +54,19 @@ _CITATION_REFUSAL = (
 )
 _DEGRADED_BANNER = (
     "Não foi possível gerar um resumo. Seguem os trechos recuperados das fontes."
+)
+_UNSUPPORTED_REFUSAL = (
+    "As fontes recuperadas tratam do tema, mas não respondem à pergunta. "
+    "Não há base nas fontes para afirmar esse dado."
+)
+_PII_REFUSAL = (
+    "Não é possível expor dados pessoais de segurados — nome, CPF, telefone ou "
+    "e-mail — ainda que constem em documento interno (POL-LGPD-2024). "
+    "Posso responder com dados não identificáveis, como o número do sinistro."
+)
+_CLARIFY = (
+    "As fontes recuperadas trazem limites diferentes por produto. "
+    "De qual produto se trata: Auto, Residencial ou Empresarial?"
 )
 
 
@@ -86,8 +103,25 @@ def _system_prompt() -> str:
     return (_PROMPTS / "system.md").read_text(encoding="utf-8").strip()
 
 
+def _prompt_version() -> str:
+    """Hash of the system prompt plus the draft schema.
+
+    Answers "which answers came from the prompt we are about to change?" in one
+    query, and it is the key Tier 1 cassettes are meant to be invalidated by — a
+    prompt change should break a replay, and a version nobody bumps would hide it.
+    """
+    material = _system_prompt() + json.dumps(DRAFT_SCHEMA, sort_keys=True)
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()[:12]
+
+
+PROMPT_VERSION = _prompt_version()
+
+
 def citation_from_evidence(evidence: Evidence) -> Citation:
-    snippet = " ".join(evidence.text.split())
+    # redact() before truncating, not after: the 240-character cut was chosen for
+    # rendering and happened to cap the leak at the first two rows of a PII table.
+    # A length picked for layout is not a privacy control (S6 finding 4).
+    snippet = " ".join(redact(evidence.text).split())
     if len(snippet) > 240:
         snippet = snippet[:237] + "..."
     return Citation(
@@ -102,6 +136,7 @@ def citation_from_evidence(evidence: Evidence) -> Citation:
 
 
 def validate_citations(draft: Draft, evidence: list[Evidence]) -> Answer:
+    """Resolve cited ids against what was actually retrieved. Forgery check only."""
     if draft.outcome == "needs_clarification":
         return Answer(
             outcome="needs_clarification",
@@ -121,6 +156,40 @@ def validate_citations(draft: Draft, evidence: list[Evidence]) -> Answer:
     if not citations:
         return Answer(outcome="refused", text=_CITATION_REFUSAL, citations=[])
     return Answer(outcome="answered", text=draft.answer, citations=citations)
+
+
+def judge(draft: Draft, evidence: list[Evidence], question: str) -> Answer:
+    """The draft is a proposal. This decides what ships.
+
+    Order is deliberate: privacy outranks everything, a clarification outranks a
+    guess, and a citation that resolves still has to be *supported*.
+    """
+    if grounding.is_pii_request(question, evidence):
+        return Answer(outcome="refused", text=_PII_REFUSAL, citations=[])
+
+    if draft.outcome in ("needs_clarification", "refused"):
+        return validate_citations(draft, evidence)
+
+    if grounding.is_ambiguous(question, evidence):
+        return Answer(outcome="needs_clarification", text=_CLARIFY, citations=[])
+
+    answer = validate_citations(draft, evidence)
+    if answer.outcome != "answered":
+        return answer
+
+    cited = _cited_evidence(answer, evidence)
+    if not grounding.is_supported(answer.text or "", cited):
+        return Answer(outcome="refused", text=_UNSUPPORTED_REFUSAL, citations=[])
+
+    # Layer 2. The gates above are the control; this is belt and braces, and it
+    # cannot stand alone — redact() matches CPF, phone and e-mail patterns, so a
+    # policyholder's name passes straight through it (S6 finding 3).
+    return answer.model_copy(update={"text": redact(answer.text or "")})
+
+
+def _cited_evidence(answer: Answer, evidence: list[Evidence]) -> list[Evidence]:
+    by_id = {item.id: item for item in evidence}
+    return [by_id[c.evidence_id] for c in answer.citations if c.evidence_id in by_id]
 
 
 def excerpts_answer(evidence: list[Evidence]) -> Answer:
@@ -240,7 +309,7 @@ async def ask(
             if spent is not None:
                 spent_usd = spent.spent_usd
             draft = _parse_draft(completion)
-            answer = validate_citations(draft, evidence)
+            answer = judge(draft, evidence, content)
             latency_ms = int((time.perf_counter() - started) * 1000)
             turn = await repo.complete_turn(
                 turn,
@@ -249,6 +318,7 @@ async def ask(
                 latency_ms,
                 model=completion.model,
                 cost_usd=spent_usd,
+                prompt_version=PROMPT_VERSION,
             )
             return _from_turn(turn, trace_id=trace_id, provider=provider_name)
     except (ProviderDegraded, CircuitOpen) as exc:

@@ -4,6 +4,7 @@ import logging
 
 from httpx import AsyncClient
 
+from app.api.errors import JsonFormatter
 from app.domain.errors import ProviderUnavailable
 from app.llm.fake import FakeProvider
 from app.retrieval.memory import InMemoryRetriever
@@ -87,14 +88,19 @@ async def test_provider_failure_is_problem_json_and_persists_failed(
     client: AsyncClient, llm: FakeProvider, repo: InMemoryConversationRepository, caplog
 ):
     """T-10 / R-06: provider failure is problem+json with a trace_id and no internals."""
-    leak = (
-        "openai gpt-5.4-mini failed; prompt=You are an internal assistant; "
-        "traceback: File app/llm/openai_provider.py line 1"
-    )
+    # "prompt" is hostile input here: something upstream put prompt text on the
+    # context, and the allowlist has to drop it. S6 finding 4 — the prompt used
+    # to be logged, and the only thing keeping the corpus out was that the
+    # producer happened to pass messages[0].
     llm.enqueue(
         ProviderUnavailable(
-            leak,
-            context={"model": "gpt-5.4-mini", "prompt": "You are an internal assistant"},
+            "upstream returned 503",
+            context={
+                "model": "gpt-5.4-mini",
+                "prompt_hash": "493c0c11b400",
+                "evidence_ids": ["cg-auto-2024#2.1"],
+                "prompt": "You are an internal assistant. Marta Ferreira Bittencourt",
+            },
         )
     )
 
@@ -118,8 +124,22 @@ async def test_provider_failure_is_problem_json_and_persists_failed(
     assert "traceback" not in dumped
     assert "you are an internal assistant" not in dumped
 
-    assert "gpt-5.4-mini" in caplog.text
-    assert "You are an internal assistant" in caplog.text
+    # The asymmetry: internals reach the log, the body carries none of them. But
+    # prompt text is no longer an internal we keep — it carries the corpus.
+    record = next(r for r in caplog.records if getattr(r, "event", "") == "typed_error")
+    assert record.model == "gpt-5.4-mini"
+    assert record.prompt_hash == "493c0c11b400"
+    assert record.evidence_ids == ["cg-auto-2024#2.1"]
+    assert not hasattr(record, "prompt")  # dropped at the handler, not just the formatter
+
+    line = JsonFormatter().format(record)
+    payload = json.loads(line)
+    assert payload["model"] == "gpt-5.4-mini"
+    assert payload["prompt_hash"] == "493c0c11b400"
+    assert payload["error_code"] == "provider_unavailable"
+    assert "prompt" not in payload
+    assert "Marta Ferreira Bittencourt" not in line
+    assert "You are an internal assistant" not in line
 
     turn = repo.get_turn("c-1", "cm-fail")
     assert turn is not None

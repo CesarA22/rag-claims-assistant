@@ -37,6 +37,30 @@ class MetaOut(BaseModel):
     reason: str | None = None
 
 
+class HistoryMessageOut(BaseModel):
+    """A turn as history renders it — all five statuses, including failed."""
+
+    message_id: str
+    question: str
+    outcome: TurnStatus
+    answer: str | None = None
+    error_code: str | None = None
+    citations: list[CitationOut] = Field(default_factory=list)
+    degraded: bool = False
+    reason: str | None = None
+
+
+class HistoryOut(BaseModel):
+    conversation_id: str
+    messages: list[HistoryMessageOut] = Field(default_factory=list)
+
+
+class DatabaseOut(BaseModel):
+    configured: bool
+    reachable: bool | None = None
+    detail: str | None = None
+
+
 class BreakerOut(BaseModel):
     state: str
     consecutive_failures: int
@@ -48,6 +72,8 @@ class HealthOut(BaseModel):
     status: str
     breaker: BreakerOut
     provider: str
+    storage: str
+    database: DatabaseOut
     degraded_since: float | None = None
 
 

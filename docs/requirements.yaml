@@ -11,31 +11,40 @@ requirements:
   - id: R-01
     title: Every answer cites its sources
     status: done
+    session: S7
     files:
       - app/services/ask.py
       - app/domain/models.py
       - app/api/schemas.py
-    tests: [T-01, T-02, T-13, T-14]
+      - app/api/routes.py
+      - app/storage/sql.py
+    tests: [T-01, T-02, T-13, T-14, T-36, T-37, T-40]
+    notes: "S7c added GET /conversations/{id}/messages, which renders all five statuses including failed with its error_code — the reason `failed` has been in TurnStatus since S1. Distinct from recent_messages, which feeds the model and drops failed and pending; T-36 asserts the difference rather than leaving it to be rediscovered. T-37 pins the citation query as one SELECT."
 
   - id: R-02
     title: Questions with no answer in the sources are refused
-    status: partial
-    session: S6
+    status: done
+    session: S6b
     files:
       - app/services/ask.py
+      - app/services/grounding.py
     tests: [T-03, T-16, T-17]
-    notes: "Invented-citation refusal (T-03) is in. Sufficiency and ambiguity judgment are not. S6 made the gap executable: T-16 (gs-008, on-topic non-answering evidence → refuse) and T-17 (gs-009, ambiguous question → needs_clarification) are written, were measured red against unmodified app/, and carry xfail(strict=True) so the marker fails CI the day the gate lands. Owed by S6b."
+    notes: "S6b landed both gates in app/services/grounding.py and the xfail markers came off. Sufficiency is lexical — the answer's content terms must appear in the evidence it cites, at or above SUFFICIENCY_MIN. It catches gs-008, where the answer names a subject (desconto) the cited text never mentions. It does not catch a fluent paraphrase that reuses the source's words to say something the source does not; that needs an entailment judgment and a second model call is not affordable inside the US$0.05 ceiling. Stated in DECISIONS.md rather than implied."
 
   - id: R-03
     title: Policyholder personal data never appears in an answer
-    status: partial
-    session: S6
+    status: done
+    session: S6b
     files:
       - app/safety/redact.py
       - app/retrieval/ingest.py
       - app/tools/claims.py
+      - app/services/grounding.py
+      - app/services/ask.py
+      - app/llm/base.py
+      - app/api/errors.py
     tests: [T-04, T-15, T-18]
-    notes: "Ingest-time redaction and query-layer exclusion (T-04) exist. T-18 (gs-010, corpus PII → refuse) is written, was measured red, and carries xfail(strict=True). Three egress paths are open, not one: ask.py never calls redact(); citation_from_evidence copies evidence.text into snippet unfiltered (and snippets are the entire degraded payload); and redact() matches CPF, phone and e-mail patterns only, so it cannot remove the five names gs-010 forbids. Owed by S6b."
+    notes: "S6b closed all three egress paths S6 measured. A PII question over PII-bearing evidence is refused before a draft is considered (grounding.is_pii_request, keyed on contains_pii / doc_role which S2 populated and nothing read). citation_from_evidence redacts before truncating — the 240-char cut was chosen for layout and happened to cap the leak at two of five rows. The failure log now carries prompt_hash and evidence_ids, never prompt text, filtered at the handler as well as the formatter. redact() remains layer 2 only: it matches CPF, phone and e-mail patterns, so it cannot remove a name."
 
   - id: R-04
     title: At most US$0.05 per question and p95 latency under 8 s
@@ -88,12 +97,16 @@ requirements:
   - id: R-09
     title: Hybrid retrieval with precedence filters
     status: done
+    session: S7
     files:
       - app/retrieval/hybrid.py
       - app/retrieval/embeddings.py
       - app/storage/db.py
+      - app/storage/models.py
+      - app/storage/migrations/versions/0001_initial_schema.py
       - evals/retrieval_baseline.py
-    tests: [T-19]
+    tests: [T-19, T-40]
+    notes: "S7a moved schema ownership from 001_chunks.sql to Alembic. T-40 is the guard that hand-writing revision 0001 required: it renders the migration offline (no connection) and asserts it agrees with models.py column-for-column, that chunks.tsv keeps its GENERATED ALWAYS AS clause and embedding stays vector(1536), and that citations.chunk_id carries no FK."
 
   - id: R-10
     title: Named, parameterised claims queries with PII excluded at the query layer
@@ -121,10 +134,11 @@ requirements:
     title: Idempotent retry
     source: "Challenge brief §3, Differentials"
     requirement: "Idempotent retry (repeating a question does not duplicate messages in the history)."
-    files: [app/storage/memory.py, app/api/routes.py]
-    tests: [T-02]
+    files: [app/storage/memory.py, app/storage/sql.py, app/storage/models.py, app/api/routes.py]
+    tests: [T-02, T-35]
     status: done
-    notes: "Landed in S1. client_message_id unique per conversation; begin_turn replays a completed turn."
+    session: S7
+    notes: "S1 landed it in a per-process dict, which made it true at one worker only — two uvicorn workers each held their own, so the same client_message_id posted twice created two turns and two provider calls. S7b moved it to messages_client_idem UNIQUE (conversation_id, client_message_id) with INSERT ... ON CONFLICT DO NOTHING RETURNING, preserving the same three branches. T-35 runs against both repositories, including two racing begin_turn calls."
 
   - id: D-03
     title: Docker Compose for the complete application
