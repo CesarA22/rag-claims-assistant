@@ -1,7 +1,16 @@
+# Requirement register. Status is one of: done | partial | pending | cut.
+# Differentials (D-01…D-05) are brief §3 optional items. Differentials do
+# not compensate for missing mandatory requirements.
+#
+# Vocabulary rules (enforced by scripts/traceability.py):
+#   cut     — notes MUST name the reason; a cut with no reason looks forgotten
+#   partial — notes MUST name the remaining gap
+#   done    — an R- row MUST have a non-empty tests list
+
 requirements:
   - id: R-01
     title: Every answer cites its sources
-    status: active
+    status: done
     files:
       - app/services/ask.py
       - app/domain/models.py
@@ -10,44 +19,47 @@ requirements:
 
   - id: R-02
     title: Questions with no answer in the sources are refused
-    status: active
+    status: partial
     files:
       - app/services/ask.py
     tests: [T-03]
+    notes: "Invented-citation refusal (T-03) is in. Sufficiency judgment is not — T-16 / gs-008 (on-topic non-answering evidence → refuse) is still missing."
 
   - id: R-03
     title: Policyholder personal data never appears in an answer
-    status: planned
+    status: partial
     session: S4
     files:
       - app/safety/redact.py
       - app/retrieval/ingest.py
+      - app/tools/claims.py
     tests: [T-04, T-18]
+    notes: "Ingest-time redaction and query-layer exclusion (T-04) exist. The output scrubber is not wired into ask.py, and T-18 / gs-010 (corpus PII → refuse) is still missing."
 
   - id: R-04
     title: At most US$0.05 per question and p95 latency under 8 s
-    status: planned
+    status: pending
     session: S4
     files: []
     tests: []
 
   - id: R-05
     title: Bounded cost-aware retry and degradation
-    status: planned
+    status: pending
     session: S4
     files: []
     tests: [T-05, T-06, T-07, T-08, T-09]
 
   - id: R-06
     title: Client errors leak no internals
-    status: active
+    status: done
     files:
       - app/api/errors.py
     tests: [T-10]
 
   - id: R-07
     title: Provider isolation
-    status: active
+    status: done
     files:
       - app/llm/base.py
       - app/llm/fake.py
@@ -56,7 +68,7 @@ requirements:
 
   - id: R-08
     title: Grounded, table-aware ingestion
-    status: active
+    status: done
     files:
       - app/retrieval/ingest.py
       - app/safety/redact.py
@@ -64,10 +76,72 @@ requirements:
 
   - id: R-09
     title: Hybrid retrieval with precedence filters
-    status: active
+    status: done
     files:
       - app/retrieval/hybrid.py
       - app/retrieval/embeddings.py
       - app/storage/db.py
       - evals/retrieval_baseline.py
     tests: [T-19]
+
+  - id: R-10
+    title: Named, parameterised claims queries with PII excluded at the query layer
+    status: done
+    session: S4
+    files:
+      - app/tools/claims.py
+    tests: [T-20, T-21, T-22, T-23, T-24, T-25, T-26]
+
+  # Differentials — brief §3, "Diferenciais (opcionais)".
+  # Verbatim note from the brief: "Differentials do not compensate for
+  # missing mandatory requirements." Cut rows carry a reason; see DECISIONS.md.
+
+  - id: D-01
+    title: Streaming with progressive rendering
+    source: "Challenge brief §3, Differentials"
+    requirement: "Streaming of answers with progressive rendering. If implemented, handle the edges: error in the middle of the stream, cancellation by the user, interrupted response history."
+    files: []
+    tests: []
+    status: pending
+    notes: "First on the cut list. The three edge cases are the expensive part, not the stream."
+
+  - id: D-02
+    title: Idempotent retry
+    source: "Challenge brief §3, Differentials"
+    requirement: "Idempotent retry (repeating a question does not duplicate messages in the history)."
+    files: [app/storage/memory.py, app/api/routes.py]
+    tests: [T-02]
+    status: done
+    notes: "Landed in S1. client_message_id unique per conversation; begin_turn replays a completed turn."
+
+  - id: D-03
+    title: Docker Compose for the complete application
+    source: "Challenge brief §3, Differentials"
+    requirement: "Docker Compose to run the complete application."
+    files: [docker-compose.yml]
+    tests: []
+    status: partial
+    notes: "S3 added the db service only. app and web services are S8/S9 — 'complete' is not met yet."
+
+  - id: D-04
+    title: Authored evaluation cases
+    source: "Challenge brief §3, Differentials"
+    requirement: "Authorial evaluation cases in addition to the 10 provided."
+    files: [evals/authored.json]
+    tests: []
+    status: pending
+    notes: "S9. Five adversarial cases: PII bait, corpus prompt injection, stale-version trap, cross-product trap, absent answer."
+
+  - id: D-05
+    title: Provenance footer
+    source: "Challenge brief §3, Differentials"
+    requirement: "Provenance footer: each answer indicates which source it came from and the freshness of the queried data."
+    files:
+      - app/retrieval/hybrid.py
+      - app/domain/models.py
+      - app/services/ask.py
+      - app/api/schemas.py
+      - web/src/chat/Provenance.tsx
+    tests: [T-27]
+    status: pending
+    notes: "S8. Render-only for the DB line, which reads from section + effective_date (T-26). The document line first needs page_from/page_to selected in hybrid.py and superseded + pages + source_kind added to Evidence, Citation and CitationOut. Citation does not yet carry superseded, page_from, page_to, source_kind or query_name."
