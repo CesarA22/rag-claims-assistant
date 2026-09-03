@@ -94,7 +94,11 @@ class CircuitBreaker:
             return "reject"
         self._probing = True
         self.state = "half_open"
-        logger.info("breaker_half_open consecutive_failures=%s", self.consecutive_failures)
+        logger.info(
+            "breaker_half_open consecutive_failures=%s",
+            self.consecutive_failures,
+            extra={"event": "breaker_half_open"},
+        )
         return "probe"
 
     def record_success(self) -> None:
@@ -105,7 +109,7 @@ class CircuitBreaker:
         self._opened_at_wall = None
         self._probing = False
         if was_open:
-            logger.info("breaker_closed")
+            logger.info("breaker_closed", extra={"event": "breaker_closed"})
 
     def record_failure(self) -> None:
         self.consecutive_failures += 1
@@ -118,6 +122,7 @@ class CircuitBreaker:
             logger.warning(
                 "breaker_open consecutive_failures=%s",
                 self.consecutive_failures,
+                extra={"event": "breaker_open"},
             )
 
     def snapshot(self) -> dict[str, Any]:
@@ -203,13 +208,23 @@ class ResilientProvider:
                     raise self._degraded(messages, last_error, attempts=attempt, why="time")
                 if not budget.can_afford(messages):
                     raise self._degraded(messages, last_error, attempts=attempt, why="cost")
-                logger.info("llm_retry attempt=%s delay_s=%.3f", attempt, delay)
+                logger.info(
+                    "llm_retry attempt=%s delay_s=%.3f",
+                    attempt,
+                    delay,
+                    extra={"event": "llm_retry", "attempt": attempt},
+                )
                 await self._sleep(delay)
                 remaining = budget.remaining_s()
                 if remaining < self.config.min_retry_budget_s:
                     raise self._degraded(messages, last_error, attempts=attempt, why="time")
 
-            logger.info("llm_attempt attempt=%s timeout_s=%.3f", attempt, remaining)
+            logger.info(
+                "llm_attempt attempt=%s timeout_s=%.3f",
+                attempt,
+                remaining,
+                extra={"event": "llm_attempt", "attempt": attempt},
+            )
             try:
                 completion = await asyncio.wait_for(
                     self.inner.complete(
@@ -275,6 +290,7 @@ class ResilientProvider:
             why,
             attempts,
             underlying,
+            extra={"event": "llm_degraded", "attempt": attempts},
         )
         return ProviderDegraded(
             underlying_code=underlying,

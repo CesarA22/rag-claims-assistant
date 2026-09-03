@@ -38,17 +38,25 @@ requirements:
 
   - id: R-04
     title: At most US$0.05 per question and p95 latency under 8 s
-    status: pending
-    session: S4
-    files: []
-    tests: []
+    status: done
+    session: S5
+    files:
+      - app/services/budget.py
+      - app/llm/resilient.py
+      - app/llm/openai_provider.py
+    tests: [T-29, T-32, T-34]
+    notes: "Ceiling, min-retry-budget and max_output_tokens are enforced. p95 < 8s is a live-eval claim — T-32 stops us spending the tail, but the number itself is measured in EVALS.md."
 
   - id: R-05
     title: Bounded cost-aware retry and degradation
-    status: pending
-    session: S4
-    files: []
-    tests: [T-05, T-06, T-07, T-08, T-09]
+    status: done
+    session: S5
+    files:
+      - app/llm/resilient.py
+      - app/llm/chaos.py
+      - app/services/ask.py
+      - app/api/routes.py
+    tests: [T-05, T-06, T-07, T-08, T-09, T-30, T-31, T-33]
 
   - id: R-06
     title: Client errors leak no internals
@@ -63,8 +71,10 @@ requirements:
     files:
       - app/llm/base.py
       - app/llm/fake.py
+      - app/llm/openai_provider.py
+      - app/llm/chaos.py
       - app/main.py
-    tests: [T-11]
+    tests: [T-11, T-28]
 
   - id: R-08
     title: Grounded, table-aware ingestion

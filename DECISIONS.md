@@ -107,3 +107,80 @@ Re-embedding with `text-embedding-3-small` was attempted and failed with
 `credit_balance_exhausted`. The padded MiniLM vectors stay until a funded
 key exists. `--gate 1.0` is therefore asserted on `--arm lexical`.
 
+## S5 — resilience
+
+### An open breaker still serves excerpts
+
+The original ladder in `00-architecture.mdc` split rung 2 (excerpts) from
+rung 3 (fail fast, typed error). That split was written before rung 2 had
+real excerpt rendering, and it drew the line on "did we pay". From the
+analyst's seat the two failures are one experience: the assistant cannot
+summarise, here are the sources. Returning 503 while holding retrieved,
+cited passages throws away the strongest thing in this build in the
+scenario that gets demoed.
+
+Fail-fast is preserved as latency, not payload: no call, no sleep, no
+spend. Observability moved to `meta.degraded`, `meta.reason`, `/healthz`
+and the `breaker_open` log line.
+
+```
+evidence exists  →  200, degraded=true, excerpts, meta.reason
+no evidence      →  503 problem+json
+```
+
+### chars/3 on the cost gate, on purpose
+
+The conventional 4-chars-per-token rule is a central estimate. A central
+estimate on a *ceiling* gate is wrong half the time in the only direction
+that matters: an under-estimate waves through the retry that breaches
+US$0.05. Dividing by 3 rounds against us — we occasionally degrade a
+question we could have afforded, and never bill one we could not.
+
+### `max_retries=0` on the SDK client
+
+The OpenAI SDK retries twice by default. Left on, "max 2 retries" is
+silently six calls, the budget arithmetic is fiction, and the cost
+ceiling is breached by a layer we did not write. T-28 counts requests.
+
+### `reasoning.effort` pinned to `none`
+
+Reasoning tokens bill as output at US$4.50/M and inflate cost and latency
+at once. For grounded extraction they buy nothing: the evidence is already
+assembled, so paying output-rate tokens to think about it is spend with
+no accuracy return. `none` is today's default, which is why it is pinned
+explicitly — an inherited default can move under us. If evals show a gap
+on the multi-hop cases, `low` gets tested on those cases specifically, not
+globally. `Usage.reasoning_tokens` is the measurement that proves the pin
+holds.
+
+### Data residency changes the unit economics, not the code
+
+Regional processing endpoints carry a 10% uplift: US$0.825 / US$0.0825 /
+US$4.95 per million. InsurCo is a Brazilian insurer whose own corpus
+contains `POL-LGPD-2024`, so residency is a plausible client requirement.
+A grounded question is about US$0.007 at list rates and about US$0.008
+in-region — still inside US$0.05. The answer to "can you run in-region"
+is a number, not a renegotiation.
+
+### Chaos walkthrough (ASGI, `CHAOS_500_RATE=1`, `LLM_BREAKER_FAILURES=2`)
+
+Recorded against `create_app()` with the chaos inner always returning 500.
+The decorator retries twice then degrades. Threshold lowered to 2 so the
+recording is short; production default is 5.
+
+```
+GET /healthz
+  status=ok  breaker.state=closed  consecutive_failures=0
+
+POST 1  →  200  outcome=answered  degraded=true  reason=provider_degraded
+            citations=2  (inner called 3 times: 1 + 2 retries)
+GET /healthz
+  status=degraded  breaker.state=open  consecutive_failures=3  reset_in_s=30
+
+POST 2  →  200  outcome=answered  degraded=true  reason=circuit_open
+            citations=2  (inner not called)
+POST 3  →  200  same as POST 2
+```
+
+With the circuit open, the app is still answering with sources.
+

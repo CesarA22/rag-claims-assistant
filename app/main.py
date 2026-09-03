@@ -7,7 +7,9 @@ from fastapi import FastAPI
 from app.api.errors import TraceIdMiddleware, configure_logging, install_error_handlers
 from app.api.routes import router
 from app.llm.base import LLMProvider
+from app.llm.chaos import ChaosConfig, ChaosProvider
 from app.llm.fake import FakeProvider
+from app.llm.openai_provider import OpenAIProvider
 from app.llm.resilient import ResilienceConfig, ResilientProvider
 from app.retrieval.base import Retriever
 from app.retrieval.memory import InMemoryRetriever
@@ -20,13 +22,9 @@ def build_inner(name: str) -> LLMProvider:
     if name == "fake":
         return FakeProvider()
     if name == "chaos":
-        raise RuntimeError(
-            "LLM_PROVIDER=chaos is not implemented yet (S5c). Use LLM_PROVIDER=fake."
-        )
+        return ChaosProvider(FakeProvider(), ChaosConfig.from_env())
     if name == "openai":
-        raise RuntimeError(
-            "LLM_PROVIDER=openai is not implemented yet (S5c). Use LLM_PROVIDER=fake."
-        )
+        return OpenAIProvider()
     raise RuntimeError(
         f"Unknown LLM_PROVIDER={name!r}. Use fake, chaos, or openai."
     )
