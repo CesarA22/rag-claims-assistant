@@ -50,6 +50,8 @@ def test_or_tsquery_rewrites_and_to_or() -> None:
     assert "&', '|')" in OR_TSQUERY
     assert OR_TSQUERY in SEARCH_SQL
     assert "websearch_to_tsquery" not in SEARCH_SQL
+    assert "ts_stat" in SEARCH_SQL
+    assert "to_tsquery('simple'" in SEARCH_SQL
 
 
 def test_rrf_k_discriminates_at_this_scale() -> None:
@@ -64,12 +66,26 @@ def test_rrf_k_discriminates_at_this_scale() -> None:
 def test_role_boost_prefers_normative_over_glossary() -> None:
     """T-19 / R-09: doc_role boost is a Python multiplier, testable without Postgres."""
     tied = [
-        (1.0, _chunk(id="g", role="glossary")),
-        (1.0, _chunk(id="n", role="normative")),
-        (1.0, _chunk(id="p", role="pointer")),
+        (1.0, _chunk(id="g", code="GLOS-2024", role="glossary")),
+        (1.0, _chunk(id="n", code="CG-AUTO-2024", role="normative")),
+        (1.0, _chunk(id="p", code="FAQ-SIN-2025", role="pointer")),
     ]
     order = [item.id for _, item in apply_role_boost(tied, k=3)]
     assert order == ["n", "p", "g"]
+
+
+def test_role_boost_caps_per_document() -> None:
+    """T-19 / R-09: max_per_document=2 stops one code occupying every slot."""
+    ranked = [
+        (1.0, _chunk(id="a1", code="CG-AUTO-2024")),
+        (0.9, _chunk(id="a2", code="CG-AUTO-2024")),
+        (0.8, _chunk(id="a3", code="CG-AUTO-2024")),
+        (0.7, _chunk(id="n1", code="NI-022")),
+        (0.6, _chunk(id="p1", code="POL-LGPD-2024")),
+    ]
+    order = [item.id for _, item in apply_role_boost(ranked, k=4)]
+    assert order == ["a1", "a2", "n1", "p1"]
+    assert "a3" not in order
 
 
 def test_vector_codec_roundtrip() -> None:

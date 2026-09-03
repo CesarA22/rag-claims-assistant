@@ -4,9 +4,9 @@ Tier-0 retrieval evaluation. No LLM, no cost, no variance.
 Runs against HybridRetriever (Postgres). The original BM25 baseline remains
 runnable at handoff/evals/retrieval_baseline.py.
 
-    python evals/retrieval_baseline.py --k 5
-    python evals/retrieval_baseline.py --k 5 --probes
+    python evals/retrieval_baseline.py --k 5 --arm lexical --gate 1.0
     python evals/retrieval_baseline.py --k 5 --arm all
+    python evals/retrieval_baseline.py --k 5 --arm all --probes
 """
 from __future__ import annotations
 
@@ -99,7 +99,7 @@ async def _run_golden(retriever: HybridRetriever, k: int) -> float:
 
 async def async_main(args: argparse.Namespace) -> int:
     load_dotenv()
-    embed_query = _embed_query()
+    embed_query = None if args.arm == "lexical" else _embed_query()
     gate_recall: float | None = None
     async with connect() as pool:
         n_chunks, n_docs = await HybridRetriever(pool).corpus_stats()

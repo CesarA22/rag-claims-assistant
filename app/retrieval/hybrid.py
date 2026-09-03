@@ -28,9 +28,31 @@ TS_RANK_NORMALIZATION = 32
 # and let ts_rank_cd rank. websearch_to_tsquery also ANDs bare terms — don't.
 OR_TSQUERY = "replace(plainto_tsquery('portuguese', $1)::text, '&', '|')::tsquery"
 
+MAX_PER_DOCUMENT = 2
+
+# ts_rank_cd has no IDF. Discriminative terms (cpf, lgpd, ata) then lose to
+# long CG-AUTO chunks that match common stems. Weight rank by Robertson-Sparck
+# Jones IDF of the query lexemes that actually appear in the chunk.
 SEARCH_SQL = f"""
 WITH q AS (
   SELECT {OR_TSQUERY} AS tsq
+),
+qterms AS (
+  SELECT DISTINCT unnest(tsvector_to_array(to_tsvector('portuguese', $1))) AS term
+),
+stats AS (
+  SELECT word, ndoc FROM ts_stat($$SELECT tsv FROM chunks$$)
+),
+n AS (
+  SELECT GREATEST(count(*)::double precision, 1) AS n_docs FROM chunks
+),
+idf AS (
+  SELECT qterms.term,
+         ln((n.n_docs - COALESCE(stats.ndoc, 0) + 0.5)
+            / (COALESCE(stats.ndoc, 0) + 0.5) + 1) AS w
+  FROM qterms
+  CROSS JOIN n
+  LEFT JOIN stats ON stats.word = qterms.term
 ),
 filtered AS (
   SELECT *
@@ -42,7 +64,12 @@ filtered AS (
 lex AS (
   SELECT c.id,
          row_number() OVER (
-           ORDER BY ts_rank_cd(c.tsv, q.tsq, {TS_RANK_NORMALIZATION}) DESC, c.id
+           ORDER BY ts_rank_cd(c.tsv, q.tsq, {TS_RANK_NORMALIZATION})
+                  * (1.0 + COALESCE((
+                      SELECT SUM(i.w) FROM idf i
+                      WHERE c.tsv @@ to_tsquery('simple', i.term)
+                    ), 0)) DESC,
+                    c.id
          ) AS rank
   FROM filtered c, q
   WHERE $5::boolean
@@ -95,13 +122,26 @@ def apply_role_boost(
     *,
     weights: dict[str, float] | None = None,
     k: int = 5,
+    max_per_document: int = MAX_PER_DOCUMENT,
 ) -> list[tuple[float, Evidence]]:
     table = ROLE_WEIGHTS if weights is None else weights
     boosted = [
         (score * table.get(item.doc_role, 1.0), item) for score, item in ranked
     ]
     boosted.sort(key=lambda pair: (-pair[0], pair[1].id))
-    return boosted[:k]
+    if max_per_document <= 0:
+        return boosted[:k]
+    selected: list[tuple[float, Evidence]] = []
+    seen: dict[str, int] = {}
+    for pair in boosted:
+        code = pair[1].document_code
+        if seen.get(code, 0) >= max_per_document:
+            continue
+        seen[code] = seen.get(code, 0) + 1
+        selected.append(pair)
+        if len(selected) >= k:
+            break
+    return selected
 
 
 def _row_to_evidence(row: asyncpg.Record) -> Evidence:
@@ -139,6 +179,7 @@ class HybridRetriever:
         self.rrf_k = rrf_k
         self.candidates = candidates
         self.role_weights = ROLE_WEIGHTS if role_weights is None else role_weights
+        self.max_per_document = MAX_PER_DOCUMENT
 
     async def search(
         self,
@@ -189,7 +230,12 @@ class HybridRetriever:
                 float(self.rrf_k),
             )
         ranked = [(float(row["rrf"]), _row_to_evidence(row)) for row in rows]
-        return apply_role_boost(ranked, weights=self.role_weights, k=k)
+        return apply_role_boost(
+            ranked,
+            weights=self.role_weights,
+            k=k,
+            max_per_document=self.max_per_document,
+        )
 
     async def corpus_stats(self) -> tuple[int, int]:
         async with self.pool.acquire() as conn:
