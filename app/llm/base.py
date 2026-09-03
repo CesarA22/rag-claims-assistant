@@ -12,6 +12,7 @@ class Usage(BaseModel):
     prompt_tokens: int = 0
     cached_prompt_tokens: int = 0
     completion_tokens: int = 0
+    reasoning_tokens: int = 0
 
 
 class Completion(BaseModel):
@@ -28,6 +29,11 @@ class LLMProvider(Protocol):
         *,
         schema: dict[str, Any] | None = None,
         timeout_s: float | None = None,
+        max_output_tokens: int | None = None,
     ) -> Completion:
-        """timeout_s is owned by resilient.py. Callers above the decorator must not pass it."""
+        """timeout_s and max_output_tokens are owned by resilient.py.
+
+        Callers above the decorator must not pass either — if they do, budget
+        policy has leaked into the pipeline and the seam is cosmetic.
+        """
         ...

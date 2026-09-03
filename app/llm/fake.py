@@ -21,6 +21,8 @@ class FakeProvider:
     def __init__(self) -> None:
         self.queue: deque[Completion | BaseException] = deque()
         self.calls = 0
+        self.timeouts: list[float | None] = []
+        self.max_output_tokens_seen: list[int | None] = []
         self.hold: asyncio.Event | None = None
         self.entered: asyncio.Event | None = None
 
@@ -64,8 +66,11 @@ class FakeProvider:
         *,
         schema: dict[str, Any] | None = None,
         timeout_s: float | None = None,
+        max_output_tokens: int | None = None,
     ) -> Completion:
         self.calls += 1
+        self.timeouts.append(timeout_s)
+        self.max_output_tokens_seen.append(max_output_tokens)
         if self.entered is not None:
             self.entered.set()
         if self.hold is not None:
