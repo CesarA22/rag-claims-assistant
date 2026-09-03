@@ -184,3 +184,118 @@ POST 3  →  200  same as POST 2
 
 With the circuit open, the app is still answering with sources.
 
+
+---
+
+## S6 — the grounding gaps, measured
+
+S6 wrote no application code. It converted R-02's and R-03's prose gaps into
+three executable assertions, measured them against unmodified `app/` at
+`a1c75ee`, and pinned them. Four findings came out of the measurement; three of
+them were written down nowhere.
+
+### `xfail(strict=True)`, not a red `master`
+
+The first draft of the plan committed the three tests failing, on the grounds
+that a marker hiding a known gap turns it back into prose. That is true of a
+`gap` marker deselected in `addopts` — the test never runs — and false of
+`xfail(strict=True)`, which runs on every invocation, carries the requirement ID
+in its `reason`, and **fails the suite the moment the test unexpectedly passes**.
+It is the quarantine expiry date implemented as a forcing function rather than a
+note someone has to remember to read.
+
+Three reasons it won on this repo specifically: a red suite disarms the tier-0
+retrieval gate running beside it, so nobody could separate a real regression from
+the three expected failures; `README.md` invites an evaluator to run `pytest`,
+and `3 failed` with no commit body spends the first impression on a footnote they
+will not find; and on a five-day clock, "red until the next session" is a bet on
+the next session not slipping.
+
+The order is load-bearing, and it is recorded here because the artifact cannot
+show it: **the tests were written unmarked, run red, and their causes recorded
+before any marker went on.** A test born with an `xfail` was never measured.
+The tripwire was verified rather than assumed — a throwaway `xfail(strict=True)`
+test that passes reports `[XPASS(strict)]` and fails the run.
+
+### Finding 1 — the citation snippet is a second, unscrubbed egress path
+
+`citation_from_evidence()` copies `evidence.text` into `Citation.snippet`
+verbatim. Measured: with the ATA chunk retrieved, `111.111.111-11` reaches the
+caller **twice** — once in `answer`, once in `citations[0].snippet` — so a
+scrubber wired only into the answer string closes one of two doors.
+
+Worse than it looks, because the degraded path (`excerpts_answer()`) is *entirely*
+citation snippets. A provider outage while a minutes chunk is in the evidence set
+renders the PII table to the analyst under a "here are the sources" banner. T-18
+therefore asserts against `result.model_dump_json()`, not `result.answer`.
+
+### Finding 2 — `contains_pii` and `doc_role` are written and never read
+
+S2 populates both on every `Evidence`; the pipeline consumes neither. T-18 is the
+first thing in the repo that would notice. They are the natural key for S6b's
+refusal gate, which is what S2 paid for them for.
+
+### Finding 3 — `redact()` cannot close R-03 on its own
+
+Measured:
+
+```
+redact("Marta Ferreira Bittencourt, CPF 111.111.111-11, (41) 90000-0001")
+  → "Marta Ferreira Bittencourt, CPF [CPF], [TELEFONE]"
+```
+
+`redact()` is deterministic pattern work: CPF with check digits, phone, e-mail. A
+person's name matches no pattern, and gs-010 forbids five specific names. So
+"wire the existing scrubber into `ask.py`" — the fix R-03's own note has implied
+since S2 — leaves all five names in the answer. R-03 needs a *refusal* gate keyed
+on the question and `contains_pii` / `doc_role`, with `redact()` as the second
+layer, never the first.
+
+### Finding 4 — two PII guards that are load-bearing by accident
+
+Neither was designed as a control; both would vanish under a routine edit.
+
+**The log context happens to hold the system prompt.** `_LOG_CONTEXT_KEYS` in
+`app/api/errors.py` includes `"prompt"`, `JsonFormatter` writes it verbatim, and
+`handle_insurco_error` splats `**exc.context` into `extra`. Both producers
+(`ResilientProvider._log_context`, `OpenAIProvider.complete`) set `prompt` to
+`messages[0].content` — and `build_messages()` puts the *system* prompt at index
+0, with the rendered evidence at `messages[1]`. Verified by building the real
+message list with a minutes chunk: `messages[0]` carries no name, `messages[1]`
+does. So evidence does not reach the log today, and the only thing preventing it
+is an index nobody marked as load-bearing. The field is named `prompt`, `S5.md`
+describes the line as carrying "the prompt", and the obvious improvement ships
+five policyholder names per provider failure — into logs, which are retained
+longer, shipped further, and read by more people than a response body.
+
+S5's written justification for logging prompts is already void. It reads: "The
+prompt is safe to log because the corpus is redacted at ingest and claims
+projections exclude identifiers; if that ever stops being true, this line is
+where it bites." Finding 3 measured that ingest redaction does not remove names.
+The line S5 predicted would bite is the line that already does.
+
+**The snippet truncation happens to cap the leak.** `citation_from_evidence()`
+cuts snippets at 240 characters. Measured: the ATA chunk is 459 characters and
+carries five names and five CPFs; the snippet carries **two** of each. The leak is
+smaller than it should be because of a length chosen for rendering, not for
+privacy. Raise the limit, or reorder rows in the chunk, and it leaks more.
+
+Both resolve the same way in S6b: **log a prompt hash and the evidence IDs, never
+prompt text**, and scrub the snippet at its source instead of relying on where it
+happens to be cut.
+
+### S6b exists because S7 has no room
+
+Three strict xfails are three promises with a deadline, and the first draft
+pointed all of them at S7. S7 is persistence and the history surface — Postgres
+behind `ConversationRepository`, `UNIQUE (conversation_id, client_message_id)`,
+`GET /conversations/{id}/messages`, the `Turn` columns S5 pre-sized for it. None
+of that touches `ask.py`'s judgment. Five pieces of work were owed by a session
+with no room for them, which is how a forcing function becomes a suppressed
+failure at 11pm. **S6b** owns them: the sufficiency gate, the ambiguity gate, the
+PII refusal gate, `redact()` wired in as the second layer, and the two accidental
+guards above made deliberate.
+
+If the clock will not absorb S6b, the cut comes from D-04 and D-05 — both
+differentials, and the brief's own rule is that differentials do not compensate
+for missing mandatory requirements. R-02 and R-03 are mandatory.

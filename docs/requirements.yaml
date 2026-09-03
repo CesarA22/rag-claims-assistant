@@ -20,21 +20,22 @@ requirements:
   - id: R-02
     title: Questions with no answer in the sources are refused
     status: partial
+    session: S6
     files:
       - app/services/ask.py
-    tests: [T-03]
-    notes: "Invented-citation refusal (T-03) is in. Sufficiency judgment is not — T-16 / gs-008 (on-topic non-answering evidence → refuse) is still missing."
+    tests: [T-03, T-16, T-17]
+    notes: "Invented-citation refusal (T-03) is in. Sufficiency and ambiguity judgment are not. S6 made the gap executable: T-16 (gs-008, on-topic non-answering evidence → refuse) and T-17 (gs-009, ambiguous question → needs_clarification) are written, were measured red against unmodified app/, and carry xfail(strict=True) so the marker fails CI the day the gate lands. Owed by S6b."
 
   - id: R-03
     title: Policyholder personal data never appears in an answer
     status: partial
-    session: S4
+    session: S6
     files:
       - app/safety/redact.py
       - app/retrieval/ingest.py
       - app/tools/claims.py
-    tests: [T-04, T-18]
-    notes: "Ingest-time redaction and query-layer exclusion (T-04) exist. The output scrubber is not wired into ask.py, and T-18 / gs-010 (corpus PII → refuse) is still missing."
+    tests: [T-04, T-15, T-18]
+    notes: "Ingest-time redaction and query-layer exclusion (T-04) exist. T-18 (gs-010, corpus PII → refuse) is written, was measured red, and carries xfail(strict=True). Three egress paths are open, not one: ask.py never calls redact(); citation_from_evidence copies evidence.text into snippet unfiltered (and snippets are the entire degraded payload); and redact() matches CPF, phone and e-mail patterns only, so it cannot remove the five names gs-010 forbids. Owed by S6b."
 
   - id: R-04
     title: At most US$0.05 per question and p95 latency under 8 s
@@ -101,6 +102,7 @@ requirements:
     files:
       - app/tools/claims.py
     tests: [T-20, T-21, T-22, T-23, T-24, T-25, T-26]
+    notes: "T-12 was reserved in S1 for a status='Pago' grep guard over app/tools/. S4 wrote that guard as part of T-22, which checks the QUERIES literals, walks app/**/*.py for the pattern, and asserts count_claims(status='Pago') raises InvalidRequest — a superset of the reservation. T-12 is therefore absorbed and intentionally unused; the gap in the ID sequence is not an omission."
 
   # Differentials — brief §3, "Diferenciais (opcionais)".
   # Verbatim note from the brief: "Differentials do not compensate for
