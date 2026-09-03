@@ -60,8 +60,8 @@ LLM_PROVIDER=chaos    # injects failures. watch the degradation ladder for yours
 ```bash
 pytest --disable-socket -q               # full suite. sockets OFF is the point:
                                          # it is mechanical proof no test hits the API
-python evals/retrieval_baseline.py --k 5 # tier 0: retrieval only. free, instant
-python evals/retrieval_baseline.py --probes   # the same index vs paraphrased questions
+python evals/retrieval_baseline.py --k 5 --arm lexical --gate 1.0
+python evals/retrieval_baseline.py --probes --arm lexical
 python -m evals.run_golden               # tier 2: live API, writes EVALS.md (~US$0.50)
 ```
 

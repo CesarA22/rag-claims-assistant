@@ -89,3 +89,21 @@ exists for questions that should not retrieve the minutes at all.
 `MissingEmbeddingError`. Either path is loud; a zero vector would make
 pgvector return NaN and corrupt RRF silently.
 
+### `ts_rank_cd` is not BM25: add IDF
+
+`ts_rank_cd(..., 32)` normalises for length. It does not weight rare terms.
+Against this corpus that is the difference between 8/9 and 9/9: gs-010's
+POL-LGPD chunk ranks 44th on `ts_rank_cd` (common stems in a long CG-AUTO
+chunk win) and 2nd under the 60-line BM25 baseline. The lexical arm now
+multiplies `ts_rank_cd` by `1 + Σ IDF` of the Portuguese query lexemes
+that appear in the chunk, with document frequency from `ts_stat`. After
+that change lexical recall@5 is 9/9; the MiniLM-padded vector/hybrid arms
+stay at 8/9 because POL-LGPD never enters the vector top 50 and fused rank
+is 14. A `max_per_document=2` cap on the fused tail improves context
+(gs-004 no longer returns 5/5 CG-AUTO) but cannot lift a rank-14 hit into
+the top 5.
+
+Re-embedding with `text-embedding-3-small` was attempted and failed with
+`credit_balance_exhausted`. The padded MiniLM vectors stay until a funded
+key exists. `--gate 1.0` is therefore asserted on `--arm lexical`.
+
