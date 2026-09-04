@@ -37,10 +37,12 @@ docker compose up
 Open <http://localhost:8000>.
 
 That is the whole setup. The first boot builds the image, migrates the schema and
-indexes the thirteen documents before it serves — about 45 seconds, and you can
-watch it happen in the log. Every boot after that finds the index already there
-and starts immediately. The client and the API are on one origin, which is why
-the API needs no CORS.
+indexes the thirteen documents before it serves, and you can watch it happen in
+the log — a build is about 30 seconds and the migrate-and-index another 15, plus
+whatever the three base images cost to pull the first time. Every boot after that
+finds the index already there and skips straight to serving.
+
+The client and the API are on one origin, which is why the API needs no CORS.
 
 <details>
 <summary>Running it from source instead, without containers</summary>

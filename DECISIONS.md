@@ -825,7 +825,12 @@ and an override would be a knob that only breaks things.
 ### Verified from a clean clone
 
 `git clone` into an empty directory, no `.env`, no venv, no `node_modules`, then
-`docker compose up`. **43 seconds** to healthy.
+`docker compose up`: **43 seconds** to healthy on a machine that had already
+pulled the three base images. Measured separately, so the number is not doing
+more work than it can: a `--no-cache` build is **29 s**, and boot from an empty
+volume — migrate, ingest thirteen PDFs, bind — is **15 s**. A machine that has
+never seen `python:3.12-slim`, `node:20-slim` and `pgvector/pgvector:pg17` pays
+for those pulls on top.
 
 ```
 ==> alembic upgrade head
