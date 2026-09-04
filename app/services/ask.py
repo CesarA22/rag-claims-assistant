@@ -64,10 +64,20 @@ _PII_REFUSAL = (
     "e-mail — ainda que constem em documento interno (POL-LGPD-2024). "
     "Posso responder com dados não identificáveis, como o número do sinistro."
 )
-_CLARIFY = (
-    "As fontes recuperadas trazem limites diferentes por produto. "
-    "De qual produto se trata: Auto, Residencial ou Empresarial?"
-)
+def _clarify(products: list[str]) -> str:
+    """Name the products the evidence actually spanned, not the three we know of.
+
+    A constant sentence listing all three sat beside chips offering two, which
+    is a small lie about what was searched — the same reason the chips are built
+    from spanned_products rather than hardcoded.
+    """
+    named = (
+        f"{', '.join(products[:-1])} ou {products[-1]}" if len(products) > 1 else products[0]
+    )
+    return (
+        "As fontes recuperadas trazem limites diferentes por produto. "
+        f"De qual produto se trata: {named}?"
+    )
 
 
 class DraftCitation(BaseModel):
@@ -86,6 +96,10 @@ class AskResult(BaseModel):
     outcome: TurnStatus
     answer: str | None
     citations: list[Citation] = Field(default_factory=list)
+    # The products the evidence actually spanned. The chips the analyst clicks
+    # are this list, not the three the domain declares — offering a product the
+    # sources never mentioned is a small lie about what was searched.
+    clarification_options: list[str] = Field(default_factory=list)
     error_code: str | None = None
     trace_id: str
     provider: str
@@ -132,6 +146,8 @@ def citation_from_evidence(evidence: Evidence) -> Citation:
         version=evidence.version,
         effective_date=evidence.effective_date,
         snippet=snippet,
+        page_from=evidence.page_from,
+        page_to=evidence.page_to,
     )
 
 
@@ -171,7 +187,11 @@ def judge(draft: Draft, evidence: list[Evidence], question: str) -> Answer:
         return validate_citations(draft, evidence)
 
     if grounding.is_ambiguous(question, evidence):
-        return Answer(outcome="needs_clarification", text=_CLARIFY, citations=[])
+        return Answer(
+            outcome="needs_clarification",
+            text=_clarify(sorted(grounding.spanned_products(evidence))),
+            citations=[],
+        )
 
     answer = validate_citations(draft, evidence)
     if answer.outcome != "answered":
@@ -239,7 +259,13 @@ def _parse_draft(completion: Completion) -> Draft:
         return Draft(outcome="refused", answer=_CITATION_REFUSAL, citations=[])
 
 
-def _from_turn(turn: Turn, *, trace_id: str, provider: str) -> AskResult:
+def _from_turn(
+    turn: Turn,
+    *,
+    trace_id: str,
+    provider: str,
+    clarification_options: list[str] | None = None,
+) -> AskResult:
     answer = turn.answer
     return AskResult(
         conversation_id=turn.conversation_id,
@@ -247,6 +273,7 @@ def _from_turn(turn: Turn, *, trace_id: str, provider: str) -> AskResult:
         outcome=turn.status,
         answer=answer.text if answer else None,
         citations=list(answer.citations) if answer else [],
+        clarification_options=clarification_options or [],
         error_code=turn.error_code,
         trace_id=trace_id,
         provider=provider,
@@ -310,6 +337,11 @@ async def ask(
                 spent_usd = spent.spent_usd
             draft = _parse_draft(completion)
             answer = judge(draft, evidence, content)
+            options = (
+                sorted(grounding.spanned_products(evidence))
+                if answer.outcome == "needs_clarification"
+                else []
+            )
             latency_ms = int((time.perf_counter() - started) * 1000)
             turn = await repo.complete_turn(
                 turn,
@@ -320,7 +352,12 @@ async def ask(
                 cost_usd=spent_usd,
                 prompt_version=PROMPT_VERSION,
             )
-            return _from_turn(turn, trace_id=trace_id, provider=provider_name)
+            return _from_turn(
+                turn,
+                trace_id=trace_id,
+                provider=provider_name,
+                clarification_options=options,
+            )
     except (ProviderDegraded, CircuitOpen) as exc:
         if evidence:
             latency_ms = int((time.perf_counter() - started) * 1000)

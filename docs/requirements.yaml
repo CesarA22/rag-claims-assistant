@@ -28,7 +28,8 @@ requirements:
     files:
       - app/services/ask.py
       - app/services/grounding.py
-    tests: [T-03, T-16, T-17]
+      - web/src/components/TurnCard.tsx
+    tests: [T-03, T-16, T-17, T-41]
     notes: "S6b landed both gates in app/services/grounding.py and the xfail markers came off. Sufficiency is lexical — the answer's content terms must appear in the evidence it cites, at or above SUFFICIENCY_MIN. It catches gs-008, where the answer names a subject (desconto) the cited text never mentions. It does not catch a fluent paraphrase that reuses the source's words to say something the source does not; that needs an entailment judgment and a second model call is not affordable inside the US$0.05 ceiling. Stated in DECISIONS.md rather than implied."
 
   - id: R-03
@@ -134,11 +135,11 @@ requirements:
     title: Idempotent retry
     source: "Challenge brief §3, Differentials"
     requirement: "Idempotent retry (repeating a question does not duplicate messages in the history)."
-    files: [app/storage/memory.py, app/storage/sql.py, app/storage/models.py, app/api/routes.py]
-    tests: [T-02, T-35]
+    files: [app/storage/memory.py, app/storage/sql.py, app/storage/models.py, app/api/routes.py, app/api/schemas.py, web/src/components/Chat.tsx]
+    tests: [T-02, T-35, T-42]
     status: done
     session: S7
-    notes: "S1 landed it in a per-process dict, which made it true at one worker only — two uvicorn workers each held their own, so the same client_message_id posted twice created two turns and two provider calls. S7b moved it to messages_client_idem UNIQUE (conversation_id, client_message_id) with INSERT ... ON CONFLICT DO NOTHING RETURNING, preserving the same three branches. T-35 runs against both repositories, including two racing begin_turn calls."
+    notes: "S1 landed it in a per-process dict, which made it true at one worker only — two uvicorn workers each held their own, so the same client_message_id posted twice created two turns and two provider calls. S7b moved it to messages_client_idem UNIQUE (conversation_id, client_message_id) with INSERT ... ON CONFLICT DO NOTHING RETURNING, preserving the same three branches. T-35 runs against both repositories, including two racing begin_turn calls. S8a found the branch that made the frontend rule's Retry inert: begin_turn replayed any non-pending turn, so retrying a failed one returned the recorded failure at 200 with no provider call. A failed turn now re-opens in place — the key protects against duplicate ANSWERS, not against retrying a turn that produced none — and HistoryMessageOut returns client_message_id, which _turn() had always loaded and the API boundary had always dropped. Without that field a reloaded page mints a fresh key and duplicates the turn. T-42 asserts the retry POST body, not the rendering."
 
   - id: D-03
     title: Docker Compose for the complete application
@@ -147,7 +148,7 @@ requirements:
     files: [docker-compose.yml]
     tests: []
     status: partial
-    notes: "S3 added the db service only. app and web services are S8/S9 — 'complete' is not met yet."
+    notes: "S3 added the db service only. S8 declined the app and web services on the record: there is no Dockerfile in the repo and nothing serves static files, so 'complete' means two Dockerfiles and a seventh backend concern on the session that owes the mandatory interface requirement. D-03 is a differential and differentials do not compensate for mandatory requirements. S8 ships the Vite dev proxy instead; the remaining gap is the app and web services, owed by S9."
 
   - id: D-04
     title: Authored evaluation cases
@@ -167,7 +168,8 @@ requirements:
       - app/domain/models.py
       - app/services/ask.py
       - app/api/schemas.py
-      - web/src/chat/Provenance.tsx
+      - web/src/components/CitationList.tsx
     tests: [T-27]
-    status: pending
-    notes: "S8. Render-only for the DB line, which reads from section + effective_date (T-26). The document line first needs page_from/page_to selected in hybrid.py and superseded + pages + source_kind added to Evidence, Citation and CitationOut. Citation does not yet carry superseded, page_from, page_to, source_kind or query_name."
+    status: partial
+    session: S8
+    notes: "S8 took the page numbers only, because 40-frontend.mdc names 'page' in the citation panel. chunks.page_from/page_to were already populated, so it cost two columns in the outermost SELECT of hybrid.py — no ranking constant moved — plus the fields on Evidence, Citation and CitationOut. Nullable on Citation because sql.py rebuilds it field-by-field from a citations table that has no page columns; a required int would raise on every history read, and T-35 pins that. Remaining gap: superseded, source_kind and query_name on Citation, and the freshness line. A citation replayed from history shows no page."

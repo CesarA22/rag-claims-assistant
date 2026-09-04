@@ -62,6 +62,54 @@ async def test_same_client_message_id_creates_one_row(repos):
     assert len(await repos.history("c-idem")) == 1
 
 
+async def test_failed_turn_reopens_and_keeps_its_row(repos):
+    """T-35 / D-02: a failed turn re-opens to `new`; a completed one still replays.
+
+    40-frontend.mdc requires Retry to reuse the same client_message_id. Without
+    this branch that retry replays the recorded failure at 200 and never reaches
+    the provider — the button is inert. Reopening keeps the row and the
+    message_id, so D-02 ("repeating a question does not duplicate messages in
+    the history") is unaffected; it is asserted here rather than assumed.
+    """
+    first = await repos.begin_turn("c-reopen", "cm-r", "Pergunta que falha")
+    assert first.kind == "new"
+    await repos.fail_turn(first.turn, "provider_unavailable")
+
+    retry = await repos.begin_turn("c-reopen", "cm-r", "Pergunta que falha")
+    assert retry.kind == "new"
+    assert retry.turn.id == first.turn.id
+    assert retry.turn.status == "pending"
+    assert retry.turn.error_code is None
+    assert len(await repos.history("c-reopen")) == 1
+
+    # The reopened turn now completes normally, still on one row.
+    await repos.complete_turn(retry.turn, _answered(), Usage(), 10, model="fake-1")
+    turns = await repos.history("c-reopen")
+    assert [t.status for t in turns] == ["answered"]
+    assert turns[0].id == first.turn.id
+
+    # And a turn that reached an outcome is NOT re-openable.
+    again = await repos.begin_turn("c-reopen", "cm-r", "Pergunta que falha")
+    assert again.kind == "replay"
+
+
+async def test_persisted_citation_reads_back_without_pages(repos):
+    """T-35 / R-01: a stored citation rehydrates with null pages, it does not raise.
+
+    Citation.page_from/page_to are populated from retrieval and deliberately not
+    persisted — the citations table gains no columns this session. sql.py
+    rebuilds Citation field-by-field, so a required int would raise
+    ValidationError on every history read. The plan's "a replayed citation shows
+    no page" is only true while these stay nullable; this is what holds it.
+    """
+    await _seed_completed(repos, "c-pages", "cm-p", "Qual o prazo?", _answered())
+    turns = await repos.history("c-pages")
+    cited = turns[0].answer.citations[0]
+    assert cited.page_from is None
+    assert cited.page_to is None
+    assert cited.document_code == "NI-014"
+
+
 async def test_duplicate_while_in_flight_is_not_a_replay(repos):
     """T-35 / D-02: a duplicate arriving before the first turn completes is in_flight, not replay."""
     first = await repos.begin_turn("c-flight", "cm-2", "Qual é o prazo?")

@@ -69,6 +69,39 @@ class SqlConversationRepository:
             if inserted is not None:
                 return BeginTurnResult(turn=_turn(inserted, []), kind="new")
 
+            # A failed turn is re-openable, because the idempotency key
+            # protects against duplicate ANSWERS and a failure is not one.
+            # 40-frontend.mdc requires Retry to reuse the same
+            # client_message_id; without this the retry replays the recorded
+            # failure at 200 and never reaches the provider.
+            #
+            # `AND status = 'failed'` is what makes it race-safe: of two
+            # simultaneous retries one wins the UPDATE and gets `new`, the other
+            # reads `pending` and gets `in_flight`. Same three branches, same
+            # row, same message_id — D-02 is unaffected.
+            reopened = (
+                await session.execute(
+                    messages.update()
+                    .where(
+                        messages.c.conversation_id == conversation_id,
+                        messages.c.client_message_id == client_message_id,
+                        messages.c.status == "failed",
+                    )
+                    .values(
+                        status="pending",
+                        error_code=None,
+                        answer_text=None,
+                        completed_at=None,
+                    )
+                    .returning(messages)
+                )
+            ).mappings().first()
+            if reopened is not None:
+                await session.execute(
+                    citations.delete().where(citations.c.message_id == reopened["id"])
+                )
+                return BeginTurnResult(turn=_turn(reopened, []), kind="new")
+
             existing = (
                 await session.execute(
                     select(messages).where(

@@ -98,7 +98,7 @@ fused AS (
 SELECT
   c.id, c.document_code, c.document_title, c.section, c.version,
   c.effective_date, c.product, c.text, c.superseded, c.doc_role,
-  c.contains_pii, f.rrf
+  c.contains_pii, c.page_from, c.page_to, f.rrf
 FROM fused f
 JOIN chunks c ON c.id = f.id
 ORDER BY f.rrf DESC, c.id
@@ -159,6 +159,8 @@ def _row_to_evidence(row: asyncpg.Record) -> Evidence:
         superseded=row["superseded"],
         doc_role=row["doc_role"],
         contains_pii=row["contains_pii"],
+        page_from=row["page_from"],
+        page_to=row["page_to"],
     )
 
 

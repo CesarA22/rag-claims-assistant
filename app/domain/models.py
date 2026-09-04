@@ -24,6 +24,8 @@ class Evidence(BaseModel):
     source_kind: Literal["corpus", "claims"] = "corpus"
     doc_role: DocRole = "normative"
     contains_pii: bool = False
+    page_from: int | None = None
+    page_to: int | None = None
 
 
 class Citation(BaseModel):
@@ -34,6 +36,13 @@ class Citation(BaseModel):
     version: str
     effective_date: date
     snippet: str
+    # Nullable, and that is load-bearing rather than lazy. sql.py rebuilds a
+    # Citation field-by-field from the citations table, which has no page
+    # columns and is not gaining any this session — a required int would raise
+    # on every history read. A replayed citation shows no page; the panel omits
+    # the line rather than inventing one.
+    page_from: int | None = None
+    page_to: int | None = None
 
 
 class Answer(BaseModel):

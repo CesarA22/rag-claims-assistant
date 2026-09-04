@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from typing import Any
 
 from fastapi import FastAPI
 
@@ -36,6 +37,26 @@ def build_provider(name: str) -> LLMProvider:
         ResilienceConfig.from_env(),
         pricing=Pricing.from_env(),
     )
+
+
+async def build_retriever(arm: str) -> tuple[Any, Retriever]:
+    """The asyncpg pool and a HybridRetriever over it.
+
+    Returns both because the caller owns closing the pool. Lexical is the
+    default arm: the vector arm costs an embedding call per question and buys
+    nothing the ambiguity gate or the state demo needs.
+    """
+    from app.retrieval.embeddings import EmbeddingCache
+    from app.retrieval.hybrid import HybridRetriever
+    from app.storage.db import create_pool
+
+    if arm not in ("lexical", "vector", "hybrid"):
+        raise RuntimeError(
+            f"Unknown RETRIEVER_ARM={arm!r}. Use lexical, vector, or hybrid."
+        )
+    embed_query = None if arm == "lexical" else EmbeddingCache().embed_one
+    pool = await create_pool()
+    return pool, HybridRetriever(pool, embed_query, arm=arm)
 
 
 def build_repo(name: str) -> tuple[ConversationRepository, object | None]:
@@ -74,6 +95,13 @@ def create_app(
     elif storage is None:
         storage_name = "memory"
 
+    # memory by default so `pytest --disable-socket` and a keyless clone still
+    # start. hybrid is what the gs-009 gate needs: InMemoryRetriever holds two
+    # chunks spanning one product, so grounding.is_ambiguous can never fire.
+    retriever_name = "memory" if retriever is not None else os.getenv("RETRIEVER", "memory")
+    if retriever_name not in ("memory", "hybrid"):
+        raise RuntimeError(f"Unknown RETRIEVER={retriever_name!r}. Use memory or hybrid.")
+
     app = FastAPI(title="InsurCo claims assistant")
     app.state.llm = provider
     app.state.retriever = retriever or InMemoryRetriever()
@@ -81,6 +109,23 @@ def create_app(
     app.state.provider_name = name
     app.state.storage = storage_name
     app.state.engine = engine
+    app.state.retriever_name = retriever_name
+    app.state.pool = None
+
+    if retriever_name == "hybrid":
+        # create_pool is async and create_app is not, so the pool is built on
+        # startup rather than at construction. app.state.retriever is replaced
+        # in place; nothing reads it before startup completes.
+        @app.on_event("startup")
+        async def _open_pool() -> None:
+            app.state.pool, app.state.retriever = await build_retriever(
+                os.getenv("RETRIEVER_ARM", "lexical")
+            )
+
+        @app.on_event("shutdown")
+        async def _close_pool() -> None:
+            if app.state.pool is not None:
+                await app.state.pool.close()
 
     if engine is not None:
         @app.on_event("shutdown")
