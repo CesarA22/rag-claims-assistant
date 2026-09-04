@@ -41,10 +41,23 @@ approaches and one of them survives a provider outage better, take that one.
 ## Running it
 
 ```bash
-cp .env.example .env          # set OPENAI_API_KEY for the real provider
-docker compose up             # app on :8000, web on :5173, postgres on :5432
-python -m app.retrieval.ingest data/corpus   # one-off, builds the index
+docker compose up             # client and API on one origin, http://localhost:8000
 ```
+
+That is the whole thing: Docker, nothing else, no API key. The first boot
+migrates the schema and indexes the corpus before it serves; later boots find the
+index and skip straight to serving. Postgres is published on host **5433** for
+host-side tools — inside the compose network the api service reaches it at
+`db:5432`.
+
+`README.md` is the authoritative run document, including the from-source path
+with hot reload. Do not duplicate its steps here; this block went stale once
+already by being a copy.
+
+Set `OPENAI_API_KEY` in the environment or in a `.env` beside the compose file
+for the real provider. Compose reads `.env` only for substitution, and the api
+service sets `DATABASE_URL`, `STORAGE`, `RETRIEVER` and `RETRIEVER_ARM`
+explicitly, so those four never reach the container from `.env`.
 
 ### Three provider modes — you do not need an API key to see this work
 

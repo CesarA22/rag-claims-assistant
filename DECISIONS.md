@@ -704,3 +704,188 @@ graded interface is how that session slips. D-03's compose services are cut for
 the same reason and re-pointed at S9 — there is no Dockerfile in this repository
 and nothing serves static files, so "complete application in compose" is two
 Dockerfiles and a service, not a config line.
+
+---
+
+## S10 — the whole application in one `docker compose up`
+
+D-03 asks for "Docker Compose to run the complete application". S8 cut it and
+S9 did not pick it up, on the record above: *"there is no Dockerfile in this
+repository and nothing serves static files, so 'complete application in compose'
+is two Dockerfiles and a service, not a config line."*
+
+That estimate was one Dockerfile too pessimistic, and the reason is the next
+section.
+
+### One origin, so the no-CORS decision survives deployment
+
+`web/src/api.ts` hardcodes `BASE = '/api'` and `vite.config.ts` proxies `/api/*`
+to `http://localhost:8000/*` **with the prefix stripped**. Any container layout
+has to reproduce that rewrite. Three could:
+
+| | Shape | Verdict |
+|---|---|---|
+| A | an `nginx` container serving `dist/` and proxying `/api` to `api:8000` | the production shape, and not this project's deliverable: two Dockerfiles, an `nginx.conf` and a third service |
+| **B** | **one `api` container: `create_app()` mounted at `/api`, the built client at `/`** | **taken** |
+| C | two ports, `vite preview` on 5173 | disqualified outright |
+
+C is disqualified because it needs CORS. Adding `CORSMiddleware` to make a
+container demo work would undo S8's decision 3 — *"opening the API to an origin
+list so a dev server can reach it is a permanent, deployment-shaped surface
+bought to solve a development-time problem"* — in a codebase whose whole argument
+is exposure discipline. B puts the client and the API on one origin, so that
+decision is now true in a deployment and not only behind a dev proxy.
+
+B costs about fifteen lines and `create_app()` does not change. The prefix is a
+**mount**, not a router prefix, so no route in `app/api/routes.py` moves and the
+76 existing tests keep driving `create_app()` directly.
+
+### A mounted ASGI sub-app does not receive the lifespan scope
+
+This is the one that would have shipped a broken demo looking like a working one,
+and the plan asserted the opposite — *"a mounted ASGI sub-app keeps its own
+middleware and exception handlers"*, which is true, and says nothing about
+lifespan, which is not.
+
+Starlette routes only `http` and `websocket` scopes into a mount. `Router.__call__`
+handles `lifespan` itself and returns; it never reaches the child. Measured
+before any container existed:
+
+```
+child startup fired? []
+```
+
+`create_app()` opens the asyncpg pool in a startup hook, because `create_pool`
+is async and `create_app` is not. Without lifespan forwarding, `state.pool`
+stays `None`, `state.retriever` stays the **two-chunk `InMemoryRetriever`** — and
+nothing looks wrong. `/healthz` reports `ok`. The vigência question still answers
+and still cites CG-AUTO 2.1, because those exact strings are in the in-memory
+fixture. The failure only shows up on a question the fixture cannot serve.
+
+So the shell drives the child's lifespan explicitly, and T-44 pins it.
+
+**The check that distinguishes the two is gs-009.** `InMemoryRetriever` holds two
+chunks spanning one product, so `grounding.is_ambiguous` can never fire against
+it. `clarification_options: ['Auto', 'Residencial']` from the container is
+mechanical proof that the real hybrid index is behind the mount — which is why
+that question, not the vigência one, is the acceptance test.
+
+### The shell's own `/docs` would have shadowed the client
+
+FastAPI registers `/openapi.json`, `/docs` and `/redoc` at construction, before
+any mount. The shell has no routes of its own, so those three would have served
+an **empty** schema from paths the client should own. `docs_url=None`,
+`redoc_url=None`, `openapi_url=None`; the API's docs are where the API is, at
+`/api/docs`. Found by an assertion that was wrong for a different reason.
+
+### `pymupdf` does not need `libgl1`
+
+The plan budgeted an apt layer for `libgl1` and `libglib2.0-0`, "three details
+that will otherwise cost an hour each". Those are **opencv's**. pymupdf 1.28's
+manylinux wheels are self-contained: `python:3.12-slim` runs `get_text("dict")`
+and `find_tables()` over the real thirteen PDFs with no apt layer at all. Checked
+by running the ingest in the image rather than by importing the module, because
+importing is not using.
+
+### A fresh volume is an empty database, and an empty database refuses everything
+
+The failure mode that actually breaks `docker compose up` is not the build. It is
+that retrieval returns nothing, the sufficiency gate correctly declines, and the
+evaluator's first impression is an app that says *"não há base nas fontes"* to
+every question — a broken-looking product that is behaving correctly.
+
+So the entrypoint boot is migrate, then ingest-if-empty, then serve, and the
+guard is what makes a second `up` cheap:
+
+```
+first boot:   Running upgrade  -> 0001 ... 13 documents · 220 chunks · 13 tables
+second boot:  index already holds 220 chunks; skipping ingest
+```
+
+One shell detail is load-bearing. The count is read into a variable, not inlined
+into an `if [ ... = "0" ]` test, because a failure inside a condition is **not**
+an error to `set -e`: a crashing count would print nothing, compare false against
+`"0"`, skip the ingest and serve an empty index — the exact outcome the guard
+exists to prevent, arrived at by way of the guard.
+
+### `--no-embed` is the keyless path, and it is not a degraded one
+
+There is no embeddings cache in the repository; `git ls-files data/` is thirteen
+PDFs and `claims.db`. The 220 vectors in the development volume were paid for in
+S3 and live only there, and `EmbeddingCache` refuses to invent replacements — a
+cache miss with no key raises rather than embedding zeros, which was S3's
+deliberate choice. So a fresh clone cannot build the vector arm.
+
+It does not need to. `--no-embed` stores NULL vectors, `RETRIEVER_ARM=lexical`
+never reads them, and S3 measured **lexical recall@5 at 8/9 — the same as
+hybrid** on this corpus. `RETRIEVER_ARM` is therefore fixed in the compose file
+rather than overridable: with NULL vectors the vector arm has nothing to read,
+and an override would be a knob that only breaks things.
+
+### Verified from a clean clone
+
+`git clone` into an empty directory, no `.env`, no venv, no `node_modules`, then
+`docker compose up`. **43 seconds** to healthy.
+
+```
+==> alembic upgrade head
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, Initial schema
+==> empty index; ingesting data/corpus
+totals: 13 documents · 220 chunks · 13 tables · 1 footnotes attached · 1 PII chunks
+wrote 220 chunks (0 embedded)
+==> serving on 0.0.0.0:8000
+
+GET /api/healthz -> 200
+  status ok · provider fake · storage sql · database reachable · breaker closed
+GET /            -> 200 text/html   435 bytes
+GET /assets/*.js -> 200 text/javascript  193825 bytes
+
+"Qual é a vigência padrão da apólice de seguro auto?"
+  answered  · CG-AUTO-2024 · 2.1 Vigência · p2 · v3.2
+"Qual é o limite da cobertura de vidros?"
+  needs_clarification · ['Auto', 'Residencial'] · 0 citations · no number
+"Liste o nome completo e o CPF dos segurados citados na ata do comitê"
+  refused · no CPF pattern anywhere in the envelope
+same client_message_id replayed -> same message_id
+
+container: uid 10001 · no node · no npm · OPENAI_API_KEY empty · no .env in /app
+```
+
+Then the same thing in a browser at `http://localhost:8000`: the client loads
+from the container, the vidros question renders **PRECISA DE ESCLARECIMENTO**
+with the `Auto` and `Residencial` chips, no console errors. One port, one origin.
+
+The cold-volume run is the only one that counts. A warm volume proves nothing:
+it skips the migration, skips the ingest, and hides both.
+
+### The key is opt-in, and `docker compose config` will print it
+
+`LLM_PROVIDER` and `OPENAI_API_KEY` are read from the host environment or a
+`.env` beside the compose file, defaulting to `fake` and empty. A clean clone has
+no `.env`, so the keyless path is what an evaluator gets without choosing
+anything. `.dockerignore` excludes `.env`, so the key arrives as a runtime
+variable and is never baked into a layer, which a layer would outlive.
+
+Worth knowing while developing: on a machine that *does* have a `.env` with a
+real key, `docker compose config` renders every substitution and prints that key
+in plaintext. Redirect it or do not run it in a shared terminal.
+
+### Out of scope, stated so it is not mistaken for an omission
+
+- **An `nginx` service.** Option A above. Add it when the client needs a CDN or
+  the API needs to scale separately from the static files.
+- **Committing an embeddings cache** so the vector arm works from a clone. It
+  costs an API call per chunk and a decision about committing generated vectors,
+  and S3 measured lexical at parity on this corpus.
+- **Pinned Python dependencies.** `web/package-lock.json` pins the client half of
+  this image exactly; `pyproject.toml` gives the Python half floors only, so two
+  builds a month apart can resolve different versions and the tests that would
+  catch it run on the host venv, not in the image. A `constraints.txt` is the
+  fix. Out of scope here because it is a repository-wide decision that predates
+  the image, not something the image introduced — but the image is what makes it
+  matter, so it is written down.
+- **Publishing the image** to a registry. Nothing asks for it.
+- **A `web` container running Vite dev.** `npm run dev` with hot reload stays the
+  development path and the proxy stays in `vite.config.ts`. Containerising the
+  dev server would give two ways to run the same thing and a second place for the
+  proxy rule to drift.

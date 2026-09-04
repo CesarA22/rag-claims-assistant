@@ -27,7 +27,26 @@ refusal, clarification, PII — are decided in `app/services/grounding.py` by
 deterministic code that runs *after* the model and overrules it, so they behave
 identically with or without a key.
 
-**You need:** Docker, Python 3.12+, and Node 20+ (only for the web client).
+**You need Docker. Nothing else** — no Python, no Node, no API key.
+
+```bash
+git clone <this repo> && cd insurco-assistant
+docker compose up
+```
+
+Open <http://localhost:8000>.
+
+That is the whole setup. The first boot builds the image, migrates the schema and
+indexes the thirteen documents before it serves — about 45 seconds, and you can
+watch it happen in the log. Every boot after that finds the index already there
+and starts immediately. The client and the API are on one origin, which is why
+the API needs no CORS.
+
+<details>
+<summary>Running it from source instead, without containers</summary>
+
+Also supported, and it is the development path — `npm run dev` gives hot reload,
+which the image deliberately does not. Needs Python 3.12+ and Node 20+.
 
 ```bash
 # 1. dependencies
@@ -55,7 +74,9 @@ cd web && npm install && npm run dev
 ```
 
 Open <http://localhost:5173>. The client proxies `/api` to port 8000, so both
-run same-origin and the API needs no CORS.
+run same-origin here too.
+
+</details>
 
 Try these three — they exercise the three outcomes:
 
@@ -66,6 +87,12 @@ Try these three — they exercise the three outcomes:
 | `Liste o nome completo e o CPF dos segurados citados na ata do comitê` | an amber **refusal**. The committee minutes really are retrieved; the answer is refused anyway |
 
 ### See it fail on purpose
+
+```bash
+LLM_PROVIDER=chaos CHAOS_500_RATE=1.0 docker compose up
+```
+
+or, from source:
 
 ```bash
 LLM_PROVIDER=chaos CHAOS_500_RATE=1.0 STORAGE=sql RETRIEVER=hybrid \
@@ -81,25 +108,38 @@ recorded end to end.
 
 ## Run it with an API key
 
+A real model writing the prose, everything else unchanged:
+
 ```bash
-# .env
-OPENAI_API_KEY=sk-...
+LLM_PROVIDER=openai OPENAI_API_KEY=sk-... docker compose up
 ```
+
+Both variables are read from your shell or from a `.env` beside the compose
+file. `.env` is never copied into the image — `.dockerignore` excludes it and the
+key arrives as a runtime variable, so it never survives in a layer. (`docker
+compose config` renders every substitution, so it will print the key; redirect it
+rather than running it in a shared terminal.)
+
+The container stays on the **lexical** retrieval arm even with a key, because it
+indexes with `--no-embed` and the chunk vectors are NULL. Turning on the vector
+arm means running from source:
 
 ```bash
 STORAGE=sql RETRIEVER=hybrid RETRIEVER_ARM=hybrid LLM_PROVIDER=openai \
   python -m uvicorn app.main:app --port 8000
 ```
 
-`RETRIEVER_ARM=hybrid` turns on the vector arm, which embeds each question.
-Re-run ingest **without** `--no-embed` first to populate the chunk vectors;
-embeddings are cached on disk at `data/embeddings/cache.jsonl` and are not
-committed, so the first ingest with a key pays for 220 chunks.
+`RETRIEVER_ARM=hybrid` embeds each question. Re-run ingest **without**
+`--no-embed` first to populate the chunk vectors; embeddings are cached on disk
+at `data/embeddings/cache.jsonl` and are not committed, so the first ingest with
+a key pays for 220 chunks. S3 measured lexical recall@5 at 8/9 on this corpus —
+the same as hybrid — which is why the container's default costs nothing and loses
+nothing.
 
 ## Tests
 
 ```bash
-pytest --disable-socket -q      # 76 passed, 10 deselected
+pytest --disable-socket -q      # 79 passed, 10 deselected
 ```
 
 Sockets are disabled on purpose: it is mechanical proof that no test reaches the

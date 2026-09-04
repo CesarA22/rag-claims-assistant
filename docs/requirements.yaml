@@ -145,10 +145,11 @@ requirements:
     title: Docker Compose for the complete application
     source: "Challenge brief §3, Differentials"
     requirement: "Docker Compose to run the complete application."
-    files: [docker-compose.yml]
-    tests: []
-    status: partial
-    notes: "S3 added the db service only. S8 declined the app and web services on the record: there is no Dockerfile in the repo and nothing serves static files, so 'complete' means two Dockerfiles and a seventh backend concern on the session that owes the mandatory interface requirement. D-03 is a differential and differentials do not compensate for mandatory requirements. S8 ships the Vite dev proxy instead; the remaining gap is the app and web services, owed by S9."
+    files: [docker-compose.yml, Dockerfile, .dockerignore, .gitattributes, docker/entrypoint.sh, scripts/chunk_count.py, app/main.py]
+    tests: [T-43, T-44]
+    status: done
+    session: S10
+    notes: "S3 added the db service only. S8 declined the app and web services on the record — no Dockerfile, nothing serving static files — and re-pointed them at S9, which spent itself on the eval harness. S10 closes it with ONE Dockerfile and one service, not the two S8 estimated: the API is mounted at /api inside a shell that also serves the built client at /, so client and API share an origin and S8's decision to add no CORS middleware stays true in a deployment rather than only behind the Vite dev proxy. The plan's bare shell.mount() would have shipped a broken demo that looked healthy — Starlette does not route the lifespan scope into a mounted app, so create_app()'s startup hook never runs and state.retriever stays the two-chunk InMemoryRetriever; T-44 pins the forwarding and gs-009 returning ['Auto','Residencial'] from the container is the acceptance check, because that gate cannot fire against the in-memory fixture. Boot is idempotent: alembic upgrade head, ingest only when the chunk count is zero, serve. Verified from a git clone into an empty directory with no .env, no venv and no key: 43 seconds to healthy, 13 documents / 220 chunks, the three documented questions returning answered / needs_clarification / refused, and with LLM_PROVIDER=chaos the degraded and failed states too — all seven interface states reachable from compose alone. Two limits, both deliberate and recorded in DECISIONS.md: the container indexes with --no-embed so RETRIEVER_ARM is fixed at lexical (S3 measured it at parity, recall@5 8/9), and there is no nginx service."
 
   - id: D-04
     title: Authored evaluation cases

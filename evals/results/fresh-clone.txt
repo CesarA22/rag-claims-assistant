@@ -32,3 +32,7 @@ $ npm run build                                  built in 1.97s
 
 Every command in README.md ran as written. No step needed an undocumented
 prerequisite, no step needed editing .env, and nothing required an API key.
+
+# Recorded at 293b69f, following the from-source path README documented then.
+# S10 added `docker compose up` and three tests: the suite is 79 passed /
+# 10 deselected today. The numbers above are left as they ran.
