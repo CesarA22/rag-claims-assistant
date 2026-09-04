@@ -1,0 +1,15 @@
+Tier 2 (live provider) could not be run. Captured from the API process log at
+the first live question, LLM_PROVIDER=openai, RETRIEVER_ARM=hybrid:
+
+  File "app/retrieval/embeddings.py", line 102, in embed_fn
+    return await openai_embed(batch, model=self.model)
+  File "app/llm/openai_provider.py", line 40, in embed
+    response = await client.embeddings.create(model=model, input=texts)
+  openai.RateLimitError: Error code: 429 - {'error': {'message': 'You have no
+  credits remaining. Add credits to continue using the API at
+  https://platform.openai.com/settings/organization/billing/.', 'type':
+  'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}
+
+The request surfaced to the caller as HTTP 500 problem+json with a trace_id and
+no internals, which is the correct behaviour and is itself the first row of
+evidence in this file.

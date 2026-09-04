@@ -113,6 +113,7 @@ def render(
     boundary: dict[str, Any] | None,
     tier0: str | None,
     blocked: str | None,
+    fresh: str | None,
 ) -> str:
     records = _all_records(runs)
     by_case = _records_by_case(runs)
@@ -350,6 +351,15 @@ def render(
             "whose right answer is that nothing matches.\n"
         )
 
+    if fresh:
+        add("## The README, followed literally from a fresh clone\n")
+        add(
+            "Cloned into an empty directory and run command by command against a "
+            "**new, empty database**, so `alembic upgrade head` was exercised from "
+            "nothing rather than against the developer's existing volume.\n"
+        )
+        add("```\n" + fresh.strip() + "\n```\n")
+
     add(REPRODUCE)
     return "\n".join(out)
 
@@ -509,8 +519,12 @@ def main() -> int:
         else {}
     )
 
+    fresh_path = args.results / "fresh-clone.txt"
+    fresh = fresh_path.read_text(encoding="utf-8") if fresh_path.exists() else None
+
     args.out.write_text(
-        render(runs, cfg, judged, boundary, tier0, blocked) + "\n", encoding="utf-8"
+        render(runs, cfg, judged, boundary, tier0, blocked, fresh) + "\n",
+        encoding="utf-8",
     )
     print(f"wrote {args.out} from {len(runs)} run(s)")
     return 0

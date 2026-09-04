@@ -1,1 +1,9 @@
-results/
+# The raw results ARE committed — decision 8 of the S9 plan: committing the data
+# is what lets a reader recompute a number they doubt instead of taking it, and
+# it is the only thing that saves EVALS.md from the charge that it was written
+# on the last day to match the gates.
+#
+# Only the throwaway harness-proof run is ignored: `--in-process --out
+# evals/results/fake` exists to show the harness reports failure before any
+# money is spent, and its verdicts are meaningless.
+results/fake/

@@ -247,6 +247,47 @@ recall@5 = 9/9 = 100%
 
 **recall@5 = 9/9 = 100%**, against a registered gate of 88%. Higher than the 8/9 S3 recorded, and the case that moved is gs-010: S3's note says POL-LGPD was not in the top 5 and the ATA chunk appeared only on the vector and hybrid arms. Both are now in the lexical top 5, which is what the IDF weighting S3 added to `hybrid.py` was for — discriminative terms like `lgpd` and `ata` no longer lose to long CG-AUTO chunks matching common stems. gs-008 is scored `n/a`: it is a refusal case with no expected document, and counting it would be scoring retrieval on a question whose right answer is that nothing matches.
 
+## The README, followed literally from a fresh clone
+
+Cloned into an empty directory and run command by command against a **new, empty database**, so `alembic upgrade head` was exercised from nothing rather than against the developer's existing volume.
+
+```
+$ git clone <repo> insurco && cd insurco        # into an empty directory
+cloned; files: 182
+
+$ python -m venv .venv && .venv/Scripts/activate
+$ pip install -e ".[dev]"                        exit 0
+$ cp .env.example .env                           ok, no edit needed
+
+$ docker compose up -d db
+$ alembic upgrade head                           # against an EMPTY database
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, Initial schema:
+      chunks, documents, conversations, messages, citations.
+
+$ python -m app.retrieval.ingest data/corpus --no-embed
+totals: 13 documents · 220 chunks · 13 tables · 1 footnotes attached · 1 PII chunks
+
+$ STORAGE=sql RETRIEVER=hybrid RETRIEVER_ARM=lexical LLM_PROVIDER=fake \
+    python -m uvicorn app.main:app --port 8000
+{"status":"ok","provider":"fake","storage":"sql","database":{"reachable":true}}
+
+  the three questions the README tells you to try:
+  vigencia  HTTP 200  answered             cites=1  [CG-AUTO-2024 §2.1 Vigência p.2 v3.2]
+  vidros    HTTP 200  needs_clarification  cites=0  opts=['Auto', 'Residencial']
+  pii       HTTP 200  refused              cites=0
+
+$ pytest --disable-socket -q                     76 passed, 10 deselected
+$ pytest -m db -q                                10 passed, 76 deselected
+$ python evals/retrieval_baseline.py --k 5 --arm lexical    recall@5 = 9/9 = 100%
+
+$ cd web && npm install                          added 242 packages in 7s
+$ npm test                                       2 passed
+$ npm run build                                  built in 1.97s
+
+Every command in README.md ran as written. No step needed an undocumented
+prerequisite, no step needed editing .env, and nothing required an API key.
+```
+
 ## Reproducing this
 
 ```bash
