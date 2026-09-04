@@ -816,11 +816,17 @@ S3 and live only there, and `EmbeddingCache` refuses to invent replacements — 
 cache miss with no key raises rather than embedding zeros, which was S3's
 deliberate choice. So a fresh clone cannot build the vector arm.
 
-It does not need to. `--no-embed` stores NULL vectors, `RETRIEVER_ARM=lexical`
-never reads them, and S3 measured **lexical recall@5 at 8/9 — the same as
-hybrid** on this corpus. `RETRIEVER_ARM` is therefore fixed in the compose file
-rather than overridable: with NULL vectors the vector arm has nothing to read,
-and an override would be a knob that only breaks things.
+It does not need to. `--no-embed` stores NULL vectors and `RETRIEVER_ARM=lexical`
+never reads them, and the arm that is left is the one `EVALS.md` re-measured in
+S9 at **recall@5 = 9/9 = 100%**, against a registered gate of 88% — higher than
+the 8/9 S3 recorded, because the IDF weighting S3 added to `hybrid.py` pulled
+POL-LGPD and the ATA chunk into the lexical top 5. Citing S3's 8/9 here would be
+quoting a number EVALS.md itself calls superseded, and it would understate the
+keyless path rather than overstate it.
+
+`RETRIEVER_ARM` is therefore fixed in the compose file rather than overridable:
+with NULL vectors the vector arm has nothing to read, and an override would be a
+knob that only breaks things.
 
 ### Verified from a clean clone
 

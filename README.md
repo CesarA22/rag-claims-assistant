@@ -134,9 +134,10 @@ STORAGE=sql RETRIEVER=hybrid RETRIEVER_ARM=hybrid LLM_PROVIDER=openai \
 `RETRIEVER_ARM=hybrid` embeds each question. Re-run ingest **without**
 `--no-embed` first to populate the chunk vectors; embeddings are cached on disk
 at `data/embeddings/cache.jsonl` and are not committed, so the first ingest with
-a key pays for 220 chunks. S3 measured lexical recall@5 at 8/9 on this corpus —
-the same as hybrid — which is why the container's default costs nothing and loses
-nothing.
+a key pays for 220 chunks. The container's lexical default is not a compromise:
+`EVALS.md`'s tier 0 measures it at **recall@5 = 9/9 = 100%** on this corpus,
+against a registered gate of 88%. S3 measured 8/9 with all three arms at parity;
+the case that moved since is gs-010.
 
 ## Tests
 

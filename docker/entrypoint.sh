@@ -19,8 +19,8 @@ count=$(python -m scripts.chunk_count)
 if [ "$count" = "0" ]; then
   # --no-embed stores NULL vectors. There is no embeddings cache in the
   # repository and EmbeddingCache refuses to invent one, so a keyless clone
-  # cannot build the vector arm; RETRIEVER_ARM=lexical never reads it, and S3
-  # measured lexical recall@5 at 8/9 — the same as hybrid on this corpus.
+  # cannot build the vector arm; RETRIEVER_ARM=lexical never reads it, and
+  # EVALS.md's tier 0 puts that arm at recall@5 = 9/9 on this corpus.
   echo "==> empty index; ingesting data/corpus (this takes a minute)"
   python -m app.retrieval.ingest data/corpus --no-embed
 else

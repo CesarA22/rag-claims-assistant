@@ -32,8 +32,9 @@ services:
       STORAGE: sql
       RETRIEVER: hybrid
       # Fixed, not overridable: the entrypoint ingests with --no-embed, so the
-      # vectors are NULL and the vector arm would have nothing to read. S3
-      # measured lexical recall@5 at 8/9 — the same as hybrid on this corpus.
+      # vectors are NULL and the vector arm would have nothing to read. That
+      # costs nothing measurable: EVALS.md's tier 0 puts the lexical arm at
+      # recall@5 = 9/9 on this corpus, against a registered gate of 0.88.
       RETRIEVER_ARM: lexical
       # From the host environment or a .env beside this file. .env is never
       # COPY'd into the image (.dockerignore); the key arrives at runtime.
