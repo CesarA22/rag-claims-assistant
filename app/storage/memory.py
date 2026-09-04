@@ -57,6 +57,18 @@ class InMemoryConversationRepository:
         if existing is not None:
             if existing.status == "pending":
                 return BeginTurnResult(turn=existing, kind="in_flight")
+            if existing.status == "failed":
+                # A failed turn is re-openable. The idempotency key protects
+                # against duplicate ANSWERS, not against retrying a turn that
+                # produced none — and 40-frontend.mdc requires Retry to reuse
+                # the same client_message_id, which would otherwise replay the
+                # recorded failure and never call the provider. Same row, same
+                # id, so D-02 still holds.
+                reopened = existing.model_copy(
+                    update={"status": "pending", "error_code": None, "answer": None}
+                )
+                self._store(reopened)
+                return BeginTurnResult(turn=reopened, kind="new")
             return BeginTurnResult(turn=existing, kind="replay")
         turn = Turn(
             id=f"m-{uuid.uuid4().hex[:12]}",

@@ -123,6 +123,20 @@ def install_error_handlers(app: FastAPI) -> None:
         return problem_response(request, "internal_error")
 
 
+def safe_detail(code: str | None) -> str | None:
+    """The user-safe message for a stored error_code.
+
+    History persists `error_code` and nothing else, so without this the web
+    client would keep its own copy of the taxonomy — which is exactly what
+    "never render a raw error object; the API returns a safe message" forbids.
+    Derived at render time from the same map the problem+json body uses; nothing
+    new is stored and no second taxonomy exists.
+    """
+    if code is None:
+        return None
+    return _DETAILS.get(code, _DETAILS["internal_error"])
+
+
 def problem_response(request: Request, code: str) -> JSONResponse:
     status = _STATUS.get(code, 500)
     trace_id = getattr(request.state, "trace_id", None) or str(uuid.uuid4())

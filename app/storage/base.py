@@ -37,7 +37,20 @@ class ConversationRepository(Protocol):
         conversation_id: str,
         client_message_id: str,
         question: str,
-    ) -> BeginTurnResult: ...
+    ) -> BeginTurnResult:
+        """Three branches on (conversation_id, client_message_id).
+
+        new       — no row, or a `failed` row re-opened in place
+        in_flight — a `pending` row; someone else is working on it
+        replay    — a row that already reached an outcome
+
+        A `failed` turn re-opens because the key protects against duplicate
+        answers, not against retrying a turn that produced none. It keeps its
+        row and its id, so D-02 holds. A `pending` turn does NOT re-open: it may
+        genuinely be in flight on another worker, and reopening it would call
+        the provider twice.
+        """
+        ...
 
     async def complete_turn(
         self,

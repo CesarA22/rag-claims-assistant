@@ -13,6 +13,7 @@ from app.api.schemas import (
     MetaOut,
     UsageOut,
 )
+from app.api.errors import safe_detail
 from app.services.ask import AskResult, ask
 
 router = APIRouter()
@@ -78,10 +79,12 @@ async def get_messages(conversation_id: str, request: Request) -> HistoryOut:
         messages=[
             HistoryMessageOut(
                 message_id=turn.id,
+                client_message_id=turn.client_message_id,
                 question=turn.question,
                 outcome=turn.status,
                 answer=turn.answer.text if turn.answer else None,
                 error_code=turn.error_code,
+                detail=safe_detail(turn.error_code),
                 citations=[_citation_out(c) for c in (turn.answer.citations if turn.answer else [])],
                 degraded=turn.degraded,
                 reason=turn.reason,
@@ -120,6 +123,7 @@ def _to_envelope(result: AskResult) -> AnswerEnvelope:
         outcome=result.outcome,
         answer=result.answer,
         citations=[_citation_out(c) for c in result.citations],
+        clarification_options=result.clarification_options,
         meta=MetaOut(
             trace_id=result.trace_id,
             provider=result.provider,
@@ -146,4 +150,6 @@ def _citation_out(citation) -> CitationOut:
         version=citation.version,
         effective_date=citation.effective_date,
         snippet=citation.snippet,
+        page_from=citation.page_from,
+        page_to=citation.page_to,
     )
