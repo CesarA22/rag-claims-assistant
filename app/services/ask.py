@@ -64,10 +64,20 @@ _PII_REFUSAL = (
     "e-mail — ainda que constem em documento interno (POL-LGPD-2024). "
     "Posso responder com dados não identificáveis, como o número do sinistro."
 )
-_CLARIFY = (
-    "As fontes recuperadas trazem limites diferentes por produto. "
-    "De qual produto se trata: Auto, Residencial ou Empresarial?"
-)
+def _clarify(products: list[str]) -> str:
+    """Name the products the evidence actually spanned, not the three we know of.
+
+    A constant sentence listing all three sat beside chips offering two, which
+    is a small lie about what was searched — the same reason the chips are built
+    from spanned_products rather than hardcoded.
+    """
+    named = (
+        f"{', '.join(products[:-1])} ou {products[-1]}" if len(products) > 1 else products[0]
+    )
+    return (
+        "As fontes recuperadas trazem limites diferentes por produto. "
+        f"De qual produto se trata: {named}?"
+    )
 
 
 class DraftCitation(BaseModel):
@@ -177,7 +187,11 @@ def judge(draft: Draft, evidence: list[Evidence], question: str) -> Answer:
         return validate_citations(draft, evidence)
 
     if grounding.is_ambiguous(question, evidence):
-        return Answer(outcome="needs_clarification", text=_CLARIFY, citations=[])
+        return Answer(
+            outcome="needs_clarification",
+            text=_clarify(sorted(grounding.spanned_products(evidence))),
+            citations=[],
+        )
 
     answer = validate_citations(draft, evidence)
     if answer.outcome != "answered":

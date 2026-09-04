@@ -553,3 +553,154 @@ WHERE c.document_code = 'NI-014' AND c.version = '1.0' ORDER BY m.seq;
 duplicate POST created no second row, and the provider was called once.
 `prompt_version` persisted as `4adf882fbe66` on both completed turns and is empty
 on the failed one, which never reached `complete_turn`.
+
+## S8 — the interface, and what building it found in the API
+
+The frontend rules are a contract. Reading them against the running API found
+six clauses with no server-side counterpart, and the two that mattered were both
+about Retry.
+
+### Retry was inert, and the fix is a semantics change not a patch
+
+`begin_turn` returned `replay` for any turn that was not `pending` — including
+`failed`. So the Retry the rules mandate, which must reuse the same
+`client_message_id`, returned the recorded failure at HTTP 200 and never called
+the provider. It also silently changed response shape: the original failure is
+`problem+json` at 503, the "retry" an `AnswerEnvelope` at 200.
+
+A `failed` turn is now re-openable, because **the idempotency key protects
+against duplicate answers, not against retrying a turn that produced none.**
+`AND status = 'failed'` on the UPDATE keeps it race-safe — of two simultaneous
+retries one gets `new` and the other `in_flight`. Same row, same `message_id`.
+
+Then the half that would have shipped broken: `HistoryMessageOut` did not carry
+`client_message_id`. `_turn()` loads it from the row and the API boundary threw
+it away, so after a page reload the client had no key to re-post and would have
+had to mint one — creating a second row and a second paid provider call on the
+most ordinary action there is. Three lines. It is the kind of bug that is
+invisible in exactly the manual test a developer runs, because the first Retry,
+in the session that produced the failure, works fine.
+
+### Measured, not assumed: CHAOS_INNER was not built
+
+The plan reached for a knob letting chaos wrap the real provider, on the theory
+that `complete` was unreachable with a fake model. Measured against the real
+corpus instead: "Qual é a vigência padrão da apólice de seguro auto?" retrieves
+CG-AUTO §2.1, the fake's canned sentence scores **1.00** on the sufficiency gate
+against that chunk, and `judge()` returns `answered` with a real citation. The
+knob was deleted from the plan before it was written.
+
+The deeper reason a fake provider does not weaken these gates: **the three
+outcomes the brief grades are decided in deterministic code.** gs-009 clarifies
+because `spanned_products` sees two products; gs-010 refuses because the question
+asks for names over privileged evidence. Neither consults the model's opinion.
+
+### Cancel: what was claimed, and what the clock actually showed
+
+The plan asserted that a client abort leaves the turn orphaned at `pending`
+forever, because `CancelledError` is a `BaseException` and `ask.py` catches
+`Exception`. Half right, and the wrong half was the operational conclusion.
+
+Measured — abort the socket 1 s into a 20 s call, then poll the same
+`client_message_id`:
+
+```
+client aborted after 1.0s (server had 4.0s of chaos latency to go)
+same client_message_id 1.5s later -> outcome=pending  answer=null  id=m-19979f5c04a9
+same client_message_id 5.5s later -> outcome=refused             id=m-19979f5c04a9
+history rows: [('refused', 'idle-9')]
+```
+
+So `pending` — the UI's `idle` — is real and reachable, and the card's claim
+that "o servidor continua processando" is literally true. But the handler is not
+cancelled on disconnect: it finished and the row reached `refused` on its own.
+**The reaper the plan called an operational gap is therefore only needed for a
+worker that dies mid-turn, not for every cancel**, which is a much smaller
+liability than it was written up as. `Atualizar` rather than Retry is still the
+right affordance, and now for a better reason: the work completes, so refreshing
+shows the answer.
+
+### Three things the browser found that no test would have
+
+- **The clarification prose contradicted its own chips.** `_CLARIFY` was a
+  constant naming all three products while the chips correctly offered the two
+  the evidence spanned. It is now `_clarify(products)`, built from the same
+  `spanned_products` call. Same argument as the chips: offering a product the
+  sources never mentioned is a small lie about what was searched.
+- **History was never loaded.** `fromHistory`/`mergeHistory` existed and nothing
+  called them, so B7 — the whole point of returning `client_message_id` — was
+  unreachable. One mount effect.
+- **The health poll paused when the tab lost focus.** TanStack's
+  `refetchInterval` stops on blur by default, so the banner went stale exactly
+  when the analyst was away and came back — the opposite of "an open circuit is
+  visible before the analyst types". `refetchIntervalInBackground: true`.
+
+### Verified against the live stack
+
+`STORAGE=sql RETRIEVER=hybrid RETRIEVER_ARM=lexical LLM_PROVIDER=chaos`,
+220 chunks, client on the Vite `/api` proxy.
+
+```
+PASS A - provider healthy
+complete               200  answered            cites=1  CG-AUTO-2024 2.1, p. 2
+needs_clarification    200  needs_clarification opts=['Auto', 'Residencial']
+                            "De qual produto se trata: Auto ou Residencial?"
+refused (gs-010)       200  refused             no CPF, no names, cites POL-LGPD-2024
+refused (off-corpus)   200  refused             0 chunks retrieved
+
+PASS B - CHAOS_500_RATE=1.0
+degraded               200  answered  degraded=true  cites=5
+failed                 503  provider_degraded  trace=b91febe9
+
+PASS C - Retry reusing client_message_id 'b-2'
+retry, still down      503  circuit_open       trace=d4c589ce   <- different code,
+                                                                   different trace:
+                                                                   a real attempt
+retry, recovered       200  refused            one row, same message_id
+
+GET history
+  answered   cmid=b-1  m-1af64b16de03
+  refused    cmid=b-2  m-d3feaccc86b7
+  rows for cmid 'b-2': 1
+
+client_message_ids with more than one row, whole conversation: 0
+```
+
+gs-009 gate, verbatim:
+
+```
+POST /conversations/gate-gs009/messages  "Qual é o limite da cobertura de vidros?"
+HTTP 200
+outcome              : needs_clarification
+clarification_options: ['Auto', 'Residencial']
+answer               : As fontes recuperadas trazem limites diferentes por produto.
+                       De qual produto se trata: Auto ou Residencial?
+citations            : 0
+```
+
+A clarification, not a number. Seven screenshots and the outage recording are in
+`docs/screenshots/`.
+
+### Two demo fragilities, recorded so a later edit does not break them silently
+
+- **gs-010 refuses on `doc_role == "minutes"`, not on `contains_pii`.** Exactly
+  one chunk of 220 carries `contains_pii=True` and it is not among the five
+  retrieved; the ATA chunk that returns is §1 Abertura, which holds no PII.
+  `evidence_carries_pii()` ORs the two and the `minutes` half is what fires.
+  Defensible — the whole document is privileged regardless of which paragraph
+  surfaced — but reading that screenshot as proof that PII *detection* fired
+  would be reading it wrong.
+- **The `complete` demo question spans all three products** and clears the
+  ambiguity gate only because it contains the word "auto". Drop that word and
+  the same question returns a clarification.
+
+### Kept limits
+
+`clarification_options`, `trace_id` and the citation page numbers are not
+persisted, so a card replayed from history loses its chips, its trace id and its
+page line. Visible in the reload screenshot and deliberate: each is one column
+and a migration, and a schema change riding along on the session that owes the
+graded interface is how that session slips. D-03's compose services are cut for
+the same reason and re-pointed at S9 — there is no Dockerfile in this repository
+and nothing serves static files, so "complete application in compose" is two
+Dockerfiles and a service, not a config line.

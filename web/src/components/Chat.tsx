@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { ProblemError, getHistory, postMessage } from '../api'
 import { fromEnvelope, fromProblem, mergeHistory, newTurn, type Turn } from '../state'
@@ -93,6 +93,19 @@ export function Chat() {
     },
     [send],
   )
+
+  // Load history once on mount. Without this the client never calls
+  // fromHistory, so a `failed` card would never come back after a reload and
+  // the client_message_id the server now returns would have nothing to reach —
+  // B7 exists precisely so Retry survives this.
+  const bootstrapped = useRef(false)
+  useEffect(() => {
+    if (bootstrapped.current) return
+    bootstrapped.current = true
+    void refresh().catch(() => {
+      /* an unreachable API is the banner's job to report, not this one's */
+    })
+  }, [refresh])
 
   const busy = turns.some((turn) => turn.state === 'sending')
 

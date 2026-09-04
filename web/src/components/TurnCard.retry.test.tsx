@@ -54,7 +54,11 @@ function stubFetch() {
       posts.push(JSON.parse(String(init.body)))
       return problemResponse()
     }
-    return new Response('{}', { status: 200 })
+    // GET history: Chat loads it once on mount.
+    return new Response(JSON.stringify({ conversation_id: 'web-1', messages: [] }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    })
   })
   vi.stubGlobal('fetch', fetchMock)
   return posts

@@ -11,6 +11,10 @@ export function ConnectionBanner() {
     queryKey: ['health'],
     queryFn: getHealth,
     refetchInterval: 5000,
+    // Keep polling while the tab is unfocused. Without this the interval pauses
+    // exactly when the analyst is away, so they return to a stale "all clear"
+    // banner — the opposite of "an open circuit is visible BEFORE they type".
+    refetchIntervalInBackground: true,
     retry: false,
   })
 
