@@ -24,7 +24,19 @@ from typing import Any
 CPF = re.compile(r"\d{3}\.\d{3}\.\d{3}-\d{2}")
 
 # T-10's assertion, applied to all 30 responses rather than the one failure case.
-LEAK_MARKERS = ("gpt-5", "gpt-4", "Traceback", "openai.", "APIStatusError")
+#
+# Two tiers, because the rule is scoped and a flat marker list measures the wrong
+# thing. 00-architecture.mdc: "ERRORS returned to the client never contain the
+# model name, the prompt, or a traceback." A successful envelope carries
+# `meta.model` on purpose — it is provenance, and T-02 asserts it
+# (`meta["model"] == "fake-1"`). A flat scan for "gpt-5" therefore fails all
+# thirty successful live responses for doing exactly what they were built to do.
+#
+# Caught before the live run by evaluating the check against a synthetic 200
+# envelope carrying meta.model="gpt-5.4-mini". The keyless proof run could not
+# have caught it: FakeProvider reports model "fake-1".
+ALWAYS_FORBIDDEN = ("Traceback", "APIStatusError", "openai.", "You are an internal assistant")
+MODEL_MARKERS = ("gpt-5", "gpt-4")
 
 
 class Check:
@@ -169,17 +181,41 @@ def pii_egress(envelope: dict[str, Any], forbidden_names: list[str]) -> Check:
     return Check("pii_leak", "entire serialised response", ok, detail)
 
 
-def error_leakage(payload: dict[str, Any]) -> Check:
-    """Hard gate: no model name, prompt text or traceback in any body.
+def is_problem(payload: dict[str, Any]) -> bool:
+    """RFC 9457 shape: type + title + status + detail + trace_id."""
+    return "type" in payload and "status" in payload and "detail" in payload
 
-    T-10 asserts this for one failure; here it runs on every response of every
-    run, including the successful ones.
+
+def error_leakage(payload: dict[str, Any]) -> Check:
+    """Hard gate: no internals in any body, scoped the way the rule scopes it.
+
+    On an ERROR body (problem+json) nothing is allowed: not the model name, not
+    prompt text, not a traceback. That is T-10, run on every failure rather than
+    the one the unit test covers.
+
+    On a SUCCESS envelope the model name is allowed in exactly one place —
+    `meta.model`, which exists to tell the analyst what produced the answer. It
+    is checked out of `meta` and the rest of the body is scanned for it anyway,
+    so a model name reaching `answer` or a citation snippet is still a leak.
+    That is stricter than the flat scan it replaces, not looser.
     """
-    blob = json.dumps(payload, ensure_ascii=False)
-    hits = [marker for marker in LEAK_MARKERS if marker in blob]
+    if is_problem(payload):
+        blob = json.dumps(payload, ensure_ascii=False)
+        hits = [m for m in ALWAYS_FORBIDDEN + MODEL_MARKERS if m in blob]
+        return Check(
+            "error_leakage",
+            "entire problem+json body (no model, no prompt, no traceback)",
+            not hits,
+            "" if not hits else f"leaked: {hits}",
+        )
+
+    rest = {k: v for k, v in payload.items() if k != "meta"}
+    meta = {k: v for k, v in (payload.get("meta") or {}).items() if k != "model"}
+    blob = json.dumps(rest, ensure_ascii=False) + json.dumps(meta, ensure_ascii=False)
+    hits = [m for m in ALWAYS_FORBIDDEN + MODEL_MARKERS if m in blob]
     return Check(
         "error_leakage",
-        "entire response body, every response",
+        "success envelope excluding meta.model, which is deliberate provenance",
         not hits,
         "" if not hits else f"leaked: {hits}",
     )
