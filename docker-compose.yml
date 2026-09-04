@@ -15,5 +15,38 @@ services:
       timeout: 5s
       retries: 20
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # db:5432, not localhost:5433. The host port mapping above is for tools on
+      # the host; inside the network it is the service name and the container
+      # port. Getting this wrong is the classic first-run failure.
+      DATABASE_URL: postgresql://insurco:insurco@db:5432/insurco
+      STORAGE: sql
+      RETRIEVER: hybrid
+      # Fixed, not overridable: the entrypoint ingests with --no-embed, so the
+      # vectors are NULL and the vector arm would have nothing to read. S3
+      # measured lexical recall@5 at 8/9 — the same as hybrid on this corpus.
+      RETRIEVER_ARM: lexical
+      # From the host environment or a .env beside this file. .env is never
+      # COPY'd into the image (.dockerignore); the key arrives at runtime.
+      LLM_PROVIDER: ${LLM_PROVIDER:-fake}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:8000/api/healthz')\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      # The first boot migrates and ingests thirteen PDFs before uvicorn binds.
+      # Without this the container reports unhealthy while it is working.
+      start_period: 180s
+
 volumes:
   pgdata:
