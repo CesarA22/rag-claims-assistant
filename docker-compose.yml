@@ -39,6 +39,14 @@ services:
       # COPY'd into the image (.dockerignore); the key arrives at runtime.
       LLM_PROVIDER: ${LLM_PROVIDER:-fake}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Ignored unless LLM_PROVIDER=chaos, and passed through because two of the
+      # seven interface states — degraded and failed — are only reachable by
+      # making the provider fail. Without these, `LLM_PROVIDER=chaos
+      # CHAOS_500_RATE=1.0 docker compose up` would start the chaos provider
+      # with every rate at zero and nothing would ever break.
+      CHAOS_TIMEOUT_RATE: ${CHAOS_TIMEOUT_RATE:-0}
+      CHAOS_500_RATE: ${CHAOS_500_RATE:-0}
+      CHAOS_LATENCY_MS: ${CHAOS_LATENCY_MS:-0}
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:8000/api/healthz')\""]
       interval: 5s
