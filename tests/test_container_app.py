@@ -50,8 +50,9 @@ async def test_api_under_api_prefix_and_client_at_root(llm, retriever, repo, dis
         # strip it, which is why the API keeps its RFC 9457 behaviour.
         assert health.headers.get("x-trace-id")
 
-        # No route moved: the prefix is a mount, not a router prefix.
-        assert await client.get("/healthz") != health
+        # The prefix is a mount, so /healthz is not also served at the root —
+        # and it falls through to the client mount, which 404s rather than
+        # serving index.html for a path that looks like an API call.
         assert (await client.get("/healthz")).status_code == 404
 
         # The API's docs live with the API. The shell's own would be an empty
