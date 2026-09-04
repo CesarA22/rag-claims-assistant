@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.api.errors import TraceIdMiddleware, configure_logging, install_error_handlers
 from app.api.routes import router
@@ -136,6 +140,72 @@ def create_app(
     install_error_handlers(app)
     app.include_router(router)
     return app
+
+
+DEFAULT_WEB_DIST = "web/dist"
+
+
+def mount_client(api: FastAPI, dist: Path | None = None) -> FastAPI:
+    """A shell serving `api` under /api and the built client at /.
+
+    `web/src/api.ts` hardcodes `BASE = '/api'` and the Vite dev proxy strips that
+    prefix before forwarding (`vite.config.ts`), so the client asks for
+    /api/healthz and the backend serves /healthz. Mounting reproduces that
+    contract exactly: no route in `app/api/routes.py` moves, and the tests that
+    drive `create_app()` keep hitting /healthz directly.
+
+    Two things a mount does not give you for free, both load-bearing here:
+
+    - **Lifespan.** Starlette routes only HTTP and websocket scopes into a
+      mounted app; the lifespan scope never reaches it, so `create_app()`'s
+      startup hook would never run and `state.retriever` would stay the
+      two-chunk `InMemoryRetriever` while the app looked healthy. The shell
+      therefore drives the child's lifespan explicitly. T-44 pins this.
+    - **The order of the mounts.** `/api` is registered before `/`, because
+      Starlette matches routes in order and a StaticFiles mount at / would
+      otherwise swallow every API path.
+
+    Middleware and exception handlers *are* kept — the child is a full ASGI app,
+    so `TraceIdMiddleware` and the RFC 9457 handlers still run, and
+    `request.app.state` inside it resolves to the child, which is where
+    `state.llm`, `state.repo` and `state.pool` live.
+    """
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        async with api.router.lifespan_context(api):
+            yield
+
+    # The shell carries no routes of its own, so its default /docs, /redoc and
+    # /openapi.json would serve an empty schema — and they are registered before
+    # the mounts, so they would shadow the client at those three paths. Off. The
+    # API's own docs are where the API is, at /api/docs.
+    shell = FastAPI(
+        title="InsurCo claims assistant",
+        lifespan=lifespan,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
+    shell.mount("/api", api)
+    directory = dist or Path(os.getenv("WEB_DIST", DEFAULT_WEB_DIST))
+    if directory.is_dir():
+        # html=True serves index.html at /. The client has no router, so there
+        # are no deep links needing an SPA fallback.
+        shell.mount("/", StaticFiles(directory=directory, html=True), name="client")
+    return shell
+
+
+def create_container_app() -> FastAPI:
+    """The single-origin app the image runs: `uvicorn --factory`.
+
+    A factory rather than a module-level object on purpose. `app` below is
+    already built at import, and a second module-level app would build a second
+    provider and a second SQLAlchemy engine in every process that imports
+    `app.main` — which is every test in the suite. This way `import app.main`
+    costs exactly what it costs today.
+    """
+    return mount_client(create_app())
 
 
 app = create_app()

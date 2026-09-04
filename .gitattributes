@@ -1,0 +1,8 @@
+# Shell scripts that run inside a Linux image must keep LF. This repository is
+# developed on Windows with core.autocrlf=true, which would check the entrypoint
+# out with CRLF; a CRLF `#!/bin/sh` fails in the container with
+# "no such file or directory", which reads like a missing file rather than a
+# line ending. The Dockerfile strips CR as well, for clones whose git config
+# ignores this file.
+*.sh text eol=lf
+docker/entrypoint.sh text eol=lf

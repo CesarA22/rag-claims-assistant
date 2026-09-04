@@ -1,0 +1,37 @@
+# Build context hygiene. .venv is 303 MB and web/node_modules is 113 MB; neither
+# belongs in an image that builds its own.
+.venv/
+**/node_modules/
+**/__pycache__/
+*.pyc
+*.pyo
+
+.git/
+.gitignore
+.gitattributes
+
+# The key arrives as a runtime environment variable. Baking a secret into a
+# layer is exactly the exposure this codebase spends its effort avoiding, and a
+# layer survives `docker run -e`.
+.env
+
+# Generated. The image builds the client itself; a stale dist or tsbuildinfo
+# copied in would make `tsc -b` skip the type check it exists to run.
+web/dist/
+**/*.tsbuildinfo
+*.egg-info/
+dist/
+
+# Not needed at runtime, and docs/screenshots is 1.6 MB of PNGs plus a GIF.
+docs/
+evals/
+tests/
+handoff/
+cursor-rules/
+.cursor/
+.claude/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
