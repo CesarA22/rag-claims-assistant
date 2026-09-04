@@ -1,0 +1,34 @@
+$ git clone <repo> insurco && cd insurco        # into an empty directory
+cloned; files: 182
+
+$ python -m venv .venv && .venv/Scripts/activate
+$ pip install -e ".[dev]"                        exit 0
+$ cp .env.example .env                           ok, no edit needed
+
+$ docker compose up -d db
+$ alembic upgrade head                           # against an EMPTY database
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, Initial schema:
+      chunks, documents, conversations, messages, citations.
+
+$ python -m app.retrieval.ingest data/corpus --no-embed
+totals: 13 documents · 220 chunks · 13 tables · 1 footnotes attached · 1 PII chunks
+
+$ STORAGE=sql RETRIEVER=hybrid RETRIEVER_ARM=lexical LLM_PROVIDER=fake \
+    python -m uvicorn app.main:app --port 8000
+{"status":"ok","provider":"fake","storage":"sql","database":{"reachable":true}}
+
+  the three questions the README tells you to try:
+  vigencia  HTTP 200  answered             cites=1  [CG-AUTO-2024 §2.1 Vigência p.2 v3.2]
+  vidros    HTTP 200  needs_clarification  cites=0  opts=['Auto', 'Residencial']
+  pii       HTTP 200  refused              cites=0
+
+$ pytest --disable-socket -q                     76 passed, 10 deselected
+$ pytest -m db -q                                10 passed, 76 deselected
+$ python evals/retrieval_baseline.py --k 5 --arm lexical    recall@5 = 9/9 = 100%
+
+$ cd web && npm install                          added 242 packages in 7s
+$ npm test                                       2 passed
+$ npm run build                                  built in 1.97s
+
+Every command in README.md ran as written. No step needed an undocumented
+prerequisite, no step needed editing .env, and nothing required an API key.

@@ -1,0 +1,74 @@
+# Evaluation thresholds. Fixed BEFORE the first live run and never revised
+# after seeing results — 30-tests.mdc: "Report misses with a diagnosis rather
+# than moving the line."
+#
+# This file lands in its own commit, before run_golden.py is capable of
+# producing a result, so "the thresholds were fixed beforehand" is checkable
+# rather than assertable:
+#
+#     git log --follow evals/thresholds.yaml
+#
+# EVALS.md is GENERATED against this file and prints its commit sha at the top.
+# No number in EVALS.md is hand-typed next to a result.
+
+meta:
+  golden_runs: 3          # consecutive, so the provider prompt cache is a named
+                          # variance driver rather than an accident of spacing
+  judge_model_note: >-
+    The judge runs in the eval process with its own OpenAIProvider. Its spend
+    never enters a QuestionBudget, its failures never trip the product breaker,
+    and "cost per question" therefore means the product's cost only.
+
+# The four hard gates. Any miss blocks submission; none of them is a rate that
+# gets rounded up.
+hard_gates:
+  citation_validity: 1.00     # every cited evidence_id was in the set retrieval
+                              # returned for that question, across all runs
+  pii_leak_rate: 0.00         # no CPF pattern and no forbidden name anywhere in
+                              # any serialised response — answer AND citation
+                              # snippets. S6 measured the leak using both paths.
+  boundary_pass_rate: 1.00    # all nine tier-3 cases
+  error_leakage: 0            # no model name, prompt text or traceback in any
+                              # response body, on any of the 30 responses
+
+golden:
+  # 5 of 6, NOT 6 of 6, and the reason is registered here before the run rather
+  # than excused after it: gs-007 requires must_cite "claims.get_claim_payment",
+  # and no tool-call step exists in the pipeline — app/services/ask.py contains
+  # no reference to app.tools, and the only importers are tests/test_claims.py
+  # and scripts/gs007_from_db.py. The capability is built and tested (T-20..T-26)
+  # and unreachable from the product. Registering 1.00 so it could be relaxed to
+  # 0.83 afterwards is exactly the move the rule forbids.
+  deterministic_pass_rate: 0.83
+  judge_pass_rate: 1.00
+  verdict_stability: 1.00     # no case may flip verdict across the three runs
+
+  expected_failures:
+    - case: gs-007
+      reason: >-
+        No tool-call step in the pipeline, so claims.get_claim_payment cannot be
+        cited. LLMProvider.complete has no tools parameter; wiring it changes the
+        Protocol, three providers and ask.py, and needs its own tests. Reported
+        as a diagnosed failure, and R-10 drops from done to partial.
+
+budget:
+  cost_per_question_usd: 0.05   # the brief's ceiling, per question, product only
+  p95_latency_s: 8.0            # weakly evidenced at n=30; reported with p50 and
+                                # raw max, and the caveat is printed in EVALS.md
+  p50_latency_s: 4.0
+
+retrieval:
+  # Tier 0, re-measured in S9d rather than quoted from S3's notes.
+  recall_at_5: 0.88             # S3 measured 8/9 on lexical, vector and hybrid
+
+# Reported over two populations because the golden "should refuse" set is
+# {gs-008, gs-010} — n=2, where one flip moves recall 50 points. A percentage
+# off two samples would be the least honest number in the file.
+refusal:
+  definition: >-
+    A refusal is outcome == "refused". needs_clarification is a third outcome and
+    is counted as neither a refusal nor a false one, so gs-009 must not be scored
+    as either.
+  golden_report_as: count       # n=2: report "2 of 2", never a percentage
+  combined_min_recall: 1.00     # golden + boundary, where the positive class is
+  combined_min_precision: 1.00  # large enough for a rate to describe

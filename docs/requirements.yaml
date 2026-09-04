@@ -30,7 +30,7 @@ requirements:
       - app/services/grounding.py
       - web/src/components/TurnCard.tsx
     tests: [T-03, T-16, T-17, T-41]
-    notes: "S6b landed both gates in app/services/grounding.py and the xfail markers came off. Sufficiency is lexical — the answer's content terms must appear in the evidence it cites, at or above SUFFICIENCY_MIN. It catches gs-008, where the answer names a subject (desconto) the cited text never mentions. It does not catch a fluent paraphrase that reuses the source's words to say something the source does not; that needs an entailment judgment and a second model call is not affordable inside the US$0.05 ceiling. Stated in DECISIONS.md rather than implied."
+    notes: "S9 FINDING, unfixed and reported rather than patched: the sufficiency gate is unreachable for any question whose evidence spans more than one product, because judge() checks ambiguity first. Measured on gs-008 — evidence spans {Auto, Residencial, Empresarial}, the question names none, so is_ambiguous fires and the turn returns needs_clarification instead of refused. A model that refuses of its own accord still yields refused; a model that attempts an answer never reaches the sufficiency check. That inverts the architectural claim that refusal does not depend on trusting the model. The fix is a reordering plus a test pinning the order, and it gets its own commit. S6b landed both gates in app/services/grounding.py and the xfail markers came off. Sufficiency is lexical — the answer's content terms must appear in the evidence it cites, at or above SUFFICIENCY_MIN. It catches gs-008, where the answer names a subject (desconto) the cited text never mentions. It does not catch a fluent paraphrase that reuses the source's words to say something the source does not; that needs an entailment judgment and a second model call is not affordable inside the US$0.05 ceiling. Stated in DECISIONS.md rather than implied."
 
   - id: R-03
     title: Policyholder personal data never appears in an answer
@@ -111,12 +111,12 @@ requirements:
 
   - id: R-10
     title: Named, parameterised claims queries with PII excluded at the query layer
-    status: done
-    session: S4
+    status: partial
+    session: S9
     files:
       - app/tools/claims.py
     tests: [T-20, T-21, T-22, T-23, T-24, T-25, T-26]
-    notes: "T-12 was reserved in S1 for a status='Pago' grep guard over app/tools/. S4 wrote that guard as part of T-22, which checks the QUERIES literals, walks app/**/*.py for the pattern, and asserts count_claims(status='Pago') raises InvalidRequest — a superset of the reservation. T-12 is therefore absorbed and intentionally unused; the gap in the ID sequence is not an omission."
+    notes: "S9 dropped this from done to partial. REMAINING GAP: the tool is unreachable from the product. app/services/ask.py contains no reference to app.tools and LLMProvider.complete has no tools parameter, so there is no plan/execute round trip; the only importers in the repo are tests/test_claims.py and scripts/gs007_from_db.py, the standalone script S4 wrote to answer gs-007 by hand. Golden case gs-007 fails on must_cite claims.get_claim_payment as a direct result (EVALS.md). The queries themselves are real, parameterised, LIMITed and PII-free at the projection, and T-20..T-26 pass. T-12 was reserved in S1 for a status='Pago' grep guard over app/tools/. S4 wrote that guard as part of T-22, which checks the QUERIES literals, walks app/**/*.py for the pattern, and asserts count_claims(status='Pago') raises InvalidRequest — a superset of the reservation. T-12 is therefore absorbed and intentionally unused; the gap in the ID sequence is not an omission."
 
   # Differentials — brief §3, "Diferenciais (opcionais)".
   # Verbatim note from the brief: "Differentials do not compensate for
@@ -154,10 +154,11 @@ requirements:
     title: Authored evaluation cases
     source: "Challenge brief §3, Differentials"
     requirement: "Authorial evaluation cases in addition to the 10 provided."
-    files: [evals/authored.json]
+    files: [evals/authored.json, evals/boundary.py]
     tests: []
-    status: pending
-    notes: "S9. Five adversarial cases: PII bait, corpus prompt injection, stale-version trap, cross-product trap, absent answer."
+    status: done
+    session: S9
+    notes: "Five adversarial cases in evals/authored.json — PII bait, corpus prompt injection, stale-version trap, cross-product trap, absent answer — run by evals/boundary.py as five of the nine tier-3 cases. EVALS.md says plainly that these are the same five cases serving both D-04 and the boundary suite rather than two bodies of work. au-003 (stale-version) is the one miss and it is credit-blocked: its safety half passes, its content half needs a model that can answer."
 
   - id: D-05
     title: Provenance footer

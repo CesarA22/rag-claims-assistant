@@ -90,16 +90,26 @@ whole system, and it is meant to stay that way:
 ```
 1  history   = repo.recent_messages(conversation_id, token_budget)
 2  turn      = repo.begin_turn(conversation_id, client_message_id)   # idempotent
-3  plan      = await llm.complete(system, history + [question], tools=REGISTRY)
-4  evidence  = await run_tools(plan.tool_calls)      # search_corpus / query_claims
-5  draft     = await llm.complete(..., evidence, schema=ANSWER_SCHEMA)
-6  answer    = validate_citations(draft, evidence)   # invented source → refuse
-7  answer    = redact(answer)                        # defence in depth
-8  repo.complete_turn(turn, answer, usage, latency)
+3  evidence  = await retriever.search(content)       # corpus only — see below
+4  draft     = await llm.complete(messages, schema=DRAFT_SCHEMA)
+5  answer    = judge(draft, evidence, content)       # grounding.py, deterministic
+6  repo.complete_turn(turn, answer, usage, latency)
 ```
 
-`llm` there is the **resilient decorator**, never the raw provider. Steps 6 and 7
-are deterministic code — the model is never asked to police itself.
+`llm` there is the **resilient decorator**, never the raw provider. Step 5 is
+deterministic code — the model is never asked to police itself. `judge()` runs
+the PII gate, the ambiguity gate, citation validation, the sufficiency gate and
+`redact()` in that order, and it overrules whatever the draft said.
+
+> **There is no tool-call step, and step 3 is the corpus only.** An earlier
+> version of this file drew a `tools=REGISTRY` plan call and a `run_tools`
+> dispatch. Neither exists: `app/services/ask.py` contains no reference to
+> `app.tools`, and `LLMProvider.complete` has no `tools` parameter. The claims
+> tool in `app/tools/claims.py` is built and tested (T-20…T-26) and **unreachable
+> from the product** — the only importers are `tests/test_claims.py` and
+> `scripts/gs007_from_db.py`. That is why golden case gs-007 fails in `EVALS.md`
+> and why R-10 is `partial` rather than `done`. `docs/architecture.png` draws it
+> the same way, dashed and marked "no caller".
 
 ### Layout
 

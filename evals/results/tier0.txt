@@ -1,0 +1,14 @@
+220 chunks from 13 documents
+
+gs-001  OK    expected=['CG-AUTO-2024']  top5=['CG-AUTO-2024', 'CG-EMP-2024', 'CG-AUTO-2024', 'CG-RES-2024', 'MAN-SIN-2025']
+gs-002  OK    expected=['MAN-SIN-2025']  top5=['MAN-SIN-2025', 'MAN-SIN-2025', 'CG-AUTO-2024', 'GLOS-2024', 'CG-AUTO-2024']
+gs-003  OK    expected=['CG-RES-2024']  top5=['NI-022', 'CG-AUTO-2024', 'CG-RES-2024', 'CG-RES-2024', 'GLOS-2024']
+gs-004  OK    expected=['CG-AUTO-2024']  top5=['CG-AUTO-2024', 'CG-AUTO-2024', 'FAQ-SIN-2025', 'MAN-SIN-2025', 'MAN-SIN-2025']
+gs-005  OK    expected=['MAN-SIN-2025']  top5=['MAN-SIN-2025', 'CG-AUTO-2024', 'MAN-SIN-2025', 'FAQ-SIN-2025', 'CG-AUTO-2024']
+gs-006  OK    expected=['NI-022']  top5=['MAN-SIN-2025', 'CG-AUTO-2024', 'NI-022', 'NI-022', 'MAN-SIN-2025']
+gs-007  OK    expected=['CG-AUTO-2024']  top5=['MAN-SIN-2025', 'ATA-COM-2025-04', 'CG-AUTO-2024', 'CG-AUTO-2024', 'FAQ-SIN-2025']
+gs-008  n/a   (refusal case)  top5=['CG-AUTO-2024', 'CG-AUTO-2024', 'CG-EMP-2024', 'CG-RES-2024', 'MAN-SIN-2025']
+gs-009  OK    expected=['CG-AUTO-2024', 'CG-RES-2024']  top5=['CG-AUTO-2024', 'CG-AUTO-2024', 'CG-RES-2024', 'NI-022', 'CG-RES-2024']
+gs-010  OK    expected=['ATA-COM-2025-04', 'POL-LGPD-2024']  top5=['POL-LGPD-2024', 'MAN-SIN-2025', 'ATA-COM-2025-04', 'CG-AUTO-2024', 'POL-LGPD-2024']
+
+recall@5 = 9/9 = 100%

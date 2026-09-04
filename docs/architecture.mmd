@@ -1,0 +1,77 @@
+%% InsurCo claims assistant — the pipeline AS BUILT.
+%% There is deliberately no tool-call step: app/services/ask.py contains no
+%% reference to app.tools, and LLMProvider.complete has no `tools` parameter.
+%% The claims tool is built and tested (T-20..T-26) and unreachable from the
+%% product; that is why R-10 is `partial` and gs-007 fails. A diagram showing a
+%% step the code does not have would be the most misleading artefact here.
+flowchart TB
+    subgraph client["web/ — React + TypeScript + Vite"]
+        UI["Chat · TurnCard · CitationList<br/>Composer · ConnectionBanner"]
+        NORM["state.ts<br/>3 wire shapes → 7 UI states"]
+        UI --- NORM
+    end
+
+    subgraph api["app/api — HTTP shape only"]
+        POST["POST /conversations/{id}/messages"]
+        GET["GET /conversations/{id}/messages"]
+        HEALTH["GET /healthz"]
+        ERR["errors.py<br/>RFC 9457 problem+json · trace_id<br/>no model, no prompt, no traceback"]
+    end
+
+    subgraph pipeline["app/services/ask.py — reads top to bottom"]
+        direction TB
+        P1["1 · repo.recent_messages<br/><i>excludes failed + pending</i>"]
+        P2["2 · repo.begin_turn<br/><i>new | in_flight | replay</i><br/>failed re-opens"]
+        P3["3 · retriever.search"]
+        P4["4 · llm.complete(schema)"]
+        P5["5 · judge()"]
+        P6["6 · repo.complete_turn"]
+        P1 --> P2 --> P3 --> P4 --> P5 --> P6
+    end
+
+    subgraph gates["app/services/grounding.py — deterministic, never prompted"]
+        direction TB
+        G1["is_pii_request"]
+        G2["is_ambiguous"]
+        G3["validate_citations"]
+        G4["is_supported"]
+        G1 --> G2 --> G3 --> G4
+    end
+
+    subgraph llm["app/llm — the provider is assumed to fail"]
+        RES["resilient.py<br/>budget · retry 429/5xx/timeout only<br/>breaker · cost ceiling"]
+        OAI["openai_provider.py<br/><i>the only SDK import</i>"]
+        FAKE["fake.py"]
+        CHAOS["chaos.py"]
+        RES --> OAI & FAKE & CHAOS
+    end
+
+    subgraph data["storage + retrieval"]
+        PG[("Postgres + pgvector<br/>chunks · messages · citations<br/>documents · conversations")]
+        HYB["hybrid.py<br/>tsvector OR + IDF ⊕ cosine<br/>RRF k=15 · doc_role boost"]
+        ING["ingest.py<br/>tables first · footnotes<br/>redact at ingest"]
+        SQLR["sql.py<br/>UNIQUE(conversation_id,<br/>client_message_id)"]
+    end
+
+    subgraph unwired["built, tested, NOT wired — see EVALS.md gs-007"]
+        TOOL["tools/claims.py<br/>6 named queries · read-only SQLite<br/>no join to policyholders"]
+    end
+
+    NORM -->|"/api proxy, same origin"| POST
+    NORM --> GET
+    NORM -->|"poll 5 s"| HEALTH
+    POST --> P1
+    P3 --> HYB --> PG
+    P4 --> RES
+    P5 -.-> gates
+    P2 --> SQLR --> PG
+    P6 --> SQLR
+    GET --> SQLR
+    ING --> PG
+    POST -. "typed error" .-> ERR
+    TOOL -.->|"no caller"| P3
+
+    classDef gap stroke-dasharray:6 4,stroke:#b45309,color:#92400e
+    classDef det stroke:#047857
+    class unwired,TOOL gap
+    class gates,G1,G2,G3,G4 det
