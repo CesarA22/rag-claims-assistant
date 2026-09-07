@@ -187,14 +187,40 @@ ones that change what you see:
 
 ## Known gaps
 
-Stated here rather than left to be discovered; `EVALS.md` has the detail.
+Stated here rather than left to be discovered; `EVALS.md` has the detail and the
+numbers. All three of the gaps this section used to list were closed or measured
+in S11; these are what is actually open.
 
-- **The claims database is not reachable from the product.** The tool is built
-  and tested (`app/tools/claims.py`, T-20…T-26) but nothing calls it —
-  `LLMProvider.complete` has no `tools` parameter. Golden case gs-007 fails
-  because of this, and R-10 is `partial` in the register.
-- **The sufficiency gate is unreachable for questions whose evidence spans more
-  than one product**, because `judge()` checks ambiguity first. gs-008 returns a
-  clarification where it should refuse.
-- **Tier 2 has not been run**: the key on the development machine ran out of
-  credits. Everything that does not need a model is measured in `EVALS.md`.
+- **Retrieval misses the chunk while finding the document.** The one defect
+  behind both remaining eval failures. `gs-005` asks for a regulation deadline
+  whose answer is a table row reading `Roubo e Furto (Auto) | 45 dias corridos`;
+  the analyst writes *veículo*, `plainto_tsquery` ANDs every term, and the chunk
+  is excluded outright rather than ranked low. `au-003` is the same shape. In
+  both cases the model correctly reports the figure is absent and the sufficiency
+  gate correctly refuses — the failure is upstream of both. Tier 0 reports
+  recall@5 = 9/9 and cannot see this, because it scores at **document**
+  granularity. The repair moves every ranking constant in `hybrid.py` and needs a
+  chunk-level recall gate that does not exist yet.
+- **The sufficiency gate is unreachable when the evidence spans more than one
+  product**, because `judge()` checks ambiguity first. Both obvious repairs — a
+  bare reorder, and refusing only when the answer is unsupported by the whole
+  retrieved set — were measured against live drafts and **both** turn `gs-009`
+  into a refusal, which its own acceptance criterion forbids. The order stands
+  and T-46/T-47 pin it so a future reorder fails loudly. What did change: the
+  system prompt no longer teaches the model to self-declare ambiguity, so the
+  deterministic gate is reachable rather than bypassed. `gs-008` still depends on
+  the model refusing of its own accord, and that is the residual.
+- **A PII leak that already shipped is still at rest.** S11 stopped the degraded
+  path from rendering policyholder names, but nothing back-fills
+  `citations.snippet` rows written before it. There were none to clean here; on
+  real data that backfill belongs beside the fix.
+- **No streaming** (D-01). First on the cut list and recorded as such — the three
+  edge cases the brief names are the expensive part, not the stream.
+
+### What the live run measured
+
+Tier 2 ran for the first time in S11: three consecutive runs over the indexed
+corpus, plus the boundary suite and the judge. Average **US$0.0012 per question**
+against a US$0.05 ceiling, **p50 1.95 s / p95 3.71 s** against an 8 s budget, and
+30/30 on each of citation validity, PII egress and error leakage. `EVALS.md` is
+generated from the committed raw results in `evals/results/`.

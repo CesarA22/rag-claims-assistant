@@ -1,13 +1,20 @@
 %% InsurCo claims assistant — the pipeline AS BUILT.
-%% There is deliberately no tool-call step: app/services/ask.py contains no
-%% reference to app.tools, and LLMProvider.complete has no `tools` parameter.
-%% The claims tool is built and tested (T-20..T-26) and unreachable from the
-%% product; that is why R-10 is `partial` and gs-007 fails. A diagram showing a
-%% step the code does not have would be the most misleading artefact here.
+%% S11 wired the claims tool. Step 3 is now two sources: a deterministic router
+%% (app/services/claims_router.py) picks named queries from the question by
+%% regex, and their rows are prepended to what the corpus retriever returns.
+%% There is still no model tool-calling step — LLMProvider.complete has no
+%% `tools` parameter, and the reasoning for choosing a router over a plan/execute
+%% round trip is in DECISIONS.md. A diagram showing a step the code does not have
+%% would be the most misleading artefact here.
+%% ---
+%% The gate ORDER below is the real one, and the dashed G4 is not decoration:
+%% is_supported is unreachable whenever the evidence spans more than one product,
+%% because is_ambiguous returns first. Both proposed repairs were measured live
+%% and rejected — EVALS.md finding 1.
 flowchart TB
     subgraph client["web/ — React + TypeScript + Vite"]
         UI["Chat · TurnCard · CitationList<br/>Composer · ConnectionBanner"]
-        NORM["state.ts<br/>3 wire shapes → 7 UI states"]
+        NORM["state.ts<br/>3 wire shapes → 7 UI states<br/><i>+ degraded, orthogonal to outcome</i>"]
         UI --- NORM
     end
 
@@ -22,8 +29,8 @@ flowchart TB
         direction TB
         P1["1 · repo.recent_messages<br/><i>excludes failed + pending</i>"]
         P2["2 · repo.begin_turn<br/><i>new | in_flight | replay</i><br/>failed re-opens"]
-        P3["3 · retriever.search"]
-        P4["4 · llm.complete(schema)"]
+        P3["3 · claims_evidence + retriever.search<br/><i>database rows, then corpus</i>"]
+        P4["4 · llm.complete(schema, strict)"]
         P5["5 · judge()"]
         P6["6 · repo.complete_turn"]
         P1 --> P2 --> P3 --> P4 --> P5 --> P6
@@ -34,7 +41,7 @@ flowchart TB
         G1["is_pii_request"]
         G2["is_ambiguous"]
         G3["validate_citations"]
-        G4["is_supported"]
+        G4["is_supported<br/><i>unreachable when the evidence<br/>spans 2+ products</i>"]
         G1 --> G2 --> G3 --> G4
     end
 
@@ -53,8 +60,14 @@ flowchart TB
         SQLR["sql.py<br/>UNIQUE(conversation_id,<br/>client_message_id)"]
     end
 
-    subgraph unwired["built, tested, NOT wired — see EVALS.md gs-007"]
+    subgraph tools["app/tools + app/services — the second source"]
+        ROUTER["claims_router.py<br/>regex on SIN-/AP- ids + intent<br/><i>deterministic, no model call</i>"]
         TOOL["tools/claims.py<br/>6 named queries · read-only SQLite<br/>no join to policyholders"]
+        ROUTER --> TOOL
+    end
+
+    subgraph degraded["provider down, evidence in hand"]
+        DEG["excerpts_answer<br/><i>unless evidence_carries_pii<br/>→ refuse instead</i>"]
     end
 
     NORM -->|"/api proxy, same origin"| POST
@@ -62,16 +75,19 @@ flowchart TB
     NORM -->|"poll 5 s"| HEALTH
     POST --> P1
     P3 --> HYB --> PG
+    P3 --> ROUTER
+    TOOL -->|"Evidence(source_kind=claims)"| P3
     P4 --> RES
     P5 -.-> gates
+    P4 -. "ProviderDegraded | CircuitOpen" .-> DEG
+    DEG --> P6
     P2 --> SQLR --> PG
     P6 --> SQLR
     GET --> SQLR
     ING --> PG
     POST -. "typed error" .-> ERR
-    TOOL -.->|"no caller"| P3
 
     classDef gap stroke-dasharray:6 4,stroke:#b45309,color:#92400e
     classDef det stroke:#047857
-    class unwired,TOOL gap
-    class gates,G1,G2,G3,G4 det
+    class G4 gap
+    class gates,G1,G2,G3,ROUTER,DEG det

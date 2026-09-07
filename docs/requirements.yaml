@@ -123,6 +123,70 @@ requirements:
     tests: [T-20, T-21, T-22, T-23, T-24, T-25, T-26, T-53]
     notes: "S9 dropped this to partial because the tool was unreachable from the product — app/services/ask.py carried no reference to app.tools and the only importers were tests/test_claims.py and scripts/gs007_from_db.py. S11 wires it. app/services/claims_router.py maps a question to named queries by regex on the identifier formats claims.py already validates (SIN-nnnn-nnnnnn, AP-{AUTO,RES,EMP}-nnnnnn) plus claim-intent keywords; ask() prepends the resulting Evidence to the retrieved corpus, and the two blocks are labelled separately in the prompt so a database row is not presented as corpus text. A deterministic router rather than model tool-calling: it costs no second model call inside the US$0.05 ceiling, changes no Protocol, and stays testable without a provider, which is the line the whole architecture holds. Reasoning recorded in DECISIONS.md and in the module docstring. A claim number routes BOTH get_claim and get_claim_payment, because the payment row alone leaves gs-007 below SUFFICIENCY_MIN — measured, and a refusal on a well-cited answer is a failure that looks like success. A tool failure is caught inside claims_evidence and degrades to corpus-only rather than reaching ask()'s except InsurCoError, which fails the turn. T-12 was reserved in S1 for a status='Pago' grep guard over app/tools/. S4 wrote that guard as part of T-22, which checks the QUERIES literals, walks app/**/*.py for the pattern, and asserts count_claims(status='Pago') raises InvalidRequest — a superset of the reservation. T-12 is therefore absorbed and intentionally unused; the gap in the ID sequence is not an omission."
 
+  # The four rows below were added in S11. Their work and their tests already
+  # existed — filed under R-01, R-02 and D-02 — but the brief names each of them
+  # as its own deliverable, so an evaluator tracing the brief against this file
+  # found four gaps the code does not actually have. A register that is hard to
+  # trace is a register that is not doing its job.
+
+  - id: R-11
+    title: An interface that distinguishes answer, refusal and clarification
+    source: "Challenge brief §2 — the analyst must be able to tell the three outcomes apart"
+    status: done
+    session: S11
+    files:
+      - web/src/state.ts
+      - web/src/components/TurnCard.tsx
+      - web/src/components/CitationList.tsx
+      - docs/screenshots/
+    tests: [T-41, T-27, T-56]
+    notes: "Seven UI states, of which the brief's three outcomes are three. The badge TEXT is the primary discriminator and colour only reinforces it, because the acceptance gate is screenshots and screenshots get read in greyscale at thumbnail size. A refusal is amber and explicitly not an error — 'Sem base nas fontes', not 'Recusado', since 'rejected' is the misreading the whole rule exists to prevent — and it offers no Retry, because asking again cannot put an answer into the corpus and that absence is itself the statement. S11 added the eighth fact without an eighth state: `degraded` is carried on Turn orthogonally to the outcome, so a refusal during a provider outage says the assistant was unreachable instead of reading as the corpus reporting a considered no. state.ts had zero tests before S11 and is the only module in the client with real logic; T-56 covers it."
+
+  - id: R-12
+    title: An HTTP API for asking a question and reading a conversation
+    source: "Challenge brief §2 — the assistant is reachable as a service, not only as a script"
+    status: done
+    session: S11
+    files:
+      - app/api/routes.py
+      - app/api/schemas.py
+      - app/api/errors.py
+      - app/main.py
+    tests: [T-02, T-10, T-36, T-43, T-44]
+    notes: "POST /conversations/{id}/messages, GET /conversations/{id}/messages, GET /healthz. Pydantic at the boundary and nothing else; the pipeline is a plain function the router calls. Errors are RFC 9457 problem+json with a trace id and never carry the model name, the prompt or a traceback — checked at the handler as well as at the formatter, so a second handler added later cannot serialise what was never attached. The client and the API share one origin in the container (app mounted at /api under a shell that serves web/dist at /), which is why no CORS middleware exists. S11 added the model_contract code (502) for a provider that returns a body that is not the schema; it reaches the client generically because the client derives the code from the problem type URL."
+
+  - id: R-13
+    title: Conversation history that persists and reloads
+    source: "Challenge brief §2 — history survives a page reload, not only a session"
+    status: done
+    session: S11
+    files:
+      - app/storage/sql.py
+      - app/storage/models.py
+      - app/storage/migrations/versions/0001_initial_schema.py
+      - app/storage/migrations/versions/0002_citation_provenance.py
+      - app/api/routes.py
+      - web/src/state.ts
+    tests: [T-35, T-36, T-37, T-40, T-54, T-56]
+    notes: "Postgres, not process memory: idempotency lives in messages_client_idem UNIQUE(conversation_id, client_message_id), so two uvicorn workers cannot each hold their own. GET history is deliberately not recent_messages — it renders all five statuses including failed with a safe detail derived from the stored error_code, while recent_messages feeds the model and drops failed and pending. A history row is thinner than the envelope that produced it (no clarification_options, no trace_id), so the client merges rather than replaces; without that a refetch blanks a card that was correct a tick earlier. S11 added source_kind and superseded to the citations table (revision 0002) so a replayed citation keeps its provenance instead of losing it the way page numbers do."
+
+  - id: R-14
+    title: A written evaluation with thresholds fixed before the run
+    source: "Challenge brief §2 — an evaluation of the system, including what it gets wrong"
+    status: done
+    session: S11
+    files:
+      - EVALS.md
+      - evals/thresholds.yaml
+      - evals/report.py
+      - evals/run_golden.py
+      - evals/boundary.py
+      - evals/judge.py
+      - evals/assertions.py
+      - evals/results/
+    tests: [T-52]
+    notes: "EVALS.md is GENERATED from committed raw results; no number in it is hand-typed and editing the markdown is reverted by the next run. thresholds.yaml landed in its own commit before any harness could produce a result, so 'the thresholds were fixed beforehand' is checkable with git log --follow rather than assertable. S11 ran tier 2 live for the first time: average US$0.0012 per question against a US$0.05 ceiling, p50 1.95 s / p95 3.71 s against 8 s, 30/30 on each hard gate, and two honest misses reported with a shared diagnosis rather than accommodated. The gate that grades the golden set was raised from 0.83 to 1.00 in its own pre-run commit once gs-007's registered cause was eliminated. T-52 exists because the harness had no tests and is the thing that produces the document an evaluator reads — it could crash on any non-200, erase a live run from one record with no meta, and, worst, render thirty replayed fake turns as a live PASS on US$0.0000."
+
   # Differentials — brief §3, "Diferenciais (opcionais)".
   # Verbatim note from the brief: "Differentials do not compensate for
   # missing mandatory requirements." Cut rows carry a reason; see DECISIONS.md.

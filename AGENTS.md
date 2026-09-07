@@ -62,7 +62,7 @@ explicitly, so those four never reach the container from `.env`.
 ### Three provider modes — you do not need an API key to see this work
 
 ```bash
-LLM_PROVIDER=openai   # real. needs OPENAI_API_KEY. costs ~US$0.015/question
+LLM_PROVIDER=openai   # real. needs OPENAI_API_KEY. US$0.0012/question measured
 LLM_PROVIDER=fake     # deterministic replay of recorded responses. no key, no network
 LLM_PROVIDER=chaos    # injects failures. watch the degradation ladder for yourself
                       # CHAOS_TIMEOUT_RATE, CHAOS_500_RATE, CHAOS_LATENCY_MS
@@ -75,7 +75,12 @@ pytest --disable-socket -q               # full suite. sockets OFF is the point:
                                          # it is mechanical proof no test hits the API
 python evals/retrieval_baseline.py --k 5 --arm lexical --gate 1.0
 python evals/retrieval_baseline.py --probes --arm lexical
-python -m evals.run_golden               # tier 2: live API, writes EVALS.md (~US$0.50)
+# tier 2: live API. Needs LLM_PROVIDER=openai and RETRIEVER=hybrid in THIS
+# process too, and mints a fresh --tag so committed answers are not replayed.
+# Measured cost of a full 3-run tier 2 + boundary + judge: about US$0.11.
+RETRIEVER=hybrid LLM_PROVIDER=openai \
+  python -m evals.run_golden --base-url http://127.0.0.1:8000 --runs 3
+python -m evals.report --results evals/results --out EVALS.md
 ```
 
 ---
@@ -103,8 +108,8 @@ whole system, and it is meant to stay that way:
 ```
 1  history   = repo.recent_messages(conversation_id, token_budget)
 2  turn      = repo.begin_turn(conversation_id, client_message_id)   # idempotent
-3  evidence  = await retriever.search(content)       # corpus only — see below
-4  draft     = await llm.complete(messages, schema=DRAFT_SCHEMA)
+3  evidence  = [*claims_evidence(content, claims), *retriever.search(content)]
+4  draft     = await llm.complete(messages, schema=DRAFT_SCHEMA)     # strict
 5  answer    = judge(draft, evidence, content)       # grounding.py, deterministic
 6  repo.complete_turn(turn, answer, usage, latency)
 ```
@@ -114,15 +119,20 @@ deterministic code — the model is never asked to police itself. `judge()` runs
 the PII gate, the ambiguity gate, citation validation, the sufficiency gate and
 `redact()` in that order, and it overrules whatever the draft said.
 
-> **There is no tool-call step, and step 3 is the corpus only.** An earlier
-> version of this file drew a `tools=REGISTRY` plan call and a `run_tools`
-> dispatch. Neither exists: `app/services/ask.py` contains no reference to
-> `app.tools`, and `LLMProvider.complete` has no `tools` parameter. The claims
-> tool in `app/tools/claims.py` is built and tested (T-20…T-26) and **unreachable
-> from the product** — the only importers are `tests/test_claims.py` and
-> `scripts/gs007_from_db.py`. That is why golden case gs-007 fails in `EVALS.md`
-> and why R-10 is `partial` rather than `done`. `docs/architecture.png` draws it
-> the same way, dashed and marked "no caller".
+That order has a known cost, measured rather than assumed: the sufficiency gate
+never runs when the evidence spans more than one product, because the ambiguity
+gate returns first. Both obvious repairs were tried against live drafts and both
+break `gs-009`. See EVALS.md finding 1 before reordering anything.
+
+> **Step 3 is two sources, and there is still no model tool-call step.** S11
+> wired the claims tool through `app/services/claims_router.py`: a deterministic
+> regex router picks named queries from the question and their rows are prepended
+> to what the corpus retriever returns, labelled in the prompt as a separate
+> `<claims_database>` block. `LLMProvider.complete` still has no `tools`
+> parameter and no plan/execute round trip exists — that was a deliberate choice
+> over model tool-calling (no second model call inside the cost ceiling, no
+> Protocol change dragging all three providers, and it stays testable without a
+> provider). Reasoning in `DECISIONS.md`; gs-007 passes and R-10 is `done`.
 
 ### Layout
 
