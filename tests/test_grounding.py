@@ -1,4 +1,4 @@
-"""T-16 / T-17 / T-18: the model produced something plausible; the pipeline must not ship it.
+"""T-16 / T-17 / T-18 / T-51: the model produced something plausible; the pipeline must not ship it.
 
 Each test scripts the fake to return the *tempting wrong answer* — confident,
 fluent and correctly cited — and asserts the pipeline overrides it. Scripting the
@@ -15,6 +15,7 @@ import re
 from datetime import date
 
 from app.domain.models import Evidence
+from app.llm.base import Completion
 from app.llm.fake import FakeProvider
 from app.retrieval.memory import InMemoryRetriever
 from app.services.ask import ask
@@ -271,3 +272,64 @@ async def test_corpus_pii_is_refused_and_never_rendered():
     for name in FORBIDDEN_NAMES:
         assert name not in blob
     assert result.outcome == "refused"
+
+
+async def test_a_refusal_is_redacted_like_an_answer():
+    """T-51 / R-03: refusal text runs through redact() too.
+
+    `redact()` used to run on the answered branch only (`judge()`'s final line),
+    so a refusal or a clarification shipped the model's raw text. The model does
+    not have to be malicious for that to leak: quoting back what it found while
+    explaining why it will not answer is exactly the shape a refusal takes.
+    """
+    llm = FakeProvider()
+    llm.enqueue(
+        Completion(
+            text="",
+            parsed={
+                "outcome": "refused",
+                "answer": (
+                    "Não posso responder. A ata lista 111.111.111-11 e o "
+                    "telefone (41) 90000-0001, que são dados pessoais."
+                ),
+                "citations": [],
+            },
+        )
+    )
+    result = await _ask(llm, PRAZO, NOTICE_CHUNKS)
+
+    assert result.outcome == "refused"
+    assert CPF_PATTERN.search(result.answer or "") is None
+    assert "[CPF]" in (result.answer or "")
+    assert "[TELEFONE]" in (result.answer or "")
+
+
+async def test_a_clarification_is_redacted_like_an_answer():
+    """T-51 / R-03: the same for needs_clarification, the other early return."""
+    llm = FakeProvider()
+    llm.enqueue(
+        FakeProvider.needs_clarification(
+            "De qual segurado se trata — o do CPF 111.111.111-11?"
+        )
+    )
+    result = await _ask(llm, PRAZO, NOTICE_CHUNKS)
+
+    assert result.outcome == "needs_clarification"
+    assert CPF_PATTERN.search(result.answer or "") is None
+
+
+async def test_an_empty_refusal_text_still_collapses_to_none():
+    """T-51 / R-01: `redact(answer) or None`, not `redact(answer or None)`.
+
+    `Draft.answer` is typed `str = ""` and never None, so redact() always gets a
+    str — but an empty answer must still become None, which is the contract T-13
+    reads back through the envelope. Written the other way this returns "".
+    """
+    llm = FakeProvider()
+    llm.enqueue(
+        Completion(text="", parsed={"outcome": "refused", "answer": "", "citations": []})
+    )
+    result = await _ask(llm, PRAZO, NOTICE_CHUNKS)
+
+    assert result.outcome == "refused"
+    assert result.answer is None

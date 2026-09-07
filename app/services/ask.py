@@ -165,15 +165,28 @@ def citation_from_evidence(evidence: Evidence) -> Citation:
 
 
 def validate_citations(draft: Draft, evidence: list[Evidence]) -> Answer:
-    """Resolve cited ids against what was actually retrieved. Forgery check only."""
+    """Resolve cited ids against what was actually retrieved. Forgery check only.
+
+    The two early returns also redact, and this is the one place that gets it
+    exactly once. `judge()` reaches them only from its refused/clarification
+    passthrough — the answered path returns further down and is redacted at the
+    end of `judge()` instead. Redacting anywhere else either doubles up or makes
+    that line dead. Before this, a refusal or a clarification shipped the model's
+    raw text: `redact()` ran on the answered branch only.
+
+    `redact(...) or None`, never `redact(... or None)`. `Draft.answer` is typed
+    `str = ""` and is never None, so redact() always receives a str; an empty
+    answer still has to collapse to None, which is the contract T-13 reads back
+    through the envelope.
+    """
     if draft.outcome == "needs_clarification":
         return Answer(
             outcome="needs_clarification",
-            text=draft.answer or None,
+            text=redact(draft.answer) or None,
             citations=[],
         )
     if draft.outcome == "refused":
-        return Answer(outcome="refused", text=draft.answer or None, citations=[])
+        return Answer(outcome="refused", text=redact(draft.answer) or None, citations=[])
 
     by_id = {item.id: item for item in evidence}
     citations: list[Citation] = []

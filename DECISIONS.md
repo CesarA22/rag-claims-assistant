@@ -989,3 +989,35 @@ absent is that there is nothing to back-fill, not that the problem is imaginary.
 `redact()` is unchanged and still cannot remove a name. The degraded path is now
 safe because it **refuses** when the evidence carries identities, not because
 anything learned to scrub them.
+
+### F6a — `redact()` ran on the answered branch only
+
+`judge()` redacted `answer.text` at its final line, which the refused and
+needs_clarification outcomes never reach: they return through `validate_citations`
+two branches earlier, carrying `draft.answer` — raw model text — straight to the
+caller. The model does not have to be malicious for that to leak. Quoting back
+what it found while explaining why it will not answer is exactly the shape a
+refusal takes.
+
+The patch site is the two early returns of `validate_citations`, and that is the
+only placement that gets exactly-once coverage. `judge()` calls
+`validate_citations` twice: once from the refused/clarification passthrough,
+which is the only caller that reaches those early returns, and once on the
+answered path, which returns further down and is redacted at the end of `judge()`.
+Redacting inside `judge()`'s passthrough instead would double-redact the answered
+path or make that final line dead.
+
+Written `redact(draft.answer) or None`, **not** `redact(draft.answer or None)`.
+`Draft.answer` is typed `str = ""` and is never None, so `redact()` always
+receives a str — but an empty answer must still collapse to None, which is what
+T-13 reads back through the envelope. T-51 pins all three: a redacted refusal, a
+redacted clarification, and the empty-collapses-to-None case; the third fails
+under exactly the wrong spelling.
+
+**This does not achieve "redact() on every branch", and saying it would be a
+lie.** The degraded path never calls `judge()` at all. Its text is the static
+`_DEGRADED_BANNER` and its citations already pass through
+`citation_from_evidence`, which redacts before truncating. So that branch is safe
+from *pattern* PII — CPF, phone, e-mail — and remains structurally unable to
+remove a **name**. That is not fixed here; it is fixed by F1 refusing the turn
+outright when the evidence carries identities.
