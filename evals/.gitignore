@@ -7,3 +7,8 @@
 # evals/results/fake` exists to show the harness reports failure before any
 # money is spent, and its verdicts are meaningless.
 results/fake/
+
+# The keyless evidence lives in results/keyless/ rather than at the top level.
+# report.py globs `run-*.json` in the directory it is given and nothing deeper,
+# so a live `run_golden` writing run-1..3.json would have overwritten the very
+# files the honesty argument in EVALS.md rests on. Moved, not deleted.

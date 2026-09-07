@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
@@ -21,6 +22,13 @@ from app.retrieval.memory import InMemoryRetriever
 from app.services.budget import Pricing
 from app.storage.base import ConversationRepository
 from app.storage.memory import InMemoryConversationRepository
+
+# Before anything reads the environment. `app = create_app()` at the bottom of
+# this module runs at import, and with LLM_PROVIDER=openai and the key only in
+# .env that construction raised inside the OpenAI SDK — uvicorn died with a
+# message that looked nothing like "missing key". load_dotenv never overrides a
+# variable the environment already set, so compose and CI stay authoritative.
+load_dotenv()
 
 
 def build_inner(name: str) -> LLMProvider:

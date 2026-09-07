@@ -30,11 +30,14 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import re
+import uuid
 from pathlib import Path
 from typing import Any
 
 import httpx
+from dotenv import load_dotenv
 
 from evals import assertions
 
@@ -71,10 +74,18 @@ async def _client(base_url: str | None, in_process: bool, **app_kwargs: Any):
     return httpx.AsyncClient(base_url=base_url or "http://localhost:8000", timeout=60.0)
 
 
-async def _ask(client: httpx.AsyncClient, case_id: str, question: str) -> dict[str, Any]:
+async def _ask(
+    client: httpx.AsyncClient, case_id: str, question: str, tag: str
+) -> dict[str, Any]:
+    """`tag` is a per-invocation nonce, for the same reason run_golden has one.
+
+    These ids were stable across invocations and idempotency is persisted, so a
+    second run against the same database replayed the first run's answers and
+    stamped them with whatever provider was configured this time.
+    """
     response = await client.post(
-        f"/conversations/bnd-{case_id}/messages",
-        json={"content": question, "client_message_id": f"{case_id}-1"},
+        f"/conversations/bnd-{tag}-{case_id}/messages",
+        json={"content": question, "client_message_id": f"{case_id}-{tag}"},
     )
     try:
         return {"status_code": response.status_code, "body": response.json()}
@@ -153,7 +164,7 @@ async def remove_chunk(expected_count: int) -> tuple[bool, int]:
         return after == expected_count, after
 
 
-async def run_forgery_case() -> dict[str, Any]:
+async def run_forgery_case(tag: str) -> dict[str, Any]:
     """Fake-driven: queue a completion citing an evidence_id never retrieved."""
     from app.llm.fake import FakeProvider
 
@@ -161,7 +172,9 @@ async def run_forgery_case() -> dict[str, Any]:
     llm.enqueue(FakeProvider.answered("O limite é de R$ 99.999,00.", ["forged#does-not-exist"]))
     client = await _client(None, True, llm=llm, provider_name="fake")
     try:
-        result = await _ask(client, "forgery", "Qual é o limite da cobertura de vidros no Seguro Auto?")
+        result = await _ask(
+            client, "forgery", "Qual é o limite da cobertura de vidros no Seguro Auto?", tag
+        )
     finally:
         await client.aclose()
     envelope = result["body"]
@@ -182,11 +195,11 @@ async def run_forgery_case() -> dict[str, Any]:
     }
 
 
-async def run_concurrency_case(client: httpx.AsyncClient) -> dict[str, Any]:
+async def run_concurrency_case(client: httpx.AsyncClient, tag: str) -> dict[str, Any]:
     """Twenty concurrent questions; every response must still be well-formed."""
     questions = [f"Qual é a vigência padrão da apólice de seguro auto? ({i})" for i in range(20)]
     results = await asyncio.gather(
-        *[_ask(client, f"conc-{i}", q) for i, q in enumerate(questions)],
+        *[_ask(client, f"conc-{i}", q, tag) for i, q in enumerate(questions)],
         return_exceptions=True,
     )
     errors = [r for r in results if isinstance(r, BaseException)]
@@ -216,7 +229,16 @@ async def main() -> int:
     parser.add_argument("--skip-planted", action="store_true",
                         help="Skip au-002; it needs Postgres to plant a chunk.")
     parser.add_argument("--out", type=Path, default=ROOT / "evals" / "results" / "boundary.json")
+    parser.add_argument(
+        "--tag",
+        default=None,
+        help="Nonce mixed into the ids. Fresh per invocation by default.",
+    )
     args = parser.parse_args()
+    load_dotenv()
+
+    tag = args.tag or uuid.uuid4().hex[:8]
+    print(f"tag={tag}  LLM_PROVIDER={os.getenv('LLM_PROVIDER', 'fake')}")
 
     cases = json.loads(AUTHORED.read_text(encoding="utf-8"))
     records: list[dict[str, Any]] = []
@@ -232,7 +254,7 @@ async def main() -> int:
             if case.get("requires_planted_chunk") and args.skip_planted:
                 print(f"  {case['id']}  SKIPPED (needs the planted chunk)")
                 continue
-            result = await _ask(client, case["id"], case["pergunta"])
+            result = await _ask(client, case["id"], case["pergunta"], tag)
             checks = _grade_authored(case, result["body"])
             records.append({
                 "case_id": case["id"],
@@ -246,7 +268,7 @@ async def main() -> int:
                   f"{'ok' if assertions.passed(checks) else 'MISS'}")
 
         for case_id, question in (("override", OVERRIDE), ("out-of-scope", OUT_OF_SCOPE)):
-            result = await _ask(client, case_id, question)
+            result = await _ask(client, case_id, question, tag)
             envelope = result["body"]
             checks = [
                 assertions.error_leakage(envelope),
@@ -279,12 +301,12 @@ async def main() -> int:
             print(f"  bnd-{case_id}  {str(envelope.get('outcome')):>20}  "
                   f"{'ok' if assertions.passed(checks) else 'MISS'}")
 
-        records.append(await run_concurrency_case(client))
+        records.append(await run_concurrency_case(client, tag))
         print(f"  bnd-concurrency  {'ok' if records[-1]['passed'] else 'MISS'}")
     finally:
         await client.aclose()
 
-    records.append(await run_forgery_case())
+    records.append(await run_forgery_case(tag))
     print(f"  bnd-forgery  {'ok' if records[-1]['passed'] else 'MISS'}")
 
     restored = None

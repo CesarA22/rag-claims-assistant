@@ -63,9 +63,35 @@ def _all_records(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _providers(runs: list[dict[str, Any]]) -> set[str]:
-    return {
-        (r.get("meta") or {}).get("provider", "unknown") for r in _all_records(runs)
+    """Providers seen across the records, ignoring records with no meta at all.
+
+    A record with no `meta` block is a non-200 response — a provider error, or a
+    problem+json body — and it carries no provider claim either way. Folding it
+    in as `"unknown"` used to flip the whole report to "tier 2 did not run", so
+    one 503 in thirty printed the entire "the key has no credits" block against a
+    real live run.
+    """
+    seen = {
+        (r.get("meta") or {}).get("provider")
+        for r in _all_records(runs)
+        if (r.get("meta") or {}).get("provider")
     }
+    return seen or {"unknown"}
+
+
+def _replayed(runs: list[dict[str, Any]]) -> list[str]:
+    """Records the runner flagged as replays rather than live calls.
+
+    `meta.provider` is stamped by the process that served the request, including
+    on a turn replayed out of storage — so provider alone cannot establish that a
+    run was live. run_golden marks a record whose provider is openai, which is
+    not degraded, and which billed no input tokens.
+    """
+    return [
+        f"{r['case_id']}#r{r['run']}"
+        for r in _all_records(runs)
+        if r.get("suspected_replay")
+    ]
 
 
 def _gate(passed: int, total: int) -> str:
@@ -118,7 +144,13 @@ def render(
     records = _all_records(runs)
     by_case = _records_by_case(runs)
     providers = _providers(runs)
-    live = providers == {"openai"}
+    replayed = _replayed(runs)
+    # Live means the provider claim is openai AND no record looks replayed. The
+    # provider name alone is not evidence: a turn replayed out of Postgres is
+    # stamped with the CURRENT process's provider, so a re-run against a database
+    # that already holds a keyless run would render thirty fake answers as a live
+    # run and print PASS on US$0.0000.
+    live = providers == {"openai"} and not replayed
     n = len(records)
 
     out: list[str] = []
@@ -133,11 +165,27 @@ def render(
     )
 
     # ---------------------------------------------------------------- tier 2
-    if not live:
+    if replayed:
+        add("## These runs are replays, not measurements — do not read the numbers\n")
+        add(
+            f"{len(replayed)} of {n} records claim `provider=openai` while billing zero "
+            "input tokens on a turn that was not degraded. That is the signature of "
+            "idempotent replay: the conversation ids and idempotency keys already "
+            "existed in the database, so the API returned the stored answers without "
+            "calling the provider and stamped them with the provider this process "
+            "happened to be configured with. Affected: "
+            f"{', '.join(replayed[:12])}{' and more' if len(replayed) > 12 else ''}.\n"
+        )
+        add(
+            "**Re-run with a fresh `--tag` (the default) against a reset conversation "
+            "set.** Every gate below is computed from these records, and none of them "
+            "means anything until that is done.\n"
+        )
+    elif not live:
         add("## Tier 2 did not run, and nothing here pretends otherwise\n")
         add(
-            f"The three runs below were produced with **`provider={'/'.join(sorted(providers))}`**, "
-            "not the live model. The OpenAI key on this machine has no credits:\n"
+            f"The runs below were produced with **`provider={'/'.join(sorted(providers))}`**, "
+            "not the live model:\n"
         )
         if blocked:
             add("```\n" + blocked.strip() + "\n```\n")
@@ -199,7 +247,12 @@ def render(
     add("## Per case\n")
     add("| Case | Grade | Verdict × runs | Stable | Outcome | Note |")
     add("|---|---|---|---|---|---|")
-    expected = {e["case"]: e["reason"] for e in cfg["golden"].get("expected_failures", [])}
+    # `or []`, not a default: emptying the key in YAML (`expected_failures:` with
+    # nothing under it) makes safe_load return None for it, and iterating None
+    # raises. Removing the last registered failure is exactly when that happens.
+    expected = {
+        e["case"]: e["reason"] for e in (cfg["golden"].get("expected_failures") or [])
+    }
     for case_id in sorted(by_case):
         rows = by_case[case_id]
         verdicts = [_verdict(r, judged.get(f"{case_id}#r{r['run']}")) for r in rows]
@@ -212,7 +265,7 @@ def render(
         add(
             f"| {case_id} | {rows[0]['grade']} | {' '.join(verdicts)} | "
             f"{'yes' if len(set(verdicts)) == 1 else '**NO**'} | "
-            f"{'/'.join(sorted(outcomes))} | {note} |"
+            f"{'/'.join(sorted(str(o) for o in outcomes))} | {note} |"
         )
     add("")
     stable = all(
@@ -223,6 +276,45 @@ def render(
         f"**Verdict stability:** {'all cases stable' if stable else 'UNSTABLE'} across "
         f"{len(runs)} runs — but with a deterministic provider that is close to a tautology. "
         "Stability is only informative once the live model is answering.\n"
+    )
+
+    add("### The golden gates\n")
+    det = [r for r in records if r["grade"] == "deterministic"]
+    det_pass = sum(1 for r in det if r.get("deterministic_pass"))
+    det_rate = det_pass / len(det) if det else 0.0
+    det_gate = cfg["golden"]["deterministic_pass_rate"]
+    judged_records = [r for r in records if r["grade"] == "judge"]
+    judged_pass = sum(
+        1
+        for r in judged_records
+        if (judged.get(f"{r['case_id']}#r{r['run']}") or {}).get("verdict") == "pass"
+    )
+    judge_rate = judged_pass / len(judged_records) if judged_records else 0.0
+    add("| Gate | Value | Threshold | Result |")
+    add("|---|---|---|---|")
+    add(
+        f"| deterministic_pass_rate | {det_rate:.2f} ({det_pass}/{len(det)}) | "
+        f"{det_gate:.2f} | "
+        f"{'**PASS**' if det_rate >= det_gate else '**MISS**'} |"
+    )
+    add(
+        f"| judge_pass_rate | "
+        f"{(f'{judge_rate:.2f} ({judged_pass}/{len(judged_records)})') if judged else 'not graded'} | "
+        f"{cfg['golden']['judge_pass_rate']:.2f} | "
+        f"{('**PASS**' if judge_rate >= cfg['golden']['judge_pass_rate'] else '**MISS**') if judged else 'judge did not run'} |"
+    )
+    add(
+        f"| verdict_stability | {'all stable' if stable else 'UNSTABLE'} | "
+        f"{cfg['golden']['verdict_stability']:.2f} | "
+        f"{'**PASS**' if stable else '**MISS**'} |"
+    )
+    add("")
+    add(
+        "`deterministic_pass_rate` is the headline golden gate in "
+        "`evals/thresholds.yaml`, and until now it was the one number this file "
+        "never rendered — the whole `expected_failures` argument was about a gate "
+        "that did not appear in the generated document. It is computed over the "
+        "deterministic cases of every run, not the latest one.\n"
     )
 
     failures = _failed_checks(records)
@@ -248,22 +340,47 @@ def render(
     add("## Cost and latency\n")
     if not live:
         add(
-            "> **Not measured.** These come from `FakeProvider`, which bills nothing and "
-            "returns without a network call. They are printed so the harness is seen to "
-            "compute them, and they are worthless as evidence about the system.\n"
+            "> **Not measured, and therefore not graded.** These runs are not live, so "
+            "every row below is rendered without a verdict rather than with a PASS. A "
+            "provider that bills nothing and returns without a network call would pass "
+            "a cost ceiling and a latency budget trivially, and reporting that as a "
+            "pass would be the most flattering lie in this file.\n"
         )
     ordered = sorted(latencies)
     p50 = statistics.median(ordered) if ordered else 0.0
     p95 = ordered[min(len(ordered) - 1, int(round(0.95 * (len(ordered) - 1))))] if ordered else 0.0
+    mean_cost = (sum(costs) / len(costs)) if costs else 0.0
+
+    def verdict(value: float, ceiling: float) -> str:
+        """No gate reports PASS on input that is not live."""
+        if not live:
+            return "not measured"
+        return "**PASS**" if value <= ceiling else "**MISS**"
+
     add("| Metric | Value | Threshold | Result |")
     add("|---|---|---|---|")
+    # The brief names the average explicitly and it existed nowhere in this file.
+    add(
+        f"| Average cost per question | US${mean_cost:.4f} | "
+        f"US${cfg['budget']['cost_per_question_usd']} | "
+        f"{verdict(mean_cost, cfg['budget']['cost_per_question_usd'])} |"
+    )
     add(
         f"| Max cost per question | US${max(costs or [0]):.4f} | "
         f"US${cfg['budget']['cost_per_question_usd']} | "
-        f"{'**PASS**' if max(costs or [0]) <= cfg['budget']['cost_per_question_usd'] else '**MISS**'} |"
+        f"{verdict(max(costs or [0]), cfg['budget']['cost_per_question_usd'])} |"
     )
-    add(f"| p50 latency | {p50:.2f} s | {cfg['budget']['p50_latency_s']} s | — |")
-    add(f"| p95 latency | {p95:.2f} s | {cfg['budget']['p95_latency_s']} s | — |")
+    # p50 and p95 carried a literal em dash where a verdict belongs. Both have a
+    # registered threshold in thresholds.yaml; not scoring them meant the latency
+    # half of requirement 4 was printed and never graded.
+    add(
+        f"| p50 latency | {p50:.2f} s | {cfg['budget']['p50_latency_s']} s | "
+        f"{verdict(p50, cfg['budget']['p50_latency_s'])} |"
+    )
+    add(
+        f"| p95 latency | {p95:.2f} s | {cfg['budget']['p95_latency_s']} s | "
+        f"{verdict(p95, cfg['budget']['p95_latency_s'])} |"
+    )
     add(f"| max latency | {max(ordered or [0]):.2f} s | — | — |")
     add("")
     add("**Token split across all runs** (cached input is billed at one tenth of uncached):\n")

@@ -20,6 +20,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
+
 from evals import judge
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +32,7 @@ async def main() -> int:
     parser = argparse.ArgumentParser(description="Grade the judge cases.")
     parser.add_argument("--results", type=Path, default=ROOT / "evals" / "results")
     args = parser.parse_args()
+    load_dotenv()
 
     cases = {
         c["id"]: c
