@@ -387,10 +387,27 @@ async def ask(
             )
     except (ProviderDegraded, CircuitOpen) as exc:
         if evidence:
+            # The PII gate applies when the provider is down too. This branch
+            # never calls judge(), so without this line requirement 3 was
+            # suspended inside the scenario of requirement 5 — and the payload
+            # here IS the retrieved text, so the leak surface is the snippets.
+            #
+            # evidence_carries_pii alone, not is_pii_request. That AND of
+            # question-shape and evidence-shape is defensible on the answered
+            # path, where the sufficiency gate and redact() sit behind it. Here
+            # there is no model answer to gate, so the question-shape half
+            # decides nothing: measured, a neutral question over the same
+            # minutes chunk shipped two policyholder names. redact() strips CPF,
+            # phone and e-mail and cannot match a name.
+            degraded_answer = (
+                Answer(outcome="refused", text=_PII_REFUSAL, citations=[])
+                if grounding.evidence_carries_pii(evidence)
+                else excerpts_answer(evidence)
+            )
             latency_ms = int((time.perf_counter() - started) * 1000)
             turn = await repo.complete_turn(
                 turn,
-                excerpts_answer(evidence),
+                degraded_answer,
                 Usage(),
                 latency_ms,
                 cost_usd=spent_usd,

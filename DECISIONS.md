@@ -904,3 +904,88 @@ in plaintext. Redirect it or do not run it in a shared terminal.
   development path and the proxy stays in `vite.config.ts`. Containerising the
   dev server would give two ways to run the same thing and a second place for the
   proxy rule to drift.
+
+## S11 — closing the mandatory-requirement gaps
+
+Written against an adversarial audit of the four hard requirements. Each finding
+below was reproduced by execution before it was fixed, and the fix re-measured.
+
+### F4 — structured output was non-deterministic, and its failure lied
+
+`app/llm/openai_provider.py` sent the draft schema with `"strict": False`.
+Measured live on `gpt-5.4-mini` over six calls: **three conformant, three
+returning the JSON Schema itself** with top-level keys `type` / `properties`.
+`_parse_draft` caught the resulting `ValidationError` and returned
+`refused` carrying `_CITATION_REFUSAL` — so a correct answer became a refusal
+that told the analyst the sources did not support it, about a draft the model
+never produced. With `"strict": True` and a strict-shaped schema:
+**ten of ten conformant**, mean US$0.001421, p50 1.80 s.
+
+`strict` is set on the adapter, so it applies to every schema the adapter is
+handed. `evals/judge.py`'s `VERDICT_SCHEMA` was reshaped in the same commit —
+left loose it is a 400 on the first judged case, which exits `judge_run.py` and
+leaves the four `grade: judge` golden cases ungraded. `citations` is required
+with `[]` as its "none" value, deliberately not `["array","null"]`: a
+`citations: null` fails `Draft` validation and reproduces the exact refusal the
+change removes.
+
+**The two failures behind one `ValidationError` are now separated.** A body cut
+off at our own `max_output_tokens` cap is budget policy biting, and still
+degrades to a 200 refusal — with a message that says so rather than one about
+citations. A well-formed body that is not the schema is the provider breaking a
+contract, and raises `ModelContract` → 502. `Completion.truncated` carries the
+provider's own `status: incomplete`, which was previously logged and discarded;
+without it the two are indistinguishable at `parsed is None` and a model that
+answered in prose would be reported to the analyst as an over-long answer.
+
+**No offline test could have caught the original defect.** `FakeProvider`
+discards `schema` entirely and `jsonschema` is not a dependency, so the suite
+passed identically with the flag either way — which is why it survived. T-48
+pins `strict` on the wire, T-49 walks both schemas for strict shape at every
+depth, T-50 pins the contract/truncation split; each was verified by reverting
+the corresponding source change and watching it go red.
+`scripts/live_schema_gate.py` is the evidence they cannot be, and it runs **ten**
+calls rather than three because the failure is probabilistic and three can pass
+by luck.
+
+`PROMPT_VERSION` moved `4adf882fbe66` → `e3307f28ac81`. That is the mechanism
+working: `_prompt_version()` hashes the system prompt plus the schema precisely
+so a change to either invalidates a replay.
+
+### F1 — the degraded path suspended requirement 3
+
+`ask()`'s `except (ProviderDegraded, CircuitOpen)` handler called
+`excerpts_answer(evidence)` and **never called `judge()`** — no PII gate, no
+sufficiency gate, no ambiguity gate. Measured before the fix, with a minutes
+chunk in the evidence set and the provider down: `outcome="answered"`,
+`degraded=true`, and `Marta Ferreira Bittencourt | [CPF] | [TELEFONE]` in the
+citation snippet. The CPF and the phone number were scrubbed; the **name was
+not**, because `redact()` matches patterns and a name is not one.
+
+So requirement 3 was suspended inside the scenario of requirement 5 — the
+highest-weighted criterion, failing inside the one condition the architecture is
+built around.
+
+**The gate is `grounding.evidence_carries_pii(evidence)`, not
+`is_pii_request(question, evidence)`**, and the difference is the whole finding.
+`is_pii_request` is an AND of question-shape and evidence-shape. On the answered
+path that AND is defensible: a model answer sits behind the sufficiency gate and
+`redact()`. On the degraded path there is no model answer at all — the payload
+*is* the raw retrieved text — so the question-shape half decides nothing.
+Measured: a **neutral** question ("o que o comitê deliberou em abril de 2025?")
+over the same chunk shipped two policyholder names. T-45 pins both the PII
+question and the neutral one, and a third case pins that clean evidence still
+gets its excerpts, so deleting the branch outright cannot pass.
+
+**Residual, named rather than deleted: this fixes new turns, not old rows.**
+`sql.py` writes `citations.snippet` at `complete_turn`, so a leak that already
+shipped is also already at rest, and no backfill ships with this change. Checked
+against the development database at the time of the fix: `citations` held zero
+rows, so nothing there needs cleaning today. For a PoC that is the right trade —
+the store is disposable and re-ingest is one command — but on real data the fix
+would need a backfill over `citations.snippet` beside it, and the reason it is
+absent is that there is nothing to back-fill, not that the problem is imaginary.
+
+`redact()` is unchanged and still cannot remove a name. The degraded path is now
+safe because it **refuses** when the evidence carries identities, not because
+anything learned to scrub them.

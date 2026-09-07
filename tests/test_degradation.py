@@ -1,4 +1,4 @@
-"""T-09 / T-10 / T-33: degradation rendering, log-only internals, breaker health."""
+"""T-09 / T-10 / T-33 / T-45: degradation rendering, log-only internals, breaker health."""
 
 from __future__ import annotations
 
@@ -11,8 +11,12 @@ from app.llm.fake import FakeProvider
 from app.llm.resilient import ResilienceConfig, ResilientProvider
 from app.main import create_app
 from app.retrieval.memory import InMemoryRetriever
+from tests.test_grounding import ATA_PII, CPF_PATTERN, FORBIDDEN_NAMES, MINUTES_CHUNKS
 
 VIGENCIA = "Qual é o prazo de vigência padrão de uma apólice de Seguro Auto?"
+# Neutral on its face — it asks about process, not about people — and answerable
+# only from a chunk that happens to carry the names.
+NEUTRAL_MINUTES = "O que o comitê de sinistros graves deliberou em abril de 2025?"
 PATH = "/conversations/c-1/messages"
 
 
@@ -124,3 +128,92 @@ async def test_healthz_reports_breaker_state():
     assert opened["breaker"]["consecutive_failures"] >= 1
     assert opened["breaker"]["reset_in_s"] > 0
     assert opened["degraded_since"] is not None
+
+
+async def _degraded_post(question: str, key: str, chunks):
+    """One POST whose provider is down and whose retrieval succeeded.
+
+    The shared `app`/`client` fixtures cannot drive this: their retriever holds
+    two Auto chunks with no PII, so the branch is reachable but the leak is not.
+    The provider does have to be wrapped — a raw FakeProvider raising
+    ProviderUnavailable is caught by `except InsurCoError` and returns 503 — but
+    the fixture that actually blocks this test is the retriever, not the
+    provider. Widening the except clause instead is the wrong turn: it flips T-10
+    and T-36 to the wrong behaviour.
+    """
+    inner = FakeProvider()
+    inner.enqueue(ProviderUnavailable())
+    llm = ResilientProvider(inner, ResilienceConfig(max_retries=0, breaker_failures=5))
+    app = create_app(llm=llm, retriever=InMemoryRetriever(chunks), provider_name="fake")
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        return await client.post(PATH, json={"content": question, "client_message_id": key})
+
+
+def _assert_no_policyholder_identities(response) -> dict:
+    """No name and no CPF anywhere in the serialised body.
+
+    The whole body, not just `answer`: on the degraded path the payload *is* raw
+    retrieved text, so the leak surface is the citation snippets. Matches T-18's
+    scope for the same reason.
+    """
+    body = response.json()
+    dumped = json.dumps(body, ensure_ascii=False)
+    for name in FORBIDDEN_NAMES:
+        assert name not in dumped, f"policyholder name {name!r} shipped in a degraded response"
+    assert CPF_PATTERN.search(dumped) is None
+    return body
+
+
+async def test_pii_question_during_an_outage_is_refused_not_excerpted():
+    """T-45 / R-03: the PII gate applies when the provider is down, not only when it answers.
+
+    The degraded handler called `excerpts_answer(evidence)` directly and never
+    called `judge()`, so requirement 3 was suspended inside the scenario of
+    requirement 5. `redact()` strips CPF, phone and e-mail from a snippet but
+    cannot match a name, so the names shipped intact.
+    """
+    response = await _degraded_post(ATA_PII, "cm-pii-deg", MINUTES_CHUNKS)
+
+    assert response.status_code == 200
+    body = _assert_no_policyholder_identities(response)
+    assert body["outcome"] == "refused"
+    assert body["citations"] == []
+    assert body["meta"]["degraded"] is True
+    assert body["meta"]["reason"] == "provider_degraded"
+    assert "dados pessoais" in body["answer"].lower()
+
+
+async def test_neutral_question_over_pii_evidence_is_also_refused_when_degraded():
+    """T-45 / R-03: the degraded gate keys on the evidence alone, not on the question.
+
+    This is the case that chooses the fix. `grounding.is_pii_request` is an AND of
+    question-shape and evidence-shape, and on the answered path that AND is
+    defensible — `judge()` has the sufficiency gate and `redact()` behind it. Here
+    there is no model answer at all; the payload is the retrieved text itself, so
+    the question-shape half decides nothing and a neutral question over the same
+    chunk shipped two policyholder names. `evidence_carries_pii` alone is the gate.
+    """
+    response = await _degraded_post(NEUTRAL_MINUTES, "cm-neutral-deg", MINUTES_CHUNKS)
+
+    assert response.status_code == 200
+    body = _assert_no_policyholder_identities(response)
+    assert body["outcome"] == "refused"
+    assert body["citations"] == []
+    assert body["meta"]["degraded"] is True
+
+
+async def test_degraded_excerpts_still_ship_when_the_evidence_is_clean():
+    """T-45 / R-05: the gate is not a blanket kill switch for the degraded path.
+
+    Without this, deleting `excerpts_answer` from the handler entirely would pass
+    the two tests above, and requirement 5's whole point — useful excerpts when
+    the provider is down — would be gone.
+    """
+    response = await _degraded_post(VIGENCIA, "cm-clean-deg", None)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["outcome"] == "answered"
+    assert body["citations"]
+    assert body["meta"]["degraded"] is True
