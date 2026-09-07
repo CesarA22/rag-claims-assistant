@@ -142,20 +142,22 @@ the case that moved since is gs-010.
 ## Tests
 
 ```bash
-pytest --disable-socket -q      # 79 passed, 10 deselected
+pytest --disable-socket -q      # 120 passed, 10 deselected
 ```
 
 Sockets are disabled on purpose: it is mechanical proof that no test reaches the
 provider. The 10 deselected are marked `db` and need Postgres:
 
 ```bash
-pytest -m db -q                 # 10 passed
+pytest -m db -q                 # 10 passed, 120 deselected
 ```
 
-Two component tests for the client:
+Sixteen tests for the client, in four files — the state machine that maps three
+wire shapes onto seven UI states, plus the citation panel, the refusal card and
+the retry that reuses its `client_message_id`:
 
 ```bash
-cd web && npm test              # 2 passed
+cd web && npm test              # 16 passed
 ```
 
 ## Evaluation
@@ -191,16 +193,21 @@ Stated here rather than left to be discovered; `EVALS.md` has the detail and the
 numbers. All three of the gaps this section used to list were closed or measured
 in S11; these are what is actually open.
 
-- **Retrieval misses the chunk while finding the document.** The one defect
-  behind both remaining eval failures. `gs-005` asks for a regulation deadline
-  whose answer is a table row reading `Roubo e Furto (Auto) | 45 dias corridos`;
-  the analyst writes *veículo*, `plainto_tsquery` ANDs every term, and the chunk
-  is excluded outright rather than ranked low. `au-003` is the same shape. In
-  both cases the model correctly reports the figure is absent and the sufficiency
-  gate correctly refuses — the failure is upstream of both. Tier 0 reports
-  recall@5 = 9/9 and cannot see this, because it scores at **document**
-  granularity. The repair moves every ranking constant in `hybrid.py` and needs a
-  chunk-level recall gate that does not exist yet.
+- **Retrieval misses the chunk while finding the document — twice, for two
+  different reasons.** Both remaining eval failures are retrieval, and until now
+  this bullet named the wrong cause for one of them; `scripts/chunk_rank_probe.py`
+  measures what actually happens. `gs-005` asks for a regulation deadline whose
+  answer is a table row reading `Roubo e Furto (Auto) | 45 dias corridos`. That
+  row ranks **4th** on merit and is then dropped by `MAX_PER_DOCUMENT = 2`,
+  because MAN-SIN-2025 has already spent both slots — a per-document diversity
+  cap, not a query-semantics problem, and a local repair. `au-003` is a genuine
+  ranking miss: the NI-014 v2.0 chunk is not in the uncapped top ten either, and
+  the lexical arm is the weakest arm for exactly that version-precedence shape.
+  In both cases the model correctly reports the figure is absent and the
+  sufficiency gate correctly refuses — the failure is upstream of both. Tier 0
+  reports recall@5 = 9/9 and cannot see either, because it scores at **document**
+  granularity; the chunk-level recall gate that would catch them does not exist
+  yet, which is why neither is repaired here.
 - **The sufficiency gate is unreachable when the evidence spans more than one
   product**, because `judge()` checks ambiguity first. Both obvious repairs — a
   bare reorder, and refusing only when the answer is unsupported by the whole

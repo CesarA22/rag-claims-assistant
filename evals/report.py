@@ -588,47 +588,66 @@ instead of silently converting clarifications into false refusals. The previous
 T-16 could not do that: its fixture spanned one product, so the ambiguity gate
 could never fire against it and it was green under both orders.
 
-### 2. Both remaining misses are ONE retrieval defect, and it was invisible until the model answered
+### 2. The two remaining misses are TWO retrieval defects, and this section used to name the wrong one
 
-`gs-005` and `au-003` are the only two failures in this run, and they have the
-same root cause: **the chunk that carries the number is not in the top five,
-while the document that contains it often is.**
+`gs-005` and `au-003` are the only two failures in this run. Both are retrieval —
+in each case the chunk carrying the number is not in the top five the model was
+given — but they fail for **different reasons**, and the mechanism this section
+asserted until now was not a mechanism this code has.
+
+**The correction first, because a generated document that asserts a mechanism the
+code does not have is worse than one that asserts nothing.** This section said
+`plainto_tsquery` ANDs every term and therefore "excludes the chunk outright",
+and proposed as the repair "OR-with-ranking instead of AND". `hybrid.py` has
+rewritten `&` to `|` since S3 — `OR_TSQUERY`, and DECISIONS.md records the
+change — so the repair had already shipped and the diagnosis described a system
+that was replaced eleven sessions ago. `scripts/chunk_rank_probe.py` measures
+what actually happens; the numbers below are its output.
 
 ```
-gs-005  "prazo de regulação para roubo e furto de veículo"
-        answering chunk  man-sin-2025#v2.0#tabela-1     in top-5 chunks? NO
-        its document     MAN-SIN-2025                   in top-5 docs?   yes
-au-003  "prazo para comunicar um sinistro, conforme NI-014"
-        answering chunk  ni-014#v2.0#3-prazo-de-comunicacao  in top-5?   NO
-        its document     NI-014                         in top-5 docs?   NO
+                                    gs-005      au-003
+chunks matched by AND (unused)           2           0
+chunks matched by OR  (what runs)      156         170
+answering chunk, uncapped rank           4          >10   (raw lexical rank 14)
+answering chunk, as shipped            out          out
 ```
+
+**gs-005 is the per-document cap, not the query.** The answering row —
+`man-sin-2025#v2.0#tabela-1`, reading `Roubo e Furto (Auto) | 45 dias corridos` —
+ranks **4th** once `MAX_PER_DOCUMENT` is lifted. It is inside the top five on
+merit and is then removed, because MAN-SIN-2025 has already spent both of its two
+slots on the chunks at ranks 1 and 3. The diversity cap that exists to stop one
+document flooding the evidence is, on this question, the thing standing between
+the analyst and the number. That is a local, cheap repair — the cap itself, or an
+exemption for table chunks — not the re-tuning of every ranking constant this
+section used to claim.
+
+**au-003 is a genuine ranking miss.** `ni-014#v2.0#3-prazo-de-comunicacao` is not
+in the uncapped top ten either; it sits at raw lexical rank 14, and NI-014 is not
+in the top five documents. Nothing about the cap moves it. This one does need the
+ranking work — and, being a version-precedence case, it is the one where the
+lexical arm alone is weakest: S3 measured that only the vector arm reaches NI-014
+v2.0 at rank 1, and the container is pinned to the lexical arm.
 
 In both cases the model did the right thing with what it was given. gs-005's
 draft says the prazo "deve ser consultado na Tabela 1 do Manual de Sinistros" and
 that the number is not in the evidence; au-003's says the same about NI-014. The
 sufficiency gate then refuses, correctly, because the answer is not supported.
-**Neither is a gate failure, a prompt failure or a model failure. Both are
-retrieval.**
-
-The mechanism, for gs-005, is exact: `plainto_tsquery` **ANDs** every term, and
-the answering table row reads `Roubo e Furto (Auto) | 45 dias corridos` — it does
-not contain the word *veículo* that the analyst wrote. One vocabulary mismatch
-excludes the chunk outright rather than ranking it low. Only two chunks in the
-whole corpus match that query at all.
+**Neither is a gate failure, a prompt failure or a model failure.**
 
 **Tier 0 reports recall@5 = 9/9 and both of these still fail, which is the
 finding about the instrument.** Tier 0 scores at DOCUMENT granularity: gs-005
 counts as recalled because MAN-SIN-2025 is in the top five, and the chunk holding
-the number is not. A document-level recall number cannot see this class of miss,
-so 100% there and a failure here are not in contradiction — they are measuring
-different things, and only one of them is what the answer needs.
+the number is not. A document-level recall number cannot see either miss, so 100%
+there and a failure here are not in contradiction — they measure different
+things, and only one of them is what the answer needs.
 
-Not fixed in this session, and deliberately so. The repair is a change to the
-lexical query — OR-with-ranking instead of AND, or a table-caption boost — which
-moves every ranking constant `hybrid.py` was tuned with and requires re-measuring
-tier 0 against a chunk-level gate that does not yet exist. Registering
-`deterministic_pass_rate: 1.00` before this run and reporting the miss is what
-`thresholds.yaml` asks for; quietly relaxing it to 0.83 again would not be.
+Neither is fixed in this run, and the reason is now different for each. gs-005's
+repair is small but still moves ranking behaviour for every question, so it needs
+the chunk-level recall gate that does not exist yet rather than a spot check on
+one case. au-003's is the larger job. Registering `deterministic_pass_rate: 1.00`
+before this run and reporting the miss is what `thresholds.yaml` asks for;
+quietly relaxing it to 0.83 again would not be.
 
 ### 3. gs-007 passes, and wiring the tool broke the gate that grades it
 

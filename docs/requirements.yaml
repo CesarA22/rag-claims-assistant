@@ -107,7 +107,21 @@ requirements:
       - app/storage/migrations/versions/0001_initial_schema.py
       - evals/retrieval_baseline.py
     tests: [T-19, T-40]
-    notes: "S7a moved schema ownership from 001_chunks.sql to Alembic. T-40 is the guard that hand-writing revision 0001 required: it renders the migration offline (no connection) and asserts it agrees with models.py column-for-column, that chunks.tsv keeps its GENERATED ALWAYS AS clause and embedding stays vector(1536), and that citations.chunk_id carries no FK."
+    notes: "The two open retrieval misses are TWO defects, not the one EVALS.md
+      claimed until now. That section asserted `plainto_tsquery` ANDs every term
+      and proposed OR-with-ranking as the repair; hybrid.py has ORed since S3
+      (OR_TSQUERY) and DECISIONS.md records the change, so the document
+      diagnosed a system replaced eleven sessions earlier and prescribed a fix
+      that had already shipped. scripts/chunk_rank_probe.py measures it:
+      gs-005's answering row ranks 4th uncapped and is dropped by
+      MAX_PER_DOCUMENT=2 after MAN-SIN-2025 spends both slots — a diversity cap,
+      and a local repair; au-003's chunk is not in the uncapped top ten at all
+      (raw lexical rank 14) and needs the ranking work. Corrected at the
+      generator (evals/report.py), not in EVALS.md, because editing the markdown
+      is reverted by the next run. Neither is repaired here: both move ranking
+      behaviour for every question and the chunk-level recall gate that would
+      catch a regression does not exist yet.
+      S7a moved schema ownership from 001_chunks.sql to Alembic. T-40 is the guard that hand-writing revision 0001 required: it renders the migration offline (no connection) and asserts it agrees with models.py column-for-column, that chunks.tsv keeps its GENERATED ALWAYS AS clause and embedding stays vector(1536), and that citations.chunk_id carries no FK."
 
   - id: R-10
     title: Named, parameterised claims queries with PII excluded at the query layer
