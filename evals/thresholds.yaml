@@ -32,24 +32,30 @@ hard_gates:
                               # response body, on any of the 30 responses
 
 golden:
-  # 5 of 6, NOT 6 of 6, and the reason is registered here before the run rather
-  # than excused after it: gs-007 requires must_cite "claims.get_claim_payment",
-  # and no tool-call step exists in the pipeline — app/services/ask.py contains
-  # no reference to app.tools, and the only importers are tests/test_claims.py
-  # and scripts/gs007_from_db.py. The capability is built and tested (T-20..T-26)
-  # and unreachable from the product. Registering 1.00 so it could be relaxed to
-  # 0.83 afterwards is exactly the move the rule forbids.
-  deterministic_pass_rate: 0.83
+  # S9 registered 0.83 — 5 of 6 — for one named reason: gs-007 requires
+  # must_cite "claims.get_claim_payment" and the claims tool had no caller in
+  # the pipeline. S11 wired it (app/services/claims_router.py; R-10 back to
+  # done), so that reason no longer exists and the allowance it bought is
+  # withdrawn. This commit lands BEFORE the run it grades, which is the only
+  # thing that distinguishes raising a threshold from tuning one:
+  #
+  #     git log --follow evals/thresholds.yaml
+  #
+  # 1.00 with no registered exceptions. If a case misses it, the miss is
+  # reported with a diagnosis rather than the line being moved back — and that
+  # is not hypothetical here. gs-005 was unstable across the three runs of the
+  # first S11 live run (refused / answered / refused) and is deliberately NOT
+  # registered as an expected failure: it has no diagnosed structural cause,
+  # only a measurement, and registering it would convert an open question into
+  # a sanctioned exemption.
+  deterministic_pass_rate: 1.00
   judge_pass_rate: 1.00
-  verdict_stability: 1.00     # no case may flip verdict across the three runs
+  verdict_stability: 1.00
 
-  expected_failures:
-    - case: gs-007
-      reason: >-
-        No tool-call step in the pipeline, so claims.get_claim_payment cannot be
-        cited. LLMProvider.complete has no tools parameter; wiring it changes the
-        Protocol, three providers and ask.py, and needs its own tests. Reported
-        as a diagnosed failure, and R-10 drops from done to partial.
+  # There is no expected_failures key, and it is REMOVED rather than emptied.
+  # `expected_failures:` with nothing under it makes yaml.safe_load return None
+  # for that key, which report.py then iterated. report.py is hardened against
+  # that now, but the file should be correct on its own terms.
 
 budget:
   cost_per_question_usd: 0.05   # the brief's ceiling, per question, product only
