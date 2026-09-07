@@ -29,7 +29,18 @@ export interface Turn {
   /** The server's safe message, rendered verbatim. */
   detail?: string
   traceId?: string
-  /** degraded only: the underlying error code. */
+  /** The provider was down for this turn, whatever the outcome was.
+   *
+   *  Orthogonal to `state` on purpose. 'degraded' as a STATE means "the provider
+   *  failed and we rendered excerpts instead of an answer", which is only one of
+   *  the things an outage can produce: since S11 the degraded path also REFUSES
+   *  when the evidence carries policyholder identities, and that turn arrives as
+   *  outcome=refused with degraded=true. Folding the outage into the state enum
+   *  meant such a turn rendered as a plain amber refusal, telling the analyst the
+   *  sources do not support an answer when what actually happened is that the
+   *  assistant was unreachable and the retrieved text could not be shown. */
+  degraded: boolean
+  /** The underlying error code when `degraded`. */
   reason?: string
   /** epoch ms, drives the elapsed counter while sending. */
   startedAt?: number
@@ -42,6 +53,7 @@ export function newTurn(question: string, clientMessageId: string): Turn {
     state: 'sending',
     citations: [],
     clarificationOptions: [],
+    degraded: false,
     startedAt: Date.now(),
   }
 }
@@ -65,6 +77,7 @@ export function fromEnvelope(envelope: AnswerEnvelope, prior: Turn): Turn {
     citations: envelope.citations,
     clarificationOptions: envelope.clarification_options,
     traceId: envelope.meta.trace_id,
+    degraded: envelope.meta.degraded,
     reason: envelope.meta.reason ?? undefined,
     errorCode: undefined,
     detail: undefined,
@@ -80,6 +93,9 @@ export function fromProblem(error: ProblemError, prior: Turn): Turn {
     answer: undefined,
     citations: [],
     clarificationOptions: [],
+    // A problem+json response is a failed turn, not a degraded one: nothing was
+    // rendered, so there is no partial result for the banner to qualify.
+    degraded: false,
     errorCode: error.code,
     detail: error.detail,
     traceId: error.traceId,
@@ -115,6 +131,7 @@ export function fromHistory(message: HistoryMessageOut, prior?: Turn): Turn {
     errorCode: message.error_code ?? undefined,
     detail: message.detail ?? undefined,
     traceId: prior?.traceId,
+    degraded: message.degraded,
     reason: message.reason ?? undefined,
   }
 }

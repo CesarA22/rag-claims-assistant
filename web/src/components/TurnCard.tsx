@@ -84,7 +84,7 @@ export function TurnCard({ turn, onRetry, onCancel, onRefresh, onChoose }: TurnC
           {state === 'sending' && turn.startedAt !== undefined && (
             <Elapsed since={turn.startedAt} />
           )}
-          {state === 'refused' && (
+          {state === 'refused' && !turn.degraded && (
             <span className="text-xs text-amber-800">
               HTTP 200 — uma recusa é um resultado correto
             </span>
@@ -131,7 +131,28 @@ export function TurnCard({ turn, onRetry, onCancel, onRefresh, onChoose }: TurnC
           </>
         )}
 
-        {state === 'refused' && <p className="whitespace-pre-wrap">{turn.answer}</p>}
+        {state === 'refused' && (
+          <>
+            {/* A refusal during an outage is a different fact from a refusal on
+                a healthy system, and the analyst has to be able to tell them
+                apart. Without this the card says "the sources do not support an
+                answer" when what happened is that the assistant was unreachable
+                and the retrieved text carried policyholder identities, so the
+                excerpts could not be shown either. Said in words, because the
+                card only has one palette to spend and the refusal owns it. */}
+            {turn.degraded && (
+              <div
+                className="-m-4 mb-3 border-b border-slate-400 bg-slate-200 p-3 text-sm font-medium text-slate-900"
+                data-testid="outage-banner"
+              >
+                Assistente indisponível{turn.reason ? ` (${turn.reason})` : ''}. Esta
+                recusa não vem de uma consulta às fontes — os trechos recuperados
+                contêm dados pessoais e não podem ser exibidos sem resumo.
+              </div>
+            )}
+            <p className="whitespace-pre-wrap">{turn.answer}</p>
+          </>
+        )}
 
         {state === 'needs_clarification' && (
           <>

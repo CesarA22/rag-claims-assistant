@@ -67,7 +67,7 @@ requirements:
       - app/llm/chaos.py
       - app/services/ask.py
       - app/api/routes.py
-    tests: [T-05, T-06, T-07, T-08, T-09, T-30, T-31, T-33]
+    tests: [T-05, T-06, T-07, T-08, T-09, T-30, T-31, T-33, T-56]
 
   - id: R-06
     title: Client errors leak no internals
