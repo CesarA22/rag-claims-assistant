@@ -112,6 +112,7 @@ async def post_message(
         repo=request.app.state.repo,
         trace_id=request.state.trace_id,
         provider_name=request.app.state.provider_name,
+        claims=getattr(request.app.state, "claims", None),
     )
     return _to_envelope(result)
 

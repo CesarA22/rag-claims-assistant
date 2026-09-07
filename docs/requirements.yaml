@@ -111,12 +111,17 @@ requirements:
 
   - id: R-10
     title: Named, parameterised claims queries with PII excluded at the query layer
-    status: partial
-    session: S9
+    status: done
+    session: S11
     files:
       - app/tools/claims.py
-    tests: [T-20, T-21, T-22, T-23, T-24, T-25, T-26]
-    notes: "S9 dropped this from done to partial. REMAINING GAP: the tool is unreachable from the product. app/services/ask.py contains no reference to app.tools and LLMProvider.complete has no tools parameter, so there is no plan/execute round trip; the only importers in the repo are tests/test_claims.py and scripts/gs007_from_db.py, the standalone script S4 wrote to answer gs-007 by hand. Golden case gs-007 fails on must_cite claims.get_claim_payment as a direct result (EVALS.md). The queries themselves are real, parameterised, LIMITed and PII-free at the projection, and T-20..T-26 pass. T-12 was reserved in S1 for a status='Pago' grep guard over app/tools/. S4 wrote that guard as part of T-22, which checks the QUERIES literals, walks app/**/*.py for the pattern, and asserts count_claims(status='Pago') raises InvalidRequest — a superset of the reservation. T-12 is therefore absorbed and intentionally unused; the gap in the ID sequence is not an omission."
+      - app/services/claims_router.py
+      - app/services/ask.py
+      - app/main.py
+      - app/api/routes.py
+      - app/llm/prompts/system.md
+    tests: [T-20, T-21, T-22, T-23, T-24, T-25, T-26, T-53]
+    notes: "S9 dropped this to partial because the tool was unreachable from the product — app/services/ask.py carried no reference to app.tools and the only importers were tests/test_claims.py and scripts/gs007_from_db.py. S11 wires it. app/services/claims_router.py maps a question to named queries by regex on the identifier formats claims.py already validates (SIN-nnnn-nnnnnn, AP-{AUTO,RES,EMP}-nnnnnn) plus claim-intent keywords; ask() prepends the resulting Evidence to the retrieved corpus, and the two blocks are labelled separately in the prompt so a database row is not presented as corpus text. A deterministic router rather than model tool-calling: it costs no second model call inside the US$0.05 ceiling, changes no Protocol, and stays testable without a provider, which is the line the whole architecture holds. Reasoning recorded in DECISIONS.md and in the module docstring. A claim number routes BOTH get_claim and get_claim_payment, because the payment row alone leaves gs-007 below SUFFICIENCY_MIN — measured, and a refusal on a well-cited answer is a failure that looks like success. A tool failure is caught inside claims_evidence and degrades to corpus-only rather than reaching ask()'s except InsurCoError, which fails the turn. T-12 was reserved in S1 for a status='Pago' grep guard over app/tools/. S4 wrote that guard as part of T-22, which checks the QUERIES literals, walks app/**/*.py for the pattern, and asserts count_claims(status='Pago') raises InvalidRequest — a superset of the reservation. T-12 is therefore absorbed and intentionally unused; the gap in the ID sequence is not an omission."
 
   # Differentials — brief §3, "Diferenciais (opcionais)".
   # Verbatim note from the brief: "Differentials do not compensate for

@@ -562,10 +562,11 @@ duplicate POST created no second row, and the provider was called once.
 `prompt_version` persisted as `4adf882fbe66` on both completed turns and is empty
 on the failed one, which never reached `complete_turn`. That value is historical:
 `_prompt_version()` hashes the system prompt plus the draft schema, and S11
-changed both — the strict schema reshape (F4) took it to `e3307f28ac81`, and
-removing the ambiguity instruction from the prompt (F2) took it to
-`adb61d485f7f`. Two bumps in one session, and both are the mechanism working: a
-prompt or schema change is meant to invalidate a replay.
+changed both three times — the strict schema reshape (F4) took it to
+`e3307f28ac81`, removing the ambiguity instruction (F2) to `adb61d485f7f`, and
+teaching the prompt about the claims block and its citation (F3) to
+`17f2cf580ec0`. Three bumps in one session, every one of them the mechanism
+working: a prompt or schema change is meant to invalidate a replay.
 
 ## S8 — the interface, and what building it found in the API
 
@@ -1108,3 +1109,119 @@ that question still returns `needs_clarification` keyless. Checked against a
 running keyless API rather than assumed: the three README questions return
 `answered`, `needs_clarification` with `['Auto', 'Residencial']` chips, and
 `refused`, exactly as documented.
+
+### F3 — the claims tool is wired, and why a router rather than model tool-calling
+
+`app/services/ask.py` carried no reference to `app.tools`, so the brief's build
+item 4 ("query the claims database as a tool") had no implementation in the
+product and requirement 1's second half — "document and section, **or database
+query**" — was unreachable. The capability was real: `python -m
+scripts.gs007_from_db` already printed `paid_amount: R$ 100.000,00` and the
+citation string. This front is wiring, not new capability.
+
+**`app/services/claims_router.py`: a deterministic router.** Regex on the
+identifier formats `claims.py` already validates, plus claim-intent keywords,
+producing a list of `(query_name, params)` plans. The alternative — hand the
+model the tool schema, let it choose, execute, ask again — was rejected for four
+reasons in descending weight: it costs a second model call on every question
+inside a US$0.05 ceiling to decide what six regexes decide; it changes
+`LLMProvider.complete`, so the Protocol and all three providers change and the
+keyless doubles have to learn tool calling; it is untestable without the model,
+and every gate here is deterministic code precisely so it can be tested without
+one; and there are six named queries, not an open action space, so the
+generalisation model tool-calling buys is not needed. The cost, stated: a
+question phrased in a way no keyword matches gets no database evidence and is
+answered from the corpus alone — a recall problem with a visible symptom, fixed
+by editing a list in one file.
+
+**A claim number routes two queries, not one.** Routing `get_claim_payment` alone
+leaves gs-007's grounded ratio below `SUFFICIENCY_MIN`, so the turn returns the
+unsupported-answer refusal while its `must_cite` set is satisfied — a failure
+that looks like a success. The two rows are also the pair the question is about:
+`claims.claim_amount` is the amount CLAIMED and `payments.paid_amount` the amount
+PAID, and AGENTS.md already warns that answering from either alone is the
+mistake.
+
+**A database row is no longer presented to the model as corpus text.**
+`_format_evidence` wrapped everything in `<retrieved_corpus>` under the sentence
+"the following is retrieved corpus content". Claims rows now arrive in their own
+`<claims_database>` block that says they report facts and never establish a rule,
+and the untrusted-data warning stays on the corpus block, which is the channel
+someone else can write into. The prompt also asks for the database row to be
+cited alongside the corpus section when the answer uses one; without that the
+model used the rows and cited only the corpus, which is the citation half of
+gs-007 failing for a new reason.
+
+**A tool failure degrades to corpus-only.** `claims_evidence` swallows
+`InsurCoError` rather than letting `ask()`'s `except InsurCoError` see it, because
+that handler fails the whole turn — an unreadable `claims.db` would otherwise
+take down every question containing a claim number. The corpus is the source of
+record for every rule; the database only ever adds facts.
+
+**Citation validation stays all-or-nothing over tool evidence, deliberately.** A
+claims `evidence_id` is `claims:<query>:<8 hex>` and one mistyped character turns
+a correct answer into a refusal. Dropping just the unresolvable citation would be
+kinder to a typo and would also let a partly forged answer through, which is
+exactly what T-03 exists to prevent. Empirically transcription is not the problem
+— citation validity was 30/30 across the live golden runs — so the stricter rule
+is kept, and T-53 pins it so the choice is visible rather than incidental.
+
+### The sufficiency measure was under-counting support, and that is fixed
+
+Wiring the tool surfaced it. A correct, well-cited gs-007 answer scored 0.706 and
+0.750 against a floor of 0.80 and was **refused**, and the unsupported terms were
+`deliberação`, `registra`, `respeitou`, `portanto`, `também`. Not one is a
+fabricated fact: they are the question's own verb, two discourse connectives, and
+two words the cited evidence carries in a different inflection ("5 Deliberações",
+"registrado"). The gate's measured failure mode was refusing correct answers.
+
+Two changes, both to the measure and neither to the threshold. `SUFFICIENCY_MIN`
+is still 0.80 and `evals/thresholds.yaml` is untouched.
+
+1. **`_STOPWORDS` extended by class, not by case.** The list held modal verbs,
+   demonstratives, degree adverbs and prepositions, but missed other members of
+   those same classes — `portanto`, `também`, `porém`, `assim`, the first person
+   of a modal already present (`pode` → `posso`), the second-person pronoun. The
+   rule applied was: a word goes in only if a word of its grammatical class is
+   already there. Content words stayed out however convenient it would have been
+   — `deliberação`, `registra`, `respeitou`, `confirmar`, `valor` are all things
+   an answer can be wrong about.
+2. **Support now matches on a six-character stem.** Portuguese inflects on the
+   suffix and the measure compared surface forms, so "a deliberação registra"
+   scored zero against "5 Deliberações … registrado". Six characters, with both
+   words required to reach that length: five would fuse `seguro` with `segurado`
+   and `limite` with `limitado`. It is a heuristic, not a stemmer, and it can
+   still fuse a related pair like `sinistro`/`sinistralidade` — which errs toward
+   counting a related term as supported, the safe direction for a gate whose
+   demonstrated failure was false refusals.
+
+**Validated against every draft measured this session**, including the one it
+must not rescue:
+
+| draft | ratio(retrieved) | supported |
+|---|---|---|
+| gs-008 trap · "O desconto para pagamento à vista é de 5%." | 0.333 | **no** — still refused |
+| gs-007 live · "…pagamento foi de R$ 100.000,00…" | 0.933 | yes |
+| au-004 live | 0.800 | yes |
+| gs-009 live | 0.643 | no |
+
+The trap survives because `desconto` and `vista` are content words with no
+six-character relative anywhere in the premium evidence. That is the separation
+the gate is supposed to make, and it now makes it on vocabulary rather than on
+verbosity.
+
+**This moves two numbers F2 quoted, and the plan predicted it would.** F2 rejected
+the two-set discriminator partly because au-004's retrieved-set ratio was 0.667;
+under the corrected measure it is 0.800, so the discriminator would now spare
+au-004. It would still refuse gs-009 at 0.643, whose own acceptance criterion
+accepts a clarifying question, so F2's conclusion is unchanged and its second
+reason is now the load-bearing one. Re-measured after F3 rather than left stale.
+
+**And a claim in F2's record is narrowed by a fresh measurement.** Removing the
+ambiguity instruction was recorded as moving gs-009 and au-004 onto the
+deterministic gate. Sampled five times each afterwards, the model still
+self-declares `needs_clarification` for gs-009 5 times in 5 and for au-004 3
+times in 5. So the instruction's removal made the deterministic gate *reachable*
+rather than *reached*: the model volunteers a clarification for a genuinely
+ambiguous question without being told to. The passthrough, not the gate order, is
+still what decides these two cases most of the time.

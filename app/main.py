@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -22,6 +23,7 @@ from app.retrieval.memory import InMemoryRetriever
 from app.services.budget import Pricing
 from app.storage.base import ConversationRepository
 from app.storage.memory import InMemoryConversationRepository
+from app.tools.base import Tool
 
 # Before anything reads the environment. `app = create_app()` at the bottom of
 # this module runs at import, and with LLM_PROVIDER=openai and the key only in
@@ -29,6 +31,8 @@ from app.storage.memory import InMemoryConversationRepository
 # message that looked nothing like "missing key". load_dotenv never overrides a
 # variable the environment already set, so compose and CI stay authoritative.
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 def build_inner(name: str) -> LLMProvider:
@@ -84,6 +88,27 @@ def build_repo(name: str) -> tuple[ConversationRepository, object | None]:
     raise RuntimeError(f"Unknown STORAGE={name!r}. Use memory or sql.")
 
 
+def build_claims_tool() -> Tool | None:
+    """The claims tool, or None if its database is not there.
+
+    Constructed once and shared, like the provider and the retriever, because
+    `ClaimsTool` caches the snapshot's coverage date after its first query — the
+    "dados até" line every database citation carries. A per-request tool would
+    pay an extra SELECT per question to rediscover it.
+
+    Returns None rather than raising when the file is missing: the corpus half of
+    this product works without the database, and a keyless clone that has not
+    fetched `data/claims.db` should still start.
+    """
+    from app.tools.claims import ClaimsTool
+
+    tool = ClaimsTool()
+    if not tool.path.exists():
+        logger.warning("claims database not found at %s; claims queries disabled", tool.path)
+        return None
+    return tool
+
+
 def create_app(
     *,
     llm: LLMProvider | None = None,
@@ -91,6 +116,7 @@ def create_app(
     repo: ConversationRepository | None = None,
     provider_name: str | None = None,
     storage: str | None = None,
+    claims: Tool | None = None,
 ) -> FastAPI:
     configure_logging()
     if llm is None:
@@ -123,6 +149,7 @@ def create_app(
     app.state.engine = engine
     app.state.retriever_name = retriever_name
     app.state.pool = None
+    app.state.claims = claims if claims is not None else build_claims_tool()
 
     if retriever_name == "hybrid":
         # create_pool is async and create_app is not, so the pool is built on
