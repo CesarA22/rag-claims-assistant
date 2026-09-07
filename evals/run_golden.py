@@ -121,27 +121,57 @@ async def ask_one(
     }
 
 
-async def retrieved_ids_for(questions: list[str]) -> dict[str, set[str]]:
-    """What retrieval returned per question, so citation validity checks truth.
+async def _claims_ids_for(question: str) -> set[str]:
+    """Evidence ids the claims router would produce for this question.
 
-    Uses the same retriever the app is configured with — the in-memory one on the
-    keyless proof, HybridRetriever over Postgres live. One pool for all ten
-    questions rather than one per question.
+    Without this the citation-validity HARD GATE fails gs-007 for citing a
+    database row the pipeline legitimately gave the model: the gate compares
+    cited ids against "what was retrieved", and until S11 wired the tool that
+    meant the corpus retriever alone. Measured — three runs, every one reporting
+    `invented: ['claims:get_claim_payment:...']` on a correct answer.
+
+    The gate has to model the same evidence set `ask()` builds, or it is checking
+    the model against a description of the system rather than the system. A tool
+    failure yields no ids and the corpus half still grades, which is the same
+    degradation the pipeline takes.
+    """
+    from app.services.ask import claims_evidence
+    from app.tools.claims import ClaimsTool
+
+    tool = ClaimsTool()
+    if not tool.path.exists():
+        return set()
+    return {item.id for item in await claims_evidence(question, tool)}
+
+
+async def retrieved_ids_for(questions: list[str]) -> dict[str, set[str]]:
+    """Every evidence id the pipeline could legitimately cite, per question.
+
+    Corpus retrieval plus routed claims queries — the same two sources `ask()`
+    assembles. Uses the retriever the app is configured with: the in-memory one
+    on the keyless proof, HybridRetriever over Postgres live. One pool for all
+    ten questions rather than one per question.
 
     `build_retriever(arm)` returns `(pool, retriever)` in that order, and it
     takes the ARM (lexical|vector|hybrid), not RETRIEVER (memory|hybrid).
     """
+    claims = {q: await _claims_ids_for(q) for q in questions}
+
     if os.getenv("RETRIEVER", "memory") != "hybrid":
         from app.retrieval.memory import InMemoryRetriever
 
         retriever = InMemoryRetriever()
-        return {q: {e.id for e in await retriever.search(q)} for q in questions}
+        return {
+            q: {e.id for e in await retriever.search(q)} | claims[q] for q in questions
+        }
 
     from app.main import build_retriever
 
     pool, retriever = await build_retriever(os.getenv("RETRIEVER_ARM", "lexical"))
     try:
-        return {q: {e.id for e in await retriever.search(q)} for q in questions}
+        return {
+            q: {e.id for e in await retriever.search(q)} | claims[q] for q in questions
+        }
     finally:
         if pool is not None:
             await pool.close()

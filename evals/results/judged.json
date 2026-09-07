@@ -1,0 +1,134 @@
+{
+  "gs-002#r1": {
+    "verdict": "pass",
+    "reason": "A resposta menciona encaminhar ao SIU e suspender/registrar, atendendo ao critério. Também está suportada pelos trechos do Manual de Sinistros citados, incluindo a orientação de não negar por conta própria e de documentar a tramitação com confidencialidade e imparcialidade.",
+    "grounded": true,
+    "cited_resolved": 2,
+    "cited_requested": 2,
+    "usage": {
+      "prompt_tokens": 698,
+      "completion_tokens": 82
+    }
+  },
+  "gs-003#r1": {
+    "verdict": "pass",
+    "reason": "A resposta menciona rompimento/destruição de obstáculo e vestígios, e atribui corretamente a definição às Condições Gerais do Seguro Residencial. O conteúdo está समर्थado pela fonte citada.",
+    "grounded": true,
+    "cited_resolved": 2,
+    "cited_requested": 2,
+    "usage": {
+      "prompt_tokens": 805,
+      "completion_tokens": 62
+    }
+  },
+  "gs-006#r1": {
+    "verdict": "pass",
+    "reason": "A resposta afirma corretamente que a franquia de danos elétricos não se aplica quando o sinistro decorre comprovadamente de raio, mediante laudo técnico, e que a indenização é integral. Isso está suportado pela Tabela 1 e pelos casos práticos/exemplos resolvidos. Embora a resposta não cite explicitamente o Normativo de Franquias como tal, o conteúdo exigido pela criterion está presente e a afirmação é suportada pelas fontes citadas.",
+    "grounded": true,
+    "cited_resolved": 4,
+    "cited_requested": 4,
+    "usage": {
+      "prompt_tokens": 1471,
+      "completion_tokens": 116
+    }
+  },
+  "gs-009#r1": {
+    "verdict": "pass",
+    "reason": "A resposta identifica a ambiguidade ao perguntar se o limite é para Auto ou Residencial, em vez de fornecer um único número sem qualificar o produto. Isso atende ao critério de explicitar a premissa ou pedir esclarecimento. Como não foram citadas fontes, não há alegações factuais adicionais a verificar.",
+    "grounded": true,
+    "cited_resolved": 0,
+    "cited_requested": 0,
+    "usage": {
+      "prompt_tokens": 316,
+      "completion_tokens": 91
+    }
+  },
+  "gs-002#r2": {
+    "verdict": "pass",
+    "reason": "A resposta menciona encaminhar ao SIU e suspender/registrar, atendendo ao critério. Também está suportada pelos trechos citados do Manual de Sinistros, que dizem exatamente isso e acrescentam a documentação, confidencialidade e imparcialidade.",
+    "grounded": true,
+    "cited_resolved": 2,
+    "cited_requested": 2,
+    "usage": {
+      "prompt_tokens": 698,
+      "completion_tokens": 75
+    }
+  },
+  "gs-003#r2": {
+    "verdict": "pass",
+    "reason": "A resposta menciona destruição/rompimento de obstáculo e vestígios materiais, exatamente como exigido, e atribui isso às Condições Gerais do Seguro Residencial. Também está suportada pelas fontes citadas.",
+    "grounded": true,
+    "cited_resolved": 2,
+    "cited_requested": 2,
+    "usage": {
+      "prompt_tokens": 805,
+      "completion_tokens": 66
+    }
+  },
+  "gs-006#r2": {
+    "verdict": "pass",
+    "reason": "A resposta afirma corretamente que há isenção da franquia quando o dano elétrico decorre de raio comprovado por laudo técnico, e menciona a nota (3) da Tabela 1 do Normativo de Franquias. Essa afirmação é suportada pelos स्रोतs citados, que dizem expressamente que a franquia não se aplica nessa hipótese e que a indenização é integral. Não há claims substantivas adicionais sem suporte.",
+    "grounded": true,
+    "cited_resolved": 3,
+    "cited_requested": 3,
+    "usage": {
+      "prompt_tokens": 1131,
+      "completion_tokens": 110
+    }
+  },
+  "gs-009#r2": {
+    "verdict": "pass",
+    "reason": "A resposta identifica a ambiguidade ao perguntar se o limite é para Auto ou Residencial, em vez de dar um único número sem qualificar o produto. Isso atende ao critério de explicitar a premissa ou pedir esclarecimento. Como não houve fontes citadas, não há alegações substantivas a verificar contra fontes.",
+    "grounded": true,
+    "cited_resolved": 0,
+    "cited_requested": 0,
+    "usage": {
+      "prompt_tokens": 316,
+      "completion_tokens": 92
+    }
+  },
+  "gs-002#r3": {
+    "verdict": "pass",
+    "reason": "A resposta menciona encaminhar ao SIU e suspender/registrar, exatamente como exigido. Também cita o Manual de Sinistros por meio da referência fornecida. Todas as afirmações substantivas estão suportadas pelo trecho citado.",
+    "grounded": true,
+    "cited_resolved": 1,
+    "cited_requested": 1,
+    "usage": {
+      "prompt_tokens": 548,
+      "completion_tokens": 68
+    }
+  },
+  "gs-003#r3": {
+    "verdict": "pass",
+    "reason": "A resposta menciona rompimento/destruição de obstáculo e vestígios, exatamente como exigido, e atribui a definição às Condições Gerais do Seguro Residencial. As afirmações estão suportadas pelas fontes citadas.",
+    "grounded": true,
+    "cited_resolved": 2,
+    "cited_requested": 2,
+    "usage": {
+      "prompt_tokens": 805,
+      "completion_tokens": 67
+    }
+  },
+  "gs-006#r3": {
+    "verdict": "pass",
+    "reason": "A resposta afirma corretamente que há isenção da franquia quando o dano elétrico decorre comprovadamente de raio, mediante laudo técnico, e diz que isso está previsto na nota da Tabela 1 do Normativo de Franquias. Essa afirmação é suportada pelas fontes citadas, especialmente a nota (3) da Tabela 1 e os exemplos práticos. Atende ao critério de aceitação.",
+    "grounded": true,
+    "cited_resolved": 3,
+    "cited_requested": 3,
+    "usage": {
+      "prompt_tokens": 1122,
+      "completion_tokens": 106
+    }
+  },
+  "gs-009#r3": {
+    "verdict": "pass",
+    "reason": "A resposta identifica corretamente a ambiguidade entre produtos (Auto ou Residencial) e pede esclarecimento antes de dar um limite único, exatamente como պահանջido pela criterion. Não há citações, mas também não há substantivas claims factuais além dessa qualificação.",
+    "grounded": true,
+    "cited_resolved": 0,
+    "cited_requested": 0,
+    "usage": {
+      "prompt_tokens": 321,
+      "completion_tokens": 73
+    }
+  }
+}

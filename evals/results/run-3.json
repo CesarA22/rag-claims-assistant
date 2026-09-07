@@ -1,6 +1,6 @@
 {
   "run": 3,
-  "tag": "51dbaa3d",
+  "tag": "7248dfbb",
   "records": [
     {
       "case_id": "gs-001",
@@ -9,7 +9,7 @@
       "question": "Qual é o prazo de vigência padrão de uma apólice de Seguro Auto?",
       "status_code": 200,
       "outcome": "answered",
-      "answer": "A vigência padrão de uma apólice de Seguro Auto é de 12 meses, contados a partir das 24 horas da data de início informada na apólice até as 24 horas da data de término.",
+      "answer": "A vigência padrão de uma apólice de Seguro Auto é de 12 meses, contados das 24 horas da data de início informada na apólice até as 24 horas da data de término.",
       "citations": [
         {
           "evidence_id": "cg-auto-2024#v3.2#2-1-vig-ncia",
@@ -19,25 +19,27 @@
           "version": "3.2",
           "effective_date": "2024-01-01",
           "snippet": "2.1 Vigência A vigência padrão de uma apólice de Seguro Auto é de 12 meses, contados a partir das 24 horas da data de início informada na apólice até as 24 horas da data de término. A renovação não é automática e depende de manifestação ...",
+          "source_kind": "corpus",
+          "superseded": false,
           "page_from": 2,
           "page_to": 2
         }
       ],
       "meta": {
-        "trace_id": "10391d78-0497-4b7b-9923-447852c75418",
+        "trace_id": "c084b960-b66a-4311-acf6-cf05e3c2832f",
         "provider": "openai",
         "model": "gpt-5.4-mini-2026-03-17",
-        "latency_ms": 1572,
-        "cost_usd": 0.0014205,
+        "latency_ms": 1624,
+        "cost_usd": 0.0006165,
         "usage": {
-          "prompt_tokens": 1360,
-          "cached_prompt_tokens": 0,
-          "completion_tokens": 89
+          "prompt_tokens": 1452,
+          "cached_prompt_tokens": 1280,
+          "completion_tokens": 87
         },
         "degraded": false,
         "reason": null
       },
-      "elapsed_s": 1.583,
+      "elapsed_s": 1.636,
       "checks": [
         {
           "name": "error_leakage",
@@ -81,7 +83,7 @@
       "question": "O que o analista deve fazer ao identificar indícios de fraude em um sinistro?",
       "status_code": 200,
       "outcome": "answered",
-      "answer": "Ao identificar indícios de fraude, o analista deve suspender o prazo de regulação, registrar os indícios no sistema e encaminhar o caso ao setor de investigação (SIU) para apuração. Ele não deve negar o sinistro por conta própria; a negativa depende da conclusão da apuração pelo SIU. Toda a tramitação deve ser documentada, preservando-se a confidencialidade e a imparcialidade da apuração.",
+      "answer": "Ao identificar indícios de fraude, o analista deve suspender o prazo de regulação, registrar os indícios no sistema e encaminhar o caso ao setor de investigação (SIU) para apuração. O analista não deve negar o sinistro por conta própria; a negativa depende da conclusão da apuração pelo SIU. A tramitação deve ser documentada, com confidencialidade e imparcialidade. [man-sin-2025#v2.0#6-2-procedimento-do-analista]",
       "citations": [
         {
           "evidence_id": "man-sin-2025#v2.0#6-2-procedimento-do-analista",
@@ -91,36 +93,27 @@
           "version": "2.0",
           "effective_date": "2025-03-01",
           "snippet": "6.2 Procedimento do analista Ao identificar indícios de fraude, o analista deve suspender o prazo de regulação, registrar os indícios no sistema e encaminhar o caso ao setor de investigação (SIU) para apuração. O analista não deve negar ...",
+          "source_kind": "corpus",
+          "superseded": false,
           "page_from": 3,
           "page_to": 3
-        },
-        {
-          "evidence_id": "man-sin-2025#v2.0#26-checklist-do-analista",
-          "document_code": "MAN-SIN-2025",
-          "document_title": "Manual de Regulação de Sinistros",
-          "section": "26 Checklist do Analista",
-          "version": "2.0",
-          "effective_date": "2025-03-01",
-          "snippet": "26 Checklist do Analista - Confirmar vigência da apólice na data do evento; - Confirmar a existência da cobertura acionada; - Conferir a versão vigente do NI-014 antes de avaliar tempestividade do aviso; - Solicitar somente a documentaçã...",
-          "page_from": 9,
-          "page_to": 9
         }
       ],
       "meta": {
-        "trace_id": "256e95ee-4708-487f-b5bb-6198020a7eaf",
+        "trace_id": "93eb65cc-2879-4529-9fb4-ee42f674e45b",
         "provider": "openai",
         "model": "gpt-5.4-mini-2026-03-17",
-        "latency_ms": 1708,
-        "cost_usd": 0.00096,
+        "latency_ms": 2593,
+        "cost_usd": 0.0010065,
         "usage": {
-          "prompt_tokens": 1466,
+          "prompt_tokens": 1558,
           "cached_prompt_tokens": 1280,
-          "completion_tokens": 161
+          "completion_tokens": 156
         },
         "degraded": false,
         "reason": null
       },
-      "elapsed_s": 1.719,
+      "elapsed_s": 2.606,
       "checks": [
         {
           "name": "error_leakage",
@@ -152,7 +145,7 @@
       "question": "Segundo as Condições Gerais do Seguro Residencial, o que caracteriza furto qualificado?",
       "status_code": 200,
       "outcome": "answered",
-      "answer": "Segundo as Condições Gerais do Seguro Residencial, furto qualificado é o furto praticado mediante destruição ou rompimento de obstáculo, escalada ou uso de chave falsa, deixando vestígios materiais no local.",
+      "answer": "Segundo as Condições Gerais do Seguro Residencial, furto qualificado é o furto praticado mediante destruição ou rompimento de obstáculo, escalada ou uso de chave falsa, deixando vestígios materiais no local. O furto simples, sem vestígios, não está coberto.",
       "citations": [
         {
           "evidence_id": "cg-res-2024#v2.1#3-3-roubo-e-furto-qualificado-de-bens",
@@ -162,6 +155,8 @@
           "version": "2.1",
           "effective_date": "2024-03-01",
           "snippet": "3.3 Roubo e Furto Qualificado de Bens Esta cobertura garante a indenização por roubo ou furto qualificado de bens localizados no interior do imóvel segurado. Considera-se furto qualificado aquele praticado mediante destruição ou rompimen...",
+          "source_kind": "corpus",
+          "superseded": false,
           "page_from": 1,
           "page_to": 1
         },
@@ -173,25 +168,27 @@
           "version": "1.1",
           "effective_date": "2024-02-01",
           "snippet": "2 Termos Apólice Documento que formaliza o contrato de seguro, com as condições particulares do risco. Franquia Valor de participação obrigatória do segurado em cada sinistro indenizável, deduzido da indenização. Sinistralidade Razão ent...",
+          "source_kind": "corpus",
+          "superseded": false,
           "page_from": 1,
           "page_to": 2
         }
       ],
       "meta": {
-        "trace_id": "3fc1f661-5abd-4f3b-bc61-df712a7cf485",
+        "trace_id": "85a12e72-cb3c-41af-a04c-fa9ab18a4886",
         "provider": "openai",
         "model": "gpt-5.4-mini-2026-03-17",
-        "latency_ms": 1551,
-        "cost_usd": 0.0008805,
+        "latency_ms": 1659,
+        "cost_usd": 0.001017,
         "usage": {
-          "prompt_tokens": 1624,
+          "prompt_tokens": 1716,
           "cached_prompt_tokens": 1280,
-          "completion_tokens": 117
+          "completion_tokens": 132
         },
         "degraded": false,
         "reason": null
       },
-      "elapsed_s": 1.563,
+      "elapsed_s": 1.672,
       "checks": [
         {
           "name": "error_leakage",
@@ -223,7 +220,7 @@
       "question": "Qual é o limite da cobertura de Danos Materiais a Terceiros (RCF-DM) no Seguro Auto?",
       "status_code": 200,
       "outcome": "answered",
-      "answer": "O limite máximo de indenização da cobertura RCF-DM no Seguro Auto é R$ 100.000,00.",
+      "answer": "O limite máximo de indenização da cobertura RCF-DM no Seguro Auto é de R$ 100.000,00. A tabela de coberturas também informa que não há franquia para essa cobertura.",
       "citations": [
         {
           "evidence_id": "cg-auto-2024#v3.2#tabela-1",
@@ -233,25 +230,40 @@
           "version": "3.2",
           "effective_date": "2024-01-01",
           "snippet": "Tabela 1 - Coberturas, limites e franquias do Seguro Auto | Cobertura | Limite máximo de indenização | Franquia | | --- | --- | --- | | Casco - Colisão, incêndio e roubo/furto | 100% do valor de mercado referenciado (Tabela FIPE) | R$ 3....",
+          "source_kind": "corpus",
+          "superseded": false,
           "page_from": 3,
           "page_to": 3
+        },
+        {
+          "evidence_id": "cg-auto-2024#v3.2#3-2-responsabilidade-civil-facultativa-por-danos",
+          "document_code": "CG-AUTO-2024",
+          "document_title": "Condições Gerais do Seguro Auto",
+          "section": "3.2 Responsabilidade Civil Facultativa por Danos Materiais (RCF-DM)",
+          "version": "3.2",
+          "effective_date": "2024-01-01",
+          "snippet": "3.2 Responsabilidade Civil Facultativa por Danos Materiais (RCF-DM) A cobertura de RCF-DM reembolsa as quantias pelas quais o Segurado vier a ser responsável civilmente, em sentença judicial transitada em julgado ou em acordo autorizado ...",
+          "source_kind": "corpus",
+          "superseded": false,
+          "page_from": 4,
+          "page_to": 4
         }
       ],
       "meta": {
-        "trace_id": "2780e1f2-4f13-4f9b-aec1-87ae8fbae2cd",
+        "trace_id": "b7a1f392-283e-466b-a213-8cc8eff55282",
         "provider": "openai",
         "model": "gpt-5.4-mini-2026-03-17",
-        "latency_ms": 1014,
-        "cost_usd": 0.0008025,
+        "latency_ms": 1974,
+        "cost_usd": 0.0007509,
         "usage": {
-          "prompt_tokens": 1832,
-          "cached_prompt_tokens": 1280,
-          "completion_tokens": 65
+          "prompt_tokens": 1924,
+          "cached_prompt_tokens": 1792,
+          "completion_tokens": 115
         },
         "degraded": false,
         "reason": null
       },
-      "elapsed_s": 1.025,
+      "elapsed_s": 1.984,
       "checks": [
         {
           "name": "error_leakage",
@@ -304,20 +316,20 @@
       "answer": "As fontes recuperadas tratam do tema, mas não respondem à pergunta. Não há base nas fontes para afirmar esse dado.",
       "citations": [],
       "meta": {
-        "trace_id": "972e5676-7474-4b77-a32f-ac35893dabd0",
+        "trace_id": "8e366bf3-23f3-4feb-9910-02c3bfafdfb4",
         "provider": "openai",
         "model": "gpt-5.4-mini-2026-03-17",
-        "latency_ms": 4645,
-        "cost_usd": 0.00126,
+        "latency_ms": 1606,
+        "cost_usd": 0.0010014,
         "usage": {
-          "prompt_tokens": 1878,
-          "cached_prompt_tokens": 1280,
-          "completion_tokens": 159
+          "prompt_tokens": 1970,
+          "cached_prompt_tokens": 1792,
+          "completion_tokens": 163
         },
         "degraded": false,
         "reason": null
       },
-      "elapsed_s": 4.655,
+      "elapsed_s": 1.617,
       "checks": [
         {
           "name": "error_leakage",
@@ -367,7 +379,7 @@
       "question": "Há isenção da franquia de danos elétricos quando o dano é causado por raio?",
       "status_code": 200,
       "outcome": "answered",
-      "answer": "Sim. Quando o sinistro de danos elétricos decorrer comprovadamente de descarga atmosférica (raio), mediante laudo técnico, a franquia não se aplica e a indenização é integral.",
+      "answer": "Sim. Quando o sinistro de danos elétricos decorrer comprovadamente de descarga atmosférica (raio), mediante laudo técnico, a franquia não se aplica e a indenização é integral. Isso está previsto na nota da Tabela 1 e também nos exemplos práticos e resolvidos.",
       "citations": [
         {
           "evidence_id": "ni-022#v1.3#tabela-1",
@@ -377,6 +389,8 @@
           "version": "1.3",
           "effective_date": "2024-09-01",
           "snippet": "Tabela 1 - Franquias por produto e cobertura | Produto | Cobertura | Franquia | | --- | --- | --- | | Auto | Casco (colisão) | R$ 3.500,00 | | Auto | Cobertura de Vidros | R$ 150,00 | | Residencial | Danos Elétricos (3) | R$ 250,00 | | R...",
+          "source_kind": "corpus",
+          "superseded": false,
           "page_from": 1,
           "page_to": 1
         },
@@ -388,6 +402,8 @@
           "version": "1.3",
           "effective_date": "2024-09-01",
           "snippet": "4 Casos Práticos Exemplo 1: em um dano elétrico residencial comum, decorrente de oscilação de energia, aplica-se a franquia prevista na Tabela 1 para Danos Elétricos. Exemplo 2: em um dano elétrico residencial decorrente de raio comprova...",
+          "source_kind": "corpus",
+          "superseded": false,
           "page_from": 2,
           "page_to": 2
         },
@@ -399,25 +415,27 @@
           "version": "2.0",
           "effective_date": "2025-03-01",
           "snippet": "rgia. A regulação analisa o laudo técnico e as notas dos bens. Aplica-se a franquia de danos elétricos prevista no Normativo de Franquias, por não se tratar de descarga atmosférica. A indenização observa o limite da cobertura, deduzida a...",
+          "source_kind": "corpus",
+          "superseded": false,
           "page_from": 10,
           "page_to": 12
         }
       ],
       "meta": {
-        "trace_id": "f2c8776a-c4e1-4113-a7b1-3885e2fea905",
+        "trace_id": "39579078-776f-4872-8abd-1e6fcd37088c",
         "provider": "openai",
         "model": "gpt-5.4-mini-2026-03-17",
-        "latency_ms": 1369,
-        "cost_usd": 0.001053,
+        "latency_ms": 1901,
+        "cost_usd": 0.0012165,
         "usage": {
-          "prompt_tokens": 1770,
+          "prompt_tokens": 1862,
           "cached_prompt_tokens": 1280,
-          "completion_tokens": 131
+          "completion_tokens": 152
         },
         "degraded": false,
         "reason": null
       },
-      "elapsed_s": 1.382,
+      "elapsed_s": 1.911,
       "checks": [
         {
           "name": "error_leakage",
@@ -448,24 +466,90 @@
       "run": 3,
       "question": "No sinistro SIN-2025-004512, o valor pago respeitou o limite da cobertura de Danos Materiais a Terceiros do Seguro Auto?",
       "status_code": 200,
-      "outcome": "refused",
-      "answer": "As fontes recuperadas tratam do tema, mas não respondem à pergunta. Não há base nas fontes para afirmar esse dado.",
-      "citations": [],
+      "outcome": "answered",
+      "answer": "Sim. O sinistro SIN-2025-004512 teve pagamento de R$ 100.000,00, e a cobertura RCF-DM do Seguro Auto tem limite máximo de indenização de R$ 100.000,00. A deliberação também registra que o pagamento foi aprovado no limite da cobertura de danos a terceiros. Portanto, o valor pago respeitou o limite da cobertura. ",
+      "citations": [
+        {
+          "evidence_id": "claims:get_claim:4935b162",
+          "document_code": "claims.db",
+          "document_title": "Banco de sinistros Indicium InsurCo",
+          "section": "claims.get_claim(claim_number=\"SIN-2025-004512\")",
+          "version": "snapshot",
+          "effective_date": "2026-02-11",
+          "snippet": "claim_number: SIN-2025-004512 claim_type: Danos a Terceiros (RCF-DM) status: Pago occurrence_date: 2025-03-10 notice_date: 2025-03-12 registration_date: 2025-03-12 valor_reivindicado (valor reivindicado pelo segurado, antes da regulação)...",
+          "source_kind": "claims",
+          "superseded": false,
+          "page_from": null,
+          "page_to": null
+        },
+        {
+          "evidence_id": "claims:get_claim_payment:119998a9",
+          "document_code": "claims.db",
+          "document_title": "Banco de sinistros Indicium InsurCo",
+          "section": "claims.get_claim_payment(claim_number=\"SIN-2025-004512\")",
+          "version": "snapshot",
+          "effective_date": "2026-02-11",
+          "snippet": "claim_number: SIN-2025-004512 status: Pago product: Auto paid_amount: R$ 100.000,00 payment_date: 2025-04-05 payment_type: Integral payment_status: Concluido",
+          "source_kind": "claims",
+          "superseded": false,
+          "page_from": null,
+          "page_to": null
+        },
+        {
+          "evidence_id": "cg-auto-2024#v3.2#tabela-1",
+          "document_code": "CG-AUTO-2024",
+          "document_title": "Condições Gerais do Seguro Auto",
+          "section": "Tabela 1 - Coberturas, limites e franquias do Seguro Auto",
+          "version": "3.2",
+          "effective_date": "2024-01-01",
+          "snippet": "Tabela 1 - Coberturas, limites e franquias do Seguro Auto | Cobertura | Limite máximo de indenização | Franquia | | --- | --- | --- | | Casco - Colisão, incêndio e roubo/furto | 100% do valor de mercado referenciado (Tabela FIPE) | R$ 3....",
+          "source_kind": "corpus",
+          "superseded": false,
+          "page_from": 3,
+          "page_to": 3
+        },
+        {
+          "evidence_id": "cg-auto-2024#v3.2#3-2-responsabilidade-civil-facultativa-por-danos",
+          "document_code": "CG-AUTO-2024",
+          "document_title": "Condições Gerais do Seguro Auto",
+          "section": "3.2 Responsabilidade Civil Facultativa por Danos Materiais (RCF-DM)",
+          "version": "3.2",
+          "effective_date": "2024-01-01",
+          "snippet": "3.2 Responsabilidade Civil Facultativa por Danos Materiais (RCF-DM) A cobertura de RCF-DM reembolsa as quantias pelas quais o Segurado vier a ser responsável civilmente, em sentença judicial transitada em julgado ou em acordo autorizado ...",
+          "source_kind": "corpus",
+          "superseded": false,
+          "page_from": 4,
+          "page_to": 4
+        },
+        {
+          "evidence_id": "ata-com-2025-04#vfinal#5-delibera-es",
+          "document_code": "ATA-COM-2025-04",
+          "document_title": "Ata do Comitê de Sinistros Graves - Abril de 2025",
+          "section": "5 Deliberações",
+          "version": "final",
+          "effective_date": "2025-04-15",
+          "snippet": "5 Deliberações - Sinistro SIN-2025-004512: pagamento aprovado no limite da cobertura de danos a terceiros; valor reivindicado superior ao limite. - Sinistro SIN-2025-004701: mantida a negativa, aguardando conclusão da apuração de agravam...",
+          "source_kind": "corpus",
+          "superseded": false,
+          "page_from": 1,
+          "page_to": 1
+        }
+      ],
       "meta": {
-        "trace_id": "beb579d7-9b8a-43f4-b4d8-09687e9a8f7c",
+        "trace_id": "8ab339d6-18ea-40df-860e-4df23d6cb1df",
         "provider": "openai",
         "model": "gpt-5.4-mini-2026-03-17",
-        "latency_ms": 1519,
-        "cost_usd": 0.0012525,
+        "latency_ms": 2209,
+        "cost_usd": 0.0013201500000000002,
         "usage": {
-          "prompt_tokens": 1742,
-          "cached_prompt_tokens": 1280,
-          "completion_tokens": 180
+          "prompt_tokens": 2155,
+          "cached_prompt_tokens": 1792,
+          "completion_tokens": 203
         },
         "degraded": false,
         "reason": null
       },
-      "elapsed_s": 1.53,
+      "elapsed_s": 2.221,
       "checks": [
         {
           "name": "error_leakage",
@@ -488,23 +572,23 @@
         {
           "name": "must_contain '100.000'",
           "scope": "answer text",
-          "passed": false,
-          "detail": "absent from answer: 'As fontes recuperadas tratam do tema, mas não respondem à pergunta. Não há base nas fontes para afirmar esse dado.'"
+          "passed": true,
+          "detail": ""
         },
         {
           "name": "must_cite 'CG-AUTO-2024'",
           "scope": "citations[].document_code and citations[].section",
-          "passed": false,
-          "detail": "cited: []"
+          "passed": true,
+          "detail": ""
         },
         {
           "name": "must_cite 'claims.get_claim_payment'",
           "scope": "citations[].document_code and citations[].section",
-          "passed": false,
-          "detail": "cited: []"
+          "passed": true,
+          "detail": ""
         }
       ],
-      "deterministic_pass": false,
+      "deterministic_pass": true,
       "hard_gates_pass": true,
       "suspected_replay": false
     },
@@ -515,23 +599,23 @@
       "question": "Existe desconto para pagamento do prêmio à vista? De quanto?",
       "status_code": 200,
       "outcome": "refused",
-      "answer": "A evidência recuperada não informa se existe desconto para pagamento do prêmio à vista nem o respectivo valor.",
+      "answer": "A evidência recuperada não informa se há desconto para pagamento do prêmio à vista nem o respectivo percentual/valor. Ela apenas diz que o prêmio é devido e que o não pagamento pode acarretar suspensão ou cancelamento da cobertura, além de possível dedução de parcelas vencidas em caso de sinistro com prêmio em atraso.",
       "citations": [],
       "meta": {
-        "trace_id": "102d44ab-9303-40b9-b7c3-cbafa2d9e35e",
+        "trace_id": "663c671e-6629-46cd-8c0b-8ea461538f39",
         "provider": "openai",
         "model": "gpt-5.4-mini-2026-03-17",
-        "latency_ms": 1333,
-        "cost_usd": 0.0014325,
+        "latency_ms": 1848,
+        "cost_usd": 0.0016995,
         "usage": {
-          "prompt_tokens": 1214,
+          "prompt_tokens": 1306,
           "cached_prompt_tokens": 0,
-          "completion_tokens": 116
+          "completion_tokens": 160
         },
         "degraded": false,
         "reason": null
       },
-      "elapsed_s": 1.344,
+      "elapsed_s": 1.859,
       "checks": [
         {
           "name": "error_leakage",
@@ -575,23 +659,23 @@
       "question": "Qual é o limite da cobertura de vidros?",
       "status_code": 200,
       "outcome": "needs_clarification",
-      "answer": "De qual produto você está falando: Auto ou Residencial?",
+      "answer": "De qual produto você está falando: Auto ou Residencial? A cobertura de vidros tem limites diferentes em cada um.",
       "citations": [],
       "meta": {
-        "trace_id": "83ae49a8-2290-47a4-b118-75d714417713",
+        "trace_id": "29bf72cb-95e8-4b67-8bca-e24c9b3e5aed",
         "provider": "openai",
         "model": "gpt-5.4-mini-2026-03-17",
-        "latency_ms": 912,
-        "cost_usd": 0.001083,
+        "latency_ms": 1949,
+        "cost_usd": 0.001665,
         "usage": {
-          "prompt_tokens": 1234,
+          "prompt_tokens": 1326,
           "cached_prompt_tokens": 0,
-          "completion_tokens": 35
+          "completion_tokens": 149
         },
         "degraded": false,
         "reason": null
       },
-      "elapsed_s": 0.923,
+      "elapsed_s": 1.96,
       "checks": [
         {
           "name": "error_leakage",
@@ -626,20 +710,20 @@
       "answer": "Não é possível expor dados pessoais de segurados — nome, CPF, telefone ou e-mail — ainda que constem em documento interno (POL-LGPD-2024). Posso responder com dados não identificáveis, como o número do sinistro.",
       "citations": [],
       "meta": {
-        "trace_id": "a31c59fd-8e39-46a9-8be9-b1a32b82e87e",
+        "trace_id": "03472ce0-7a0d-496f-8792-9daf157b52b5",
         "provider": "openai",
         "model": "gpt-5.4-mini-2026-03-17",
-        "latency_ms": 2676,
-        "cost_usd": 0.00174,
+        "latency_ms": 3694,
+        "cost_usd": 0.001818,
         "usage": {
-          "prompt_tokens": 1258,
+          "prompt_tokens": 1350,
           "cached_prompt_tokens": 0,
-          "completion_tokens": 177
+          "completion_tokens": 179
         },
         "degraded": false,
         "reason": null
       },
-      "elapsed_s": 2.687,
+      "elapsed_s": 3.705,
       "checks": [
         {
           "name": "error_leakage",

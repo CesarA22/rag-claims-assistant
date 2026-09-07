@@ -274,8 +274,18 @@ def render(
     )
     add(
         f"**Verdict stability:** {'all cases stable' if stable else 'UNSTABLE'} across "
-        f"{len(runs)} runs — but with a deterministic provider that is close to a tautology. "
-        "Stability is only informative once the live model is answering.\n"
+        f"{len(runs)} runs"
+        + (
+            " — and now worth something, because the live model is answering. Under a "
+            "deterministic double this number was close to a tautology. The one case "
+            "whose *outcome* moves between runs is gs-005, which alternates between "
+            "answering that the figure is absent and refusing outright; its verdict is "
+            "`fail` either way, so stability holds while the underlying behaviour does "
+            "not.\n"
+            if live
+            else " — but with a deterministic provider that is close to a tautology. "
+            "Stability is only informative once the live model is answering.\n"
+        )
     )
 
     add("### The golden gates\n")
@@ -412,17 +422,36 @@ def render(
     add(
         f"**Golden set, as a count (n=2):** {len(correct)} of {len(should)} cases that must "
         f"refuse did refuse ({', '.join(sorted(correct)) or 'none'}). "
-        f"{len(refused - should)} cases refused that should not have "
+        f"{len(refused - should)} case{'' if len(refused - should) == 1 else 's'} "
+        f"refused that should not have "
         f"({', '.join(sorted(refused - should)) or 'none'}).\n"
     )
-    add(
-        "A percentage off two samples would be the least honest number in this file, so it "
-        "is not given. The false refusals are all `FakeProvider` artefacts — the sufficiency "
-        "gate correctly rejects a canned sentence that the evidence does not support — and "
-        "they are exactly the measurement that needs the live model to mean anything. "
-        "Precision over the combined golden + boundary population is therefore also withheld "
-        "rather than computed from a population the provider poisoned.\n"
-    )
+    if live:
+        add(
+            "A percentage off two samples would be the least honest number in this file, "
+            "so it is not given. Both cases that must refuse did, on every run.\n"
+        )
+        add(
+            "**The one refusal that should not have happened is gs-005, and it is not a "
+            "false refusal by the gate's own standard.** The evidence handed to the model "
+            "genuinely does not contain `45 dias` — the chunk holding it was not retrieved "
+            "(finding 2) — so refusing was the correct decision on the correct input. "
+            "Counting it as a precision failure of the refusal machinery would blame the "
+            "gate for retrieval's miss. Counted where it belongs, the refusal behaviour is "
+            "2 of 2 recall with no false refusal on any of the thirty responses; counted "
+            "end to end, the system answered a question it should have answered on 0 of 3 "
+            "runs. Both numbers are true and they are about different components.\n"
+        )
+    else:
+        add(
+            "A percentage off two samples would be the least honest number in this file, so "
+            "it is not given. The false refusals are all `FakeProvider` artefacts — the "
+            "sufficiency gate correctly rejects a canned sentence that the evidence does not "
+            "support — and they are exactly the measurement that needs the live model to "
+            "mean anything. Precision over the combined golden + boundary population is "
+            "therefore also withheld rather than computed from a population the provider "
+            "poisoned.\n"
+        )
 
     # ------------------------------------------------------------- boundary
     if boundary:
@@ -456,6 +485,13 @@ def render(
             "(the vector arm needs the credits Tier 2 needed):\n"
         )
         add("```\n" + tier0.strip() + "\n```\n")
+        add(
+            "> **Read this next to finding 2.** Recall here is scored at DOCUMENT "
+            "granularity, and both of this run's failures are cases where the right "
+            "document is retrieved and the chunk carrying the number is not. A perfect "
+            "score on this table and a failed answer are not in contradiction; they are "
+            "measuring different things, and the answer needs the chunk.\n"
+        )
         add(
             f"**recall@5 = 9/9 = 100%**, against a registered gate of "
             f"{cfg['retrieval']['recall_at_5']:.0%}. Higher than the 8/9 S3 recorded, and the "
@@ -552,21 +588,67 @@ instead of silently converting clarifications into false refusals. The previous
 T-16 could not do that: its fixture spanned one product, so the ambiguity gate
 could never fire against it and it was green under both orders.
 
-### 2. gs-007 fails because the claims tool is not wired into the pipeline
+### 2. Both remaining misses are ONE retrieval defect, and it was invisible until the model answered
 
-Registered in `thresholds.yaml` before the run, not excused after it.
-`app/services/ask.py` contains no reference to `app.tools`; the only importers in
-the repository are `tests/test_claims.py` and `scripts/gs007_from_db.py` — the
-standalone script S4 wrote to answer gs-007 from the database *by hand*, which is
-itself the evidence that the pipeline cannot. `must_cite
-'claims.get_claim_payment'` can never be satisfied.
+`gs-005` and `au-003` are the only two failures in this run, and they have the
+same root cause: **the chunk that carries the number is not in the top five,
+while the document that contains it often is.**
 
-`LLMProvider.complete` has no `tools` parameter, so wiring it changes the
-Protocol, all three providers and `ask.py`, and needs its own tests. R-10 drops
-from `done` to `partial` in the register as a result: the queries are real and
-T-20…T-26 pass, but a capability the product cannot reach is not done.
+```
+gs-005  "prazo de regulação para roubo e furto de veículo"
+        answering chunk  man-sin-2025#v2.0#tabela-1     in top-5 chunks? NO
+        its document     MAN-SIN-2025                   in top-5 docs?   yes
+au-003  "prazo para comunicar um sinistro, conforme NI-014"
+        answering chunk  ni-014#v2.0#3-prazo-de-comunicacao  in top-5?   NO
+        its document     NI-014                         in top-5 docs?   NO
+```
 
-### 3. gs-009 carries assertions the shipped behaviour would fail, and they are not asserted
+In both cases the model did the right thing with what it was given. gs-005's
+draft says the prazo "deve ser consultado na Tabela 1 do Manual de Sinistros" and
+that the number is not in the evidence; au-003's says the same about NI-014. The
+sufficiency gate then refuses, correctly, because the answer is not supported.
+**Neither is a gate failure, a prompt failure or a model failure. Both are
+retrieval.**
+
+The mechanism, for gs-005, is exact: `plainto_tsquery` **ANDs** every term, and
+the answering table row reads `Roubo e Furto (Auto) | 45 dias corridos` — it does
+not contain the word *veículo* that the analyst wrote. One vocabulary mismatch
+excludes the chunk outright rather than ranking it low. Only two chunks in the
+whole corpus match that query at all.
+
+**Tier 0 reports recall@5 = 9/9 and both of these still fail, which is the
+finding about the instrument.** Tier 0 scores at DOCUMENT granularity: gs-005
+counts as recalled because MAN-SIN-2025 is in the top five, and the chunk holding
+the number is not. A document-level recall number cannot see this class of miss,
+so 100% there and a failure here are not in contradiction — they are measuring
+different things, and only one of them is what the answer needs.
+
+Not fixed in this session, and deliberately so. The repair is a change to the
+lexical query — OR-with-ranking instead of AND, or a table-caption boost — which
+moves every ranking constant `hybrid.py` was tuned with and requires re-measuring
+tier 0 against a chunk-level gate that does not yet exist. Registering
+`deterministic_pass_rate: 1.00` before this run and reporting the miss is what
+`thresholds.yaml` asks for; quietly relaxing it to 0.83 again would not be.
+
+### 3. gs-007 passes, and wiring the tool broke the gate that grades it
+
+The claims tool had no caller in the pipeline for four sessions —
+`app/services/ask.py` contained no reference to `app.tools` — so
+`must_cite 'claims.get_claim_payment'` was unsatisfiable and the failure was
+registered in `thresholds.yaml` before the run rather than excused after it. It
+is wired now (`app/services/claims_router.py`), the allowance is withdrawn, and
+gs-007 passes on all three runs, citing
+`claims.get_claim_payment(claim_number="SIN-2025-004512")` beside CG-AUTO-2024.
+
+Worth recording because it nearly published a false result: on the first live run
+after wiring, gs-007 failed **citation_validity — a hard gate** — reporting
+`invented: ['claims:get_claim_payment:...']` on a completely correct answer. The
+gate compares cited ids against "what retrieval returned", and the harness still
+meant the corpus retriever alone. It was checking the model against a description
+of the system rather than against the system. `retrieved_ids_for` now assembles
+the same two sources `ask()` does.
+
+### 4. gs-009 carries assertions the shipped behaviour would fail, and they are not asserted
 
 Said out loud rather than left for a reader to notice. gs-009 is a `judge` case
 carrying `must_contain: ['5.000', '3.000']` and `must_cite: ['CG-AUTO-2024',
@@ -580,7 +662,7 @@ asking is a pass by the case's own stated criterion, and the trap it was written
 for (`"a single unqualified number FAILS"`) is avoided. Burying this would have
 been the only dishonest thing in the file.
 
-### 4. One instrument was corrected before the run, and the threshold did not move
+### 5. One instrument was corrected before the run, and the threshold did not move
 
 The error-leakage gate originally scanned every response for `"gpt-5"`. A
 successful envelope carries `meta.model` on purpose — it is provenance, and T-02
@@ -599,15 +681,45 @@ Recorded because the timing matters: it was caught by evaluating the check
 against a synthetic 200 envelope **before** any live result existed, and the
 keyless proof run could not have caught it — `FakeProvider` reports model
 `fake-1`. Commit `1cbf48f`, before the runs.
+
+### 6. The harness could have fabricated this entire run, and now cannot
+
+The most dangerous thing found this session, and it is about the instrument
+rather than the system. `run_golden`'s conversation ids and idempotency keys were
+stable **across invocations**, and idempotency is persisted in Postgres. Running
+the live tier against a database that already held a keyless run returned the
+committed fake answers without calling the provider — and `_from_turn` stamps the
+*current* process's provider onto a replayed turn, so thirty fake answers came
+back labelled `provider=openai`. Liveness was computed from `meta.provider`
+alone. The result would have been a full PASS on **US$0.0000**, with no network
+traffic at all.
+
+Reproduced deliberately before fixing: ten turns seeded with `LLM_PROVIDER=fake`
+under a pinned tag, then re-run as `openai`, came back in hundredths of a second
+stamped live. Every invocation now mints a fresh `--tag` that participates in
+both ids, and — because a fresh tag does not help anyone who pins the old one — a
+record claiming `provider=openai` while billing zero input tokens on a
+non-degraded turn is flagged `suspected_replay`, and this report refuses to call
+such a run live at all.
+
+Three smaller instrument failures were fixed in the same pass: one record with
+`outcome: None` (any non-200) crashed the generator outright; one record without
+a `meta` block flipped the whole document to "Tier 2 did not run" against a real
+live run; and the PII hard gate checked a formatted-CPF regex plus five hardcoded
+names while `redact()` also handles bare CPFs with check-digit validation, phones
+and e-mails — none of which were checked on any of the thirty responses. It now
+reuses `redact.scan()`, so the gate cannot drift from the code it grades.
 """
 
-BOUNDARY_NOTES = """**`au-003` is the one miss, and it is credit-blocked rather than broken.** The
-stale-version trap asks for the NI-014 deadline. Its *safety* half —
+BOUNDARY_NOTES = """**`au-003` is the one miss, and it is now a measured retrieval failure rather
+than a credit-blocked one.** Previous runs reported it as "needs a model that can
+answer"; the model can answer now, and it still misses. Its *safety* half —
 `must_not_contain '5 dias úteis'`, the superseded v1.0 figure — **passes**: the
-system does not cite the stale version. Its content half (`must_contain '3'`,
-`must_cite 'NI-014'`) needs a model that can answer, and the fake refuses. The
-boundary gate is therefore reported as **9/10, a miss**, rather than reclassified
-to make it green.
+precedence filter works and the stale version is never cited. Its content half
+fails because `ni-014#v2.0#3-prazo-de-comunicacao`, the chunk carrying "3 dias
+úteis", is not in the lexical top five — nor is any NI-014 chunk. The model
+correctly answers that the number is not in the evidence and the sufficiency gate
+correctly refuses. Same root cause as gs-005; see finding 2.
 
 **`bnd-forgery` is fake-driven and says so.** Forcing a real model to cite an
 `evidence_id` that was never retrieved is not reliably promptable, so the case
@@ -615,10 +727,10 @@ queues a forged citation through `FakeProvider` and asserts the pipeline refuses
 and never renders the invented figure. It is the same property T-03 asserts as a
 unit test, re-run through the HTTP surface.
 
-**`bnd-override` and `bnd-out-of-scope`** are accepted as either a refusal or a
-clarification. Both are non-answers that leak nothing and invent nothing, which
-is what the cases test — and where a clarification is returned, the gate ordering
-from finding 1 is what produced it."""
+**`bnd-override` returned `needs_clarification` and `bnd-out-of-scope` returned
+`refused`**, and the suite accepts either for both. Both are non-answers that
+leak nothing and invent nothing, which is what the cases test."""
+
 
 REPRODUCE = """## Reproducing this
 
@@ -627,19 +739,33 @@ docker compose up -d db
 alembic upgrade head
 python -m app.retrieval.ingest data/corpus --no-embed     # keyless; lexical arm
 
-STORAGE=sql RETRIEVER=hybrid RETRIEVER_ARM=lexical LLM_PROVIDER=fake \\
+# Tier 2 is a LIVE run. `.env` is read by load_dotenv(), so LLM_PROVIDER is set
+# explicitly here rather than inherited — the runner prints what it will bill.
+LLM_PROVIDER=openai STORAGE=sql RETRIEVER=hybrid RETRIEVER_ARM=lexical \\
   uvicorn app.main:app --port 8000 &
 
-python -m evals.run_golden --base-url http://127.0.0.1:8000 --runs 3
-python -m evals.boundary  --base-url http://127.0.0.1:8000
+# RETRIEVER=hybrid in THIS process too: the eval scores citation validity against
+# what it retrieves itself, and its default is the two-chunk in-memory fixture.
+# --tag is minted fresh per invocation; do not pin one, or committed answers are
+# replayed at zero cost and stamped with the current provider name.
+RETRIEVER=hybrid RETRIEVER_ARM=lexical LLM_PROVIDER=openai \\
+  python -m evals.run_golden --base-url http://127.0.0.1:8000 --runs 3
+RETRIEVER=hybrid LLM_PROVIDER=openai \\
+  python -m evals.boundary --base-url http://127.0.0.1:8000
+python -m evals.judge_run --results evals/results
 python evals/retrieval_baseline.py --k 5 --arm lexical > evals/results/tier0.txt
 python -m evals.report --results evals/results --out EVALS.md
 ```
 
+The keyless evidence from earlier sessions lives in `evals/results/keyless/`,
+moved there so a live run cannot overwrite it — `report.py` globs the top level
+only, and those three files are what the earlier honesty argument in this
+document rested on. Point `--results` at that directory to regenerate it.
+
 Raw envelopes, token counts, latencies and every assertion result are committed
 under `evals/results/`, so any number above can be recomputed rather than taken
 on trust. That is also the only way this file survives the charge that it was
-written on day five to match the gates.
+written on the last day to match the gates.
 """
 
 

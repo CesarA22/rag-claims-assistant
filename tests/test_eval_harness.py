@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 import yaml
 
 from evals import assertions, report, run_golden
@@ -84,8 +86,13 @@ def test_one_record_without_meta_does_not_erase_a_live_run():
     """
     out = _render([_record("gs-001"), _record("gs-002", meta={}, status_code=503)])
 
-    assert "Tier 2 did not run" not in out
-    assert "not measured" not in out
+    # The HEADING, not the phrase: the findings prose describes this very bug,
+    # and a substring match on the description passed for the wrong reason.
+    assert "## Tier 2 did not run" not in out
+    # And the cost table must carry real verdicts rather than the not-live text.
+    cost = out.split("## Cost and latency")[1].split("##")[0]
+    assert "not measured" not in cost
+    assert "**PASS**" in cost
 
 
 def test_replayed_records_are_never_reported_as_a_live_run():
@@ -162,3 +169,37 @@ def test_the_pii_gate_covers_everything_the_redactor_covers():
     assert assertions.pii_egress(blob("CPF 111.111.111-11."), []).passed is False
     # And an ordinary grounded answer is still clean.
     assert assertions.pii_egress(blob("A vigência padrão é de 12 meses."), []).passed is True
+
+
+async def test_the_retrieved_set_includes_what_the_router_routes():
+    """T-52 / R-01: citation validity must model the evidence ask() actually builds.
+
+    Measured, on the first live run after the claims tool was wired: gs-007
+    failed citation_validity — a HARD GATE — reporting
+    `invented: ['claims:get_claim_payment:...']` on a completely correct answer,
+    three runs out of three. The gate compares cited ids against "what retrieval
+    returned", and that still meant the corpus retriever alone. A gate that
+    models a system the code no longer is grades the model against a description
+    rather than against the system.
+    """
+    from pathlib import Path
+
+    if not (Path(__file__).resolve().parents[1] / "data" / "claims.db").exists():
+        pytest.skip("data/claims.db is not present")
+
+    gs007 = (
+        "No sinistro SIN-2025-004512, o valor pago respeitou o limite da cobertura "
+        "de Danos Materiais a Terceiros do Seguro Auto?"
+    )
+    vigencia = "Qual é o prazo de vigência padrão de uma apólice de Seguro Auto?"
+
+    retrieved = await run_golden.retrieved_ids_for([gs007, vigencia])
+
+    claims_ids = {i for i in retrieved[gs007] if i.startswith("claims:")}
+    assert {"claims:get_claim", "claims:get_claim_payment"} <= {
+        ":".join(i.split(":")[:2]) for i in claims_ids
+    }
+    # The corpus half is still there, and a question that routes nothing gains
+    # nothing — the router adds to retrieval rather than replacing it.
+    assert any(not i.startswith("claims:") for i in retrieved[gs007])
+    assert not any(i.startswith("claims:") for i in retrieved[vigencia])
