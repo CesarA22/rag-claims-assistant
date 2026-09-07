@@ -12,6 +12,13 @@ deterministic:
   cites. gs-008's trap is five confident on-topic chunks that do not answer, so
   "retrieval returned nothing" is not the check.
 
+`judge()` runs ambiguity *before* sufficiency, which means sufficiency is
+unreachable for any question whose evidence spans more than one product. That is
+a real gap, it is measured, and both obvious repairs were rejected on evidence
+rather than on taste — see `judge()`'s docstring and DECISIONS.md. It is written
+here too because this module is where someone looking for the sufficiency gate
+will arrive, and the gate not running is the thing they need to know.
+
 The sufficiency test is lexical, and its limits are stated in DECISIONS.md rather
 than implied: it catches an answer that introduces a subject the cited text never
 mentions, which is the gs-008 failure. It does not catch a fluent paraphrase that

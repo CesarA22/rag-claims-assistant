@@ -437,6 +437,14 @@ question is refused before the draft is even examined, because a draft that
 quotes the minutes is already a leak in the making. Clarification outranks
 refusal because gs-009's honest answer is a question, not a "no".
 
+> **S9 found the cost of that second sentence and S11 measured the repairs.**
+> Putting clarification first makes the sufficiency gate unreachable for every
+> question whose evidence spans more than one product, so gs-008's trap draft
+> yields a clarification where the brief requires a refusal. The order stands,
+> but not because "clarification outranks refusal" is right in general — it is
+> right for gs-009 and wrong for gs-008, and the two are not distinguishable by
+> the lexical measure this build has. The full measurement is under S11 below.
+
 ### The 240-character snippet cut is not a privacy control
 
 `citation_from_evidence` now calls `redact()` **before** truncating. The cut was
@@ -553,10 +561,11 @@ WHERE c.document_code = 'NI-014' AND c.version = '1.0' ORDER BY m.seq;
 duplicate POST created no second row, and the provider was called once.
 `prompt_version` persisted as `4adf882fbe66` on both completed turns and is empty
 on the failed one, which never reached `complete_turn`. That value is historical:
-S11 reshaped `DRAFT_SCHEMA` for strict structured output and reworded one line of
-`system.md`, and `_prompt_version()` hashes both, so the current value is
-`e3307f28ac81`. The bump is the mechanism working — a prompt or schema change is
-meant to invalidate replays — not a migration.
+`_prompt_version()` hashes the system prompt plus the draft schema, and S11
+changed both — the strict schema reshape (F4) took it to `e3307f28ac81`, and
+removing the ambiguity instruction from the prompt (F2) took it to
+`adb61d485f7f`. Two bumps in one session, and both are the mechanism working: a
+prompt or schema change is meant to invalidate a replay.
 
 ## S8 — the interface, and what building it found in the API
 
@@ -948,9 +957,10 @@ the corresponding source change and watching it go red.
 calls rather than three because the failure is probabilistic and three can pass
 by luck.
 
-`PROMPT_VERSION` moved `4adf882fbe66` → `e3307f28ac81`. That is the mechanism
-working: `_prompt_version()` hashes the system prompt plus the schema precisely
-so a change to either invalidates a replay.
+`PROMPT_VERSION` moved `4adf882fbe66` → `e3307f28ac81` here, and F2 moved it
+again to `adb61d485f7f`. That is the mechanism working: `_prompt_version()`
+hashes the system prompt plus the schema precisely so a change to either
+invalidates a replay.
 
 ### F1 — the degraded path suspended requirement 3
 
@@ -1021,3 +1031,80 @@ lie.** The degraded path never calls `judge()` at all. Its text is the static
 from *pattern* PII — CPF, phone, e-mail — and remains structurally unable to
 remove a **name**. That is not fixed here; it is fixed by F1 refusing the turn
 outright when the evidence carries identities.
+
+### F2 — the gate order: the finding stands, and both repairs were rejected on evidence
+
+S9 reported that `judge()` checks ambiguity before sufficiency, so the
+sufficiency gate is unreachable for any question whose evidence spans more than
+one product. That is true. The two obvious repairs are a **bare reorder** and a
+**two-set discriminator** (refuse only when the draft is unsupported by the
+*entire* retrieved set, ask when it is supported there but not by the chunk it
+cited). S11 measured both against **live drafts over the Postgres-indexed
+220-chunk corpus** — `python -m scripts.gate_order_probe` — and rejected both.
+
+| live draft | ratio(cited) | ratio(retrieved) |
+|---|---|---|
+| gs-008 trap · "O desconto para pagamento à vista é de 5%." | 0.000 | **0.333** |
+| gs-009 · "…varia conforme o produto… R$ 3.000,00" | 0.643 | **0.643** |
+| au-004 · "…R$ 150,00 para o Auto e R$ 100,00 para o Residencial…" | 0.533 | **0.667** |
+
+`SUFFICIENCY_MIN` is 0.80, so **both** repairs turn gs-009 and au-004 into
+refusals. The discriminator exists specifically to spare au-004 and it does not:
+the design assumed au-004's retrieved-set ratio was 1.000, and measured against
+the indexed chunks and a real draft it is 0.667. That single number is the whole
+argument, and it was only available live — the fake provider emits one canned
+sentence scoring 0.000 against this evidence, so the offline harness cannot grade
+the ordering question at all.
+
+The separation that does exist — 0.333 against 0.643 — is an artefact of sentence
+length rather than of groundedness. The trap carries three content terms, so one
+unsupported term costs it a third; a fluent answer's conversational filler
+("posso", "quiser", "você", "confirmar") dilutes a perfectly grounded claim.
+Picking a constant between those two values off four samples is exactly what
+`evals/thresholds.yaml` forbids, and it would separate by verbosity.
+
+**What the gap actually costs, stated precisely.** Nothing unsupported ships
+under either order — the clarification is a non-answer with no citations. What
+is wrong is the *label* (gs-008 requires `refused`) and the clarification's own
+sentence, which says "as fontes recuperadas trazem limites diferentes por
+produto" when the sources are silent rather than divergent. It is a correctness
+bug in a message, not a safety hole.
+
+**What did land, and it is the half that measured clean.** `system.md` told the
+model to emit `needs_clarification` when "it names no product and the evidence
+spans more than one" — gs-008's exact shape — and `judge()` returns the model's
+own `needs_clarification` before either gate runs. Measured: **all three** of
+gs-008, gs-009 and au-004 hit that passthrough, so no deterministic gate decided
+any of them and the ordering was a no-op for every case it was supposed to
+govern. With the instruction removed, gs-009 and au-004 reach the deterministic
+ambiguity gate and return the same outcomes; gs-008 still returns `refused`
+because the live model declines on its own.
+
+That makes "refusal does not depend on trusting the model" true for two of the
+three rather than none. gs-008 remains model-dependent and that is the residual —
+R-02 says so rather than claiming the fix is complete.
+
+`PROMPT_VERSION` moves again, `e3307f28ac81` → `adb61d485f7f`, which is the
+second bump this session and was accepted rather than avoided: F2's prompt
+decision could not be made before F4 made structured output deterministic enough
+to measure.
+
+**T-16's fixture was vacuous and is repaired.** `PREMIUM_CHUNKS` spanned `{Auto}`
+alone, so `is_ambiguous` could never fire against it and T-16 was green under
+*both* gate orders — zero regression signal on the one question it was cited for.
+It is now two fixtures: `PREMIUM_CHUNKS_ONE_PRODUCT` keeps T-16 measuring
+sufficiency, and `PREMIUM_CHUNKS` carries the real three-product gs-008 shape for
+T-46. T-47 pins the au-004 ratios so an edit to `_STOPWORDS`, `_MIN_TERM_LEN` or
+`SUFFICIENCY_MIN` fails loudly instead of quietly converting clarifications into
+false refusals. All three were verified by mutation, including re-flattening the
+fixture to one product.
+
+**The acceptance conflict the plan anticipated does not arise.** It assumed a
+sufficiency-first order would make the README's second question return `refused`
+under `LLM_PROVIDER=fake`, breaking the README, the D-03 container probe and a
+screenshot at once. Since the order does not move, and the fake ignores the
+prompt entirely — its clarification comes from the deterministic ambiguity gate —
+that question still returns `needs_clarification` keyless. Checked against a
+running keyless API rather than assumed: the three README questions return
+`answered`, `needs_clarification` with `['Auto', 'Residencial']` chips, and
+`refused`, exactly as documented.

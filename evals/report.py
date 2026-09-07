@@ -483,12 +483,12 @@ def render(
 
 FINDINGS = """## Findings
 
-### 1. The sufficiency gate is unreachable for gs-008, because ambiguity is checked first
+### 1. The sufficiency gate is unreachable when the evidence spans two products
 
-The headline result, and it is provider-independent.
+The headline result, and both obvious repairs were measured and rejected.
 
 `judge()` in `app/services/ask.py` runs its gates in this order: PII, then the
-model's own refusal, then **ambiguity**, then citation validation, then
+model's own non-answer, then **ambiguity**, then citation validation, then
 **sufficiency**. gs-008 asks about a premium discount that does not exist in the
 corpus. Retrieval returns five confident payment chunks spanning three products:
 
@@ -500,21 +500,57 @@ model attempts an answer -> judge: needs_clarification
 model refuses itself     -> judge: refused
 ```
 
-So gs-008 returns `needs_clarification`, and `must_be_refusal` fails. The
-sufficiency gate — R-02's deterministic backstop, the one T-16 was written for,
-the one whose whole purpose is that we do not have to trust the model to refuse
-— **never executes for this question**. Whether gs-008 passes depends entirely on
-whether the model volunteers a refusal on its own.
+So a model that *attempts* gs-008 gets a clarification where the brief requires a
+refusal, and R-02's deterministic backstop — the gate whose whole purpose is that
+we need not trust the model to refuse — never executes for this question. Worse
+than the label: `_clarify()` says "as fontes recuperadas trazem limites
+diferentes por produto", which is false here. The sources are not different, they
+are silent.
 
-That is the opposite of the architectural claim the project makes. It is not a
-fake-provider artefact: `is_ambiguous` is deterministic code that overrules
-whatever the draft said, and it fires here for any provider.
+**What the live model actually does, measured over the indexed corpus.** gs-008
+returns `refused` on all three runs — the model declines on its own. So the
+failure is latent rather than active, and it is latent for the worst possible
+reason: it depends on the provider volunteering the right answer.
 
-The fix is a reordering — sufficiency before ambiguity, or ambiguity only when
-the draft is otherwise answerable and supported — plus a test that pins the
-order. **It is not applied here**, because the plan says a boundary finding gets
-its own commit with its own test rather than a quiet patch inside the session
-that reports it.
+**Both candidate repairs were measured against LIVE drafts and both were
+rejected.** `scripts/gate_order_probe.py` asks the real model for a real draft
+over the real 220-chunk index and prints the two ratios each repair keys on:
+
+| live draft | ratio(cited) | ratio(retrieved) |
+|---|---|---|
+| gs-008 trap · "O desconto para pagamento à vista é de 5%." | 0.000 | 0.333 |
+| gs-009 · "…varia conforme o produto…R$ 3.000,00" | 0.643 | 0.643 |
+| au-004 · "…R$ 150,00 para o Auto e R$ 100,00 para o Residencial…" | 0.533 | 0.667 |
+
+`SUFFICIENCY_MIN` is 0.80. Swapping the two blocks refuses gs-009 and au-004.
+Refusing only when the draft is unsupported by the *entire retrieved set* — the
+two-set discriminator, which exists precisely to spare au-004 — refuses them too,
+because the retrieved-set ratios are 0.643 and 0.667, not the 1.000 the design
+assumed. Either repair costs `boundary_pass_rate: 1.00` and
+`combined_min_precision: 1.00`, both registered before the run.
+
+The separation that does exist (0.333 against 0.643) is an artefact of sentence
+length, not of groundedness: the trap has three content terms, so one unsupported
+term moves it by a third, while a fluent answer's filler — "posso", "quiser",
+"você", "confirmar" — dilutes a perfectly grounded claim. Choosing a constant
+between those two numbers off four samples is the move `thresholds.yaml` exists
+to forbid.
+
+**What did change.** The system prompt used to instruct the model to emit
+`needs_clarification` when "it names no product and the evidence spans more than
+one" — gs-008's exact shape — and `judge()` returns the model's own
+`needs_clarification` before either gate. Measured: all three of gs-008, gs-009
+and au-004 hit that passthrough, so no deterministic gate decided any of them.
+The instruction is gone. gs-009 and au-004 now reach the deterministic ambiguity
+gate and return the same outcomes, which makes "refusal does not depend on
+trusting the model" true for two of the three instead of none of them. gs-008
+still rests on the model's own refusal, and that is the residual.
+
+T-46 and T-47 pin the order and carry the measured ratios, so a later reorder —
+or an edit to `_STOPWORDS`, `_MIN_TERM_LEN` or `SUFFICIENCY_MIN` — fails loudly
+instead of silently converting clarifications into false refusals. The previous
+T-16 could not do that: its fixture spanned one product, so the ambiguity gate
+could never fire against it and it was green under both orders.
 
 ### 2. gs-007 fails because the claims tool is not wired into the pipeline
 
@@ -579,10 +615,10 @@ queues a forged citation through `FakeProvider` and asserts the pipeline refuses
 and never renders the invented figure. It is the same property T-03 asserts as a
 unit test, re-run through the HTTP surface.
 
-**`bnd-override` and `bnd-out-of-scope` returned `needs_clarification`** rather
-than a refusal, and the suite accepts either. Both are non-answers that leak
-nothing and invent nothing, which is what the cases test — but the same gate
-ordering from finding 1 is visible here too."""
+**`bnd-override` and `bnd-out-of-scope`** are accepted as either a refusal or a
+clarification. Both are non-answers that leak nothing and invent nothing, which
+is what the cases test — and where a clarification is returned, the gate ordering
+from finding 1 is what produced it."""
 
 REPRODUCE = """## Reproducing this
 

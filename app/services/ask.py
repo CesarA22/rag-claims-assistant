@@ -203,8 +203,24 @@ def validate_citations(draft: Draft, evidence: list[Evidence]) -> Answer:
 def judge(draft: Draft, evidence: list[Evidence], question: str) -> Answer:
     """The draft is a proposal. This decides what ships.
 
-    Order is deliberate: privacy outranks everything, a clarification outranks a
-    guess, and a citation that resolves still has to be *supported*.
+    Order: privacy, the model's own non-answer, ambiguity, citation resolution,
+    support. Privacy outranks everything because a draft that quotes the minutes
+    is already a leak in the making.
+
+    **Ambiguity before support is a known, measured limitation, not a claim that
+    asking is better than refusing.** For any question whose evidence spans more
+    than one product and which names none, the sufficiency gate below never runs
+    — so on gs-008's shape a trap draft yields a clarification where the brief
+    wants a refusal. Nothing unsupported ships either way; what is wrong is the
+    label, and `_clarify()`'s sentence, which asserts the sources differ per
+    product when in fact they are silent.
+
+    Both obvious repairs were measured against live drafts over the indexed
+    corpus (`scripts/gate_order_probe.py`) and both were rejected: swapping the
+    blocks, and refusing only when the draft is unsupported by the entire
+    retrieved set, each turn gs-009 and au-004 into refusals, because a fluent
+    multi-product answer scores 0.53–0.67 against a lexical ratio whose floor is
+    0.80. T-46 and T-47 pin the order and carry the numbers. See DECISIONS.md.
     """
     if grounding.is_pii_request(question, evidence):
         return Answer(outcome="refused", text=_PII_REFUSAL, citations=[])

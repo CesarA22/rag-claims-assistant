@@ -10,7 +10,7 @@ evidence. Never invent an evidence_id.
 Outcomes:
 - answered — the evidence contains the fact; cite it.
 - refused — the evidence does not contain the asked-for fact. Do not guess.
-- needs_clarification — the question is ambiguous (for example it names no
-  product and the evidence spans more than one). Ask a short clarifying question.
+- needs_clarification — the question cannot be answered as asked. Ask a short
+  clarifying question.
 
 Respond with a JSON object that conforms to the given schema.

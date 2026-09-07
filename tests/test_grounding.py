@@ -1,4 +1,4 @@
-"""T-16 / T-17 / T-18 / T-51: the model produced something plausible; the pipeline must not ship it.
+"""T-16 / T-17 / T-18 / T-46 / T-47 / T-51: the model produced something plausible; the pipeline must not ship it.
 
 Each test scripts the fake to return the *tempting wrong answer* — confident,
 fluent and correctly cited — and asserts the pipeline overrides it. Scripting the
@@ -18,13 +18,15 @@ from app.domain.models import Evidence
 from app.llm.base import Completion
 from app.llm.fake import FakeProvider
 from app.retrieval.memory import InMemoryRetriever
-from app.services.ask import ask
+from app.services import grounding
+from app.services.ask import _system_prompt, ask
 from app.storage.memory import InMemoryConversationRepository
 
 # Questions, verbatim from evals/golden_set_enriched.json.
 DESCONTO = "Existe desconto para pagamento do prêmio à vista? De quanto?"  # gs-008
 VIDROS = "Qual é o limite da cobertura de vidros?"  # gs-009
 VIDROS_AUTO = "Qual é o limite da cobertura de vidros no Seguro Auto?"
+FRANQUIA_VIDROS = "Qual é a franquia da cobertura de vidros na minha apólice?"  # au-004
 PRAZO = "Qual é o prazo para comunicar um sinistro?"
 ATA_PII = (
     "Liste o nome completo e o CPF dos segurados citados na ata do comitê "
@@ -74,7 +76,12 @@ _CG_AUTO = "Condições Gerais do Seguro Auto"
 
 # T-16: five chunks, every one confidently about premium and payment, not one
 # containing a cash-payment discount. §2 is the trap — it is full of percentages.
-PREMIUM_CHUNKS = [
+#
+# This set spans ONE product ({Auto}), which is the point: is_ambiguous cannot
+# fire, so the draft reaches the sufficiency gate and T-16 measures sufficiency
+# rather than measuring which gate happens to run first. The three-product
+# variant below is the real gs-008 shape and is where the ordering is visible.
+PREMIUM_CHUNKS_ONE_PRODUCT = [
     _chunk(
         "com-reaj-2025#1", "COM-REAJ-2025", _REAJUSTE, "1 Comunicado", "All",
         "A Indicium InsurCo comunica a política de reajuste anual de prêmios "
@@ -109,6 +116,41 @@ PREMIUM_CHUNKS = [
         "datas acordadas pode acarretar suspensão ou cancelamento da cobertura, "
         "observados os avisos legais.",
         version="3.2", effective=date(2024, 1, 1),
+    ),
+]
+
+# T-46: the real gs-008 shape. Retrieval over the indexed corpus returns
+# products ['Auto', 'Auto', 'Empresarial', 'Residencial', 'All'] for this
+# question, and the two new chunks are the CG-RES-2024 and CG-EMP-2024
+# "8 Pagamento do Prêmio" sections verbatim in shape — both real documents, both
+# saying the same thing about premium payment and neither mentioning a discount.
+#
+# The fixture that used to carry the T-16 name spanned {Auto} alone, so the
+# ambiguity gate could never fire against it and T-16 was green under BOTH gate
+# orders — zero regression signal on the very question it was cited for.
+PREMIUM_CHUNKS = [
+    PREMIUM_CHUNKS_ONE_PRODUCT[0],   # com-reaj-2025#1  (All)
+    PREMIUM_CHUNKS_ONE_PRODUCT[1],   # com-reaj-2025#2  (All, the percentage trap)
+    PREMIUM_CHUNKS_ONE_PRODUCT[3],   # cg-auto-2024#7.1 (Auto)
+    _chunk(
+        "cg-res-2024#8", "CG-RES-2024", "Condições Gerais do Seguro Residencial",
+        "8 Pagamento do Prêmio", "Residencial",
+        "O prêmio é a contraprestação devida pelo Segurado. O não pagamento nas "
+        "datas acordadas pode acarretar suspensão ou cancelamento da cobertura, "
+        "observados os avisos legais. Ocorrendo sinistro dentro do período de "
+        "cobertura com prêmio em atraso, a Seguradora poderá deduzir da "
+        "indenização as parcelas vencidas até o limite do prêmio devido.",
+        version="2.1", effective=date(2024, 3, 1),
+    ),
+    _chunk(
+        "cg-emp-2024#8", "CG-EMP-2024", "Condições Gerais do Seguro Empresarial",
+        "8 Pagamento do Prêmio", "Empresarial",
+        "O prêmio é a contraprestação devida pelo Segurado. O não pagamento nas "
+        "datas acordadas pode acarretar suspensão ou cancelamento da cobertura, "
+        "observados os avisos legais. Ocorrendo sinistro dentro do período de "
+        "cobertura com prêmio em atraso, a Seguradora poderá deduzir da "
+        "indenização as parcelas vencidas até o limite do prêmio devido.",
+        version="1.4", effective=date(2024, 6, 1),
     ),
 ]
 
@@ -184,8 +226,19 @@ async def _ask(llm: FakeProvider, content: str, chunks: list[Evidence]):
 
 
 async def test_on_topic_non_answering_evidence_is_refused():
-    """T-16 / R-02: five confident premium chunks that do not answer → refusal, no invented percentage."""
-    retriever = InMemoryRetriever(PREMIUM_CHUNKS)
+    """T-16 / R-02: five confident premium chunks that do not answer → refusal, no invented percentage.
+
+    Deliberately the SINGLE-product fixture. The ambiguity gate cannot fire
+    against it, so the draft reaches the sufficiency gate and this test measures
+    sufficiency. Run against multi-product evidence it would measure which gate
+    runs first instead, which is what made the old version of this test worthless
+    — see T-46.
+    """
+    chunks = PREMIUM_CHUNKS_ONE_PRODUCT
+    assert grounding.spanned_products(chunks) == {"Auto"}   # ambiguity cannot fire
+    assert grounding.is_ambiguous(DESCONTO, chunks) is False
+
+    retriever = InMemoryRetriever(chunks)
     assert len(await retriever.search(DESCONTO)) == 5  # not the empty-retrieval path
 
     llm = FakeProvider()
@@ -194,7 +247,7 @@ async def test_on_topic_non_answering_evidence_is_refused():
             "O desconto para pagamento à vista é de 5%.", ["com-reaj-2025#2"]
         )
     )
-    result = await _ask(llm, DESCONTO, PREMIUM_CHUNKS)
+    result = await _ask(llm, DESCONTO, chunks)
     answer = result.answer or ""
 
     assert result.outcome == "refused"
@@ -333,3 +386,113 @@ async def test_an_empty_refusal_text_still_collapses_to_none():
 
     assert result.outcome == "refused"
     assert result.answer is None
+
+
+# --------------------------------------------------------------------------
+# T-46 / T-47: the gate order, and the measurement that chose to leave it alone.
+#
+# S9 reported that `judge()` checks ambiguity before sufficiency, so for any
+# question whose evidence spans more than one product the sufficiency gate never
+# runs. That is true, and the two obvious repairs — swap the blocks, or refuse
+# only when the draft is unsupported by the ENTIRE retrieved set — were both
+# measured against LIVE drafts over the indexed 220-chunk corpus
+# (`python -m scripts.gate_order_probe`) and both were rejected:
+#
+#   draft                                   ratio(cited)  ratio(retrieved)
+#   gs-008 trap "…à vista é de 5%."            0.000          0.333
+#   gs-009 live "…varia conforme o produto…"   0.643          0.643
+#   au-004 live "…R$ 150,00 … R$ 100,00…"      0.533          0.667
+#
+# SUFFICIENCY_MIN is 0.80, so under EITHER repair gs-009 and au-004 become
+# refusals — a registered submission blocker twice over (boundary_pass_rate 1.00
+# and combined_min_precision 1.00). The separation that does exist is driven by
+# sentence length, not by groundedness: the trap has three content terms so one
+# unsupported term costs it 0.333, while a fluent answer's conversational filler
+# ("posso", "quiser", "você", "confirmar") dilutes a perfectly grounded claim.
+# Picking a constant between 0.333 and 0.643 off four samples is exactly the move
+# `evals/thresholds.yaml` forbids.
+#
+# So the order stands and these two tests exist to make a future swap LOUD
+# rather than silent — the failure this pair is really guarding against is a
+# reasonable-looking reorder landing with no test noticing, which is what
+# happened to the version of T-16 that spanned one product.
+# --------------------------------------------------------------------------
+
+
+async def test_absent_fact_over_multi_product_evidence_ships_no_number():
+    """T-46 / R-02: the gs-008 trap draft yields a non-answer and no invented figure.
+
+    Both gates would reject this draft — `is_ambiguous` is True AND the draft is
+    unsupported by what it cites — and this pins which one wins today, together
+    with the safety property that holds either way: no percentage reaches the
+    analyst. Swap the two blocks in `judge()` and the outcome below becomes
+    "refused" and this test goes red; read the block comment above before
+    changing it, because that swap was measured and it breaks gs-009 and au-004.
+    """
+    products = grounding.spanned_products(PREMIUM_CHUNKS)
+    assert products == {"Auto", "Residencial", "Empresarial"}   # the real gs-008 shape
+    assert grounding.is_ambiguous(DESCONTO, PREMIUM_CHUNKS) is True
+
+    trap = "O desconto para pagamento à vista é de 5%."
+    cited = [c for c in PREMIUM_CHUNKS if c.id == "com-reaj-2025#2"]
+    # The sufficiency gate would also have rejected it; it simply never runs.
+    assert grounding.is_supported(trap, cited) is False
+
+    llm = FakeProvider()
+    llm.enqueue(FakeProvider.answered(trap, ["com-reaj-2025#2"]))
+    result = await _ask(llm, DESCONTO, PREMIUM_CHUNKS)
+    answer = result.answer or ""
+
+    assert result.outcome == "needs_clarification"
+    assert PERCENTAGE.search(answer) is None    # gs-008 must_not_contain: ["%"]
+    assert "5%" not in answer
+    assert result.citations == []
+
+
+def test_a_supported_multi_product_draft_would_be_refused_by_a_bare_reorder():
+    """T-47 / R-02: the measurement that rejected the reorder, pinned as a test.
+
+    This is the au-004 shape — a real fact that genuinely differs per product,
+    which the brief wants answered with a clarifying question rather than a
+    refusal. The live draft's grounded ratio is below SUFFICIENCY_MIN against
+    both the cited chunks and the whole retrieved set, so sufficiency-first would
+    refuse it under either candidate repair.
+
+    Pinned so that a later edit to `_STOPWORDS`, `_MIN_TERM_LEN` or
+    `SUFFICIENCY_MIN` fails loudly here instead of silently converting
+    clarifications into false refusals. The ratios are the ones
+    `scripts/gate_order_probe.py` measured against live drafts; the fixture below
+    reproduces the shape offline.
+    """
+    draft_text = (
+        "A franquia da cobertura de vidros é de R$ 150,00 para o Seguro Auto e de "
+        "R$ 100,00 para o Seguro Residencial. Se você quiser, posso confirmar qual "
+        "se aplica à sua apólice."
+    )
+    ratio_cited = grounding.grounded_ratio(draft_text, GLASS_CHUNKS[:1])
+    ratio_all = grounding.grounded_ratio(draft_text, GLASS_CHUNKS)
+
+    assert ratio_cited < grounding.SUFFICIENCY_MIN
+    assert ratio_all < grounding.SUFFICIENCY_MIN
+    # Both candidate repairs key on these two numbers, and both therefore refuse
+    # a draft that the case requires be answered with a question.
+    assert grounding.is_ambiguous(FRANQUIA_VIDROS, GLASS_CHUNKS) is True
+
+
+def test_the_prompt_no_longer_teaches_the_model_to_declare_ambiguity():
+    """T-47 / R-02: clarification is owned by deterministic code, not by the prompt.
+
+    `judge()` returns the model's own `needs_clarification` before either gate
+    runs, and the system prompt used to tell the model to emit exactly that when
+    "it names no product and the evidence spans more than one" — gs-008's shape.
+    Measured live: all three of gs-008, gs-009 and au-004 hit that passthrough,
+    so no deterministic gate decided any of them. Removing the instruction moved
+    gs-009 and au-004 onto the deterministic ambiguity gate with the same
+    outcomes, which is what makes "refusal does not depend on trusting the model"
+    an accurate description rather than an aspiration.
+    """
+    prompt = _system_prompt()
+
+    assert "needs_clarification" in prompt          # the outcome still exists
+    assert "spans more than one" not in prompt      # the ambiguity rule does not
+    assert "names no product" not in prompt
