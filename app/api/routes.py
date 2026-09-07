@@ -151,6 +151,8 @@ def _citation_out(citation) -> CitationOut:
         version=citation.version,
         effective_date=citation.effective_date,
         snippet=citation.snippet,
+        source_kind=citation.source_kind,
+        superseded=citation.superseded,
         page_from=citation.page_from,
         page_to=citation.page_to,
     )

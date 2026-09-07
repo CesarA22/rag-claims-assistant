@@ -167,6 +167,8 @@ class SqlConversationRepository:
                             "version": c.version,
                             "effective_date": c.effective_date,
                             "snippet": c.snippet,
+                            "source_kind": c.source_kind,
+                            "superseded": c.superseded,
                         }
                         for i, c in enumerate(answer.citations)
                     ],
@@ -269,6 +271,8 @@ class SqlConversationRepository:
                     version=row["version"],
                     effective_date=row["effective_date"],
                     snippet=row["snippet"],
+                    source_kind=row["source_kind"],
+                    superseded=row["superseded"],
                 )
             )
         return grouped

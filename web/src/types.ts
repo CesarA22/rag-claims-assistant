@@ -17,6 +17,11 @@ export interface CitationOut {
   version: string
   effective_date: string
   snippet: string
+  /** D-05. 'claims' means `section` is a named database query rather than a
+   *  document section, which changes what the panel calls both of them.
+   *  Null only on citations written before migration 0002 recorded it. */
+  source_kind: 'corpus' | 'claims' | null
+  superseded: boolean
   page_from: number | null
   page_to: number | null
 }

@@ -37,7 +37,7 @@ from app.domain.models import TurnStatus
 metadata = MetaData()
 
 # Generated from the Literal, never retyped. Two spellings of this vocabulary
-# would drift the day someone adds a sixth value; T-38 asserts they match.
+# would drift the day someone adds a sixth value; T-54 asserts they match.
 MESSAGE_STATUS = Enum(
     *get_args(TurnStatus),
     name="message_status",
@@ -160,6 +160,11 @@ citations = Table(
     Column("version", Text, nullable=False),
     Column("effective_date", Date, nullable=False),
     Column("snippet", Text, nullable=False),
+    # D-05. Nullable on purpose: rows written before revision 0002 are real
+    # citations whose provenance was never recorded, and back-filling "corpus"
+    # onto them would invent a fact about a historical answer.
+    Column("source_kind", Text),
+    Column("superseded", Boolean, nullable=False, server_default="false"),
     UniqueConstraint("message_id", "ordinal", name="citations_message_ordinal"),
     Index("citations_document", "document_code", "version"),
 )

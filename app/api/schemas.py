@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -18,8 +19,13 @@ class CitationOut(BaseModel):
     version: str
     effective_date: date
     snippet: str
+    # D-05. `source_kind` is what lets the panel say "Banco de sinistros" rather
+    # than guessing from document_code, and it survives a history read because
+    # revision 0002 persists it. Null only on citations written before that.
+    source_kind: Literal["corpus", "claims"] | None = None
+    superseded: bool = False
     # Null on a citation read back from storage: the citations table has no page
-    # columns and does not gain any this session. The panel omits the line.
+    # columns and does not gain any. The panel omits the line.
     page_from: int | None = None
     page_to: int | None = None
 

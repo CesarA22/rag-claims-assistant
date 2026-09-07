@@ -163,6 +163,8 @@ def citation_from_evidence(evidence: Evidence) -> Citation:
         version=evidence.version,
         effective_date=evidence.effective_date,
         snippet=snippet,
+        source_kind=evidence.source_kind,
+        superseded=evidence.superseded,
         page_from=evidence.page_from,
         page_to=evidence.page_to,
     )

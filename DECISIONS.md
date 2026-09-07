@@ -1225,3 +1225,69 @@ times in 5. So the instruction's removal made the deterministic gate *reachable*
 rather than *reached*: the model volunteers a clarification for a genuinely
 ambiguous question without being told to. The passthrough, not the gate order, is
 still what decides these two cases most of the time.
+
+### F6b — the register could claim a test nobody wrote, and did
+
+`scripts/traceability.py` validated status vocabulary and notes and never checked
+that a listed test id exists. That is how `D-05`'s `tests: [T-27]` survived three
+sessions with **T-27 existing nowhere in the repository**. A register that names
+a missing test is worse than one admitting a gap: it converts a hole into a
+claim, in the one document whose entire value is that it cannot do that.
+
+The rule now enumerates ids from the parsed `tests` field — never by regexing raw
+YAML, which would trip on `T-12` in R-10's prose and on the string "T-20..T-26" —
+and scans exactly two roots: `tests/**/*.py` and `web/src/**/*.test.tsx`. The web
+half is not optional: T-41 and T-42 live only there, a check that walks `tests/`
+alone reports two phantoms that are not phantoms, and the reflex fix for that is
+an allowlist that would blind the rule to two real requirements forever. A
+repo-wide glob would make it vacuous instead — every id is mentioned somewhere
+under `docs/plans/`. A missing scan root raises rather than scanning nothing,
+because a silent empty scan either fails everything at once or, once someone
+makes empty mean permissive, passes forever; the Docker image copies `scripts/`
+but neither `tests/` nor `web/`, so this must never run from inside it.
+
+**The rule has one sharp edge and it bit immediately.** Ids are harvested from
+test-file *text*, so a dead id named in a docstring reads as alive to the check
+that exists to say it is not. Both places this session that wanted to name one —
+T-54's docstring, and T-55's own phantom fixture — assemble or avoid the string
+instead, and the convention is written into `known_test_ids()`.
+
+**Two more honesty gaps the rule cannot catch, fixed by hand.** T-39 said
+"T-39 / R-04" in its own docstrings while R-04 listed `[T-29, T-32, T-34]`; it is
+registered now, and T-55 asserts the other direction — no written test goes
+unclaimed — so this cannot recur silently. And `app/storage/models.py` claimed a
+test asserted `MESSAGE_STATUS` matched `get_args(TurnStatus)` when none existed.
+Written rather than deleted (T-54): the generation could be replaced with a
+literal tuple in one careless edit, and the failure mode is a status the database
+rejects at write time, on the error path.
+
+### D-05 — persisted provenance, and the migration that was worth its cost
+
+`source_kind` and `superseded` are carried on `Citation` / `CitationOut` **and
+stored**, by Alembic revision 0002. The cheaper option was the existing
+`page_from`/`page_to` precedent — leave them off the table, null on replay — and
+it was rejected. Page numbers are a display nicety whose absence costs a line;
+provenance is what D-05 *is*, and a history read that cannot say whether an
+answer rested on a document or on a database query has lost the differential
+rather than degraded it.
+
+Both columns are nullable rather than back-filled. Rows written before 0002 never
+recorded provenance, and stamping `source_kind='corpus'` onto them would invent a
+fact about a historical answer; null means "not recorded", which is true.
+
+**The panel speaks each source in its own vocabulary**, because one label for
+both would be a false statement rather than a clumsy one. `effective_date` is the
+date a corpus version came *into* force and the date a database snapshot *stops*
+— so a corpus citation reads *Documento / Seção / Vigente desde* and a claims
+citation reads *Fonte / Consulta / Dados até*. F3 makes it pay twice: a database
+citation renders `Banco de sinistros · snapshot · dados até 2026-02-11`, which is
+literally "the freshness of the queried data" the differential asks for.
+
+**T-40 caught the schema drift within the minute**, exactly as expected — and
+then needed fixing itself. It renders the whole revision chain offline and
+compared only `CREATE TABLE` statements, so revision 0002's `ALTER TABLE
+citations ADD COLUMN` was invisible and it reported the new columns as missing
+from the migration that had just added them. It now replays `ADD`/`DROP COLUMN`
+onto the created picture, and a second test asserts it can see the alter —
+because a blind reader does not fail on a new column, it silently stops seeing
+one and goes on passing while the schema and the models diverge.

@@ -18,7 +18,7 @@ requirements:
       - app/api/schemas.py
       - app/api/routes.py
       - app/storage/sql.py
-    tests: [T-01, T-02, T-13, T-14, T-36, T-37, T-40]
+    tests: [T-01, T-02, T-13, T-14, T-36, T-37, T-40, T-49, T-54, T-55]
     notes: "S7c added GET /conversations/{id}/messages, which renders all five statuses including failed with its error_code — the reason `failed` has been in TurnStatus since S1. Distinct from recent_messages, which feeds the model and drops failed and pending; T-36 asserts the difference rather than leaving it to be rediscovered. T-37 pins the citation query as one SELECT."
 
   - id: R-02
@@ -29,8 +29,8 @@ requirements:
       - app/services/ask.py
       - app/services/grounding.py
       - web/src/components/TurnCard.tsx
-    tests: [T-03, T-16, T-17, T-41]
-    notes: "S9 FINDING, unfixed and reported rather than patched: the sufficiency gate is unreachable for any question whose evidence spans more than one product, because judge() checks ambiguity first. Measured on gs-008 — evidence spans {Auto, Residencial, Empresarial}, the question names none, so is_ambiguous fires and the turn returns needs_clarification instead of refused. A model that refuses of its own accord still yields refused; a model that attempts an answer never reaches the sufficiency check. That inverts the architectural claim that refusal does not depend on trusting the model. The fix is a reordering plus a test pinning the order, and it gets its own commit. S6b landed both gates in app/services/grounding.py and the xfail markers came off. Sufficiency is lexical — the answer's content terms must appear in the evidence it cites, at or above SUFFICIENCY_MIN. It catches gs-008, where the answer names a subject (desconto) the cited text never mentions. It does not catch a fluent paraphrase that reuses the source's words to say something the source does not; that needs an entailment judgment and a second model call is not affordable inside the US$0.05 ceiling. Stated in DECISIONS.md rather than implied."
+    tests: [T-03, T-16, T-17, T-41, T-46, T-47, T-50]
+    notes: "S9 FINDING, still open and now measured rather than merely reported: the sufficiency gate is unreachable for any question whose evidence spans more than one product, because judge() checks ambiguity first. S11 measured both proposed repairs against live drafts over the indexed corpus (scripts/gate_order_probe.py) and rejected both — a bare reorder and the two-set discriminator each turn gs-009 into a refusal, and gs-009's own acceptance criterion accepts a clarifying question. What S11 did land is the half that measured clean: system.md no longer instructs the model to self-declare needs_clarification for that exact shape, so the deterministic gate is reachable rather than bypassed; sampled afterwards the model still volunteers a clarification 5/5 on gs-009 and 3/5 on au-004, so reachable is not the same as reached and gs-008 still rests on the model refusing of its own accord. T-46 and T-47 pin the order and the ratios so a later reorder fails loudly instead of silently converting clarifications into false refusals — which the previous T-16 could not do, its fixture spanning one product and passing under both orders. Full numbers in DECISIONS.md. Measured on gs-008 — evidence spans {Auto, Residencial, Empresarial}, the question names none, so is_ambiguous fires and the turn returns needs_clarification instead of refused. A model that refuses of its own accord still yields refused; a model that attempts an answer never reaches the sufficiency check. That inverts the architectural claim that refusal does not depend on trusting the model. The fix is a reordering plus a test pinning the order, and it gets its own commit. S6b landed both gates in app/services/grounding.py and the xfail markers came off. Sufficiency is lexical — the answer's content terms must appear in the evidence it cites, at or above SUFFICIENCY_MIN. It catches gs-008, where the answer names a subject (desconto) the cited text never mentions. It does not catch a fluent paraphrase that reuses the source's words to say something the source does not; that needs an entailment judgment and a second model call is not affordable inside the US$0.05 ceiling. Stated in DECISIONS.md rather than implied."
 
   - id: R-03
     title: Policyholder personal data never appears in an answer
@@ -44,8 +44,8 @@ requirements:
       - app/services/ask.py
       - app/llm/base.py
       - app/api/errors.py
-    tests: [T-04, T-15, T-18]
-    notes: "S6b closed all three egress paths S6 measured. A PII question over PII-bearing evidence is refused before a draft is considered (grounding.is_pii_request, keyed on contains_pii / doc_role which S2 populated and nothing read). citation_from_evidence redacts before truncating — the 240-char cut was chosen for layout and happened to cap the leak at two of five rows. The failure log now carries prompt_hash and evidence_ids, never prompt text, filtered at the handler as well as the formatter. redact() remains layer 2 only: it matches CPF, phone and e-mail patterns, so it cannot remove a name."
+    tests: [T-04, T-15, T-18, T-45, T-51]
+    notes: "S11 found a fourth egress path S6b did not measure and closed it: the degraded handler called excerpts_answer() directly and never called judge(), so a provider outage suspended requirement 3 inside the scenario of requirement 5 and shipped policyholder NAMES in citation snippets — CPF and phone scrubbed, names intact, because redact() matches patterns. The gate there is evidence_carries_pii alone, not is_pii_request: with no model answer to gate, the question-shape half of that AND decides nothing, and a neutral question over the same minutes chunk leaked two names (T-45). S11 also found redact() ran on the answered branch only, so refusals and clarifications shipped raw model text; it now runs at validate_citations' two early returns, which is exactly-once coverage (T-51). Residual, named: neither change cleans rows already written to citations.snippet, and the degraded path is safe because it refuses, not because anything learned to remove a name. S6b closed the three egress paths S6 measured. A PII question over PII-bearing evidence is refused before a draft is considered (grounding.is_pii_request, keyed on contains_pii / doc_role which S2 populated and nothing read). citation_from_evidence redacts before truncating — the 240-char cut was chosen for layout and happened to cap the leak at two of five rows. The failure log now carries prompt_hash and evidence_ids, never prompt text, filtered at the handler as well as the formatter. redact() remains layer 2 only: it matches CPF, phone and e-mail patterns, so it cannot remove a name."
 
   - id: R-04
     title: At most US$0.05 per question and p95 latency under 8 s
@@ -55,8 +55,8 @@ requirements:
       - app/services/budget.py
       - app/llm/resilient.py
       - app/llm/openai_provider.py
-    tests: [T-29, T-32, T-34]
-    notes: "Ceiling, min-retry-budget and max_output_tokens are enforced. p95 < 8s is a live-eval claim — T-32 stops us spending the tail, but the number itself is measured in EVALS.md."
+    tests: [T-29, T-32, T-34, T-39, T-52]
+    notes: "Ceiling, min-retry-budget and max_output_tokens are enforced. p95 < 8s and cost per question are live-eval claims: T-32 stops us spending the tail, but the numbers come from a live run. Until S11 there had been no live run, so EVALS.md said the opposite of what this note claimed — it printed cost and latency from FakeProvider under an explicit warning that they were worthless. S11 ran tier 2 live and the report now renders average cost per question (the brief names it and it existed nowhere) with real PASS/MISS verdicts on p50 and p95 instead of an em dash, and refuses to print PASS at all when the input is not live. T-52 guards the harness itself, including the replay hazard that would have rendered thirty fake turns as a live run at US$0.0000."
 
   - id: R-05
     title: Bounded cost-aware retry and degradation
@@ -85,7 +85,7 @@ requirements:
       - app/llm/openai_provider.py
       - app/llm/chaos.py
       - app/main.py
-    tests: [T-11, T-28]
+    tests: [T-11, T-28, T-48]
 
   - id: R-08
     title: Grounded, table-aware ingestion
@@ -177,6 +177,6 @@ requirements:
       - app/api/schemas.py
       - web/src/components/CitationList.tsx
     tests: [T-27]
-    status: partial
-    session: S8
-    notes: "S8 took the page numbers only, because 40-frontend.mdc names 'page' in the citation panel. chunks.page_from/page_to were already populated, so it cost two columns in the outermost SELECT of hybrid.py — no ranking constant moved — plus the fields on Evidence, Citation and CitationOut. Nullable on Citation because sql.py rebuilds it field-by-field from a citations table that has no page columns; a required int would raise on every history read, and T-35 pins that. Remaining gap: superseded, source_kind and query_name on Citation, and the freshness line. A citation replayed from history shows no page."
+    status: done
+    session: S11
+    notes: "S8 took the page numbers only and left superseded, source_kind and the freshness line as the gap; T-27 was listed and never written, which is the phantom that motivated the traceability rule now catching it. S11 closes both. source_kind and superseded are carried on Citation and CitationOut and PERSISTED by Alembic revision 0002, which is the decision worth recording: the cheaper option was the page_from/page_to precedent of leaving them off the table and null on replay, and it was rejected because provenance is what D-05 is about — a history read that cannot say whether an answer rested on a document or on a database query has lost the differential rather than degraded it. Both columns are nullable rather than back-filled: rows written before 0002 never recorded provenance, and stamping source_kind=corpus onto them would invent a fact about a historical answer. The panel now speaks each source in its own vocabulary — Documento/Seção/Vigente desde for the corpus, Fonte/Consulta/Dados até for a database row — because effective_date means the date a version came into force on one and the date a snapshot stops on the other, and one label for both is the wrong claim about the data. F3 makes this pay twice: a claims citation renders Banco de sinistros · snapshot · dados até 2026-02-11, which is literally the freshness of the queried data the differential asks for. T-40 caught the schema drift the same day, because a CREATE-TABLE-only reader could not see an ALTER TABLE ADD COLUMN; it now replays alters and asserts it can see them."

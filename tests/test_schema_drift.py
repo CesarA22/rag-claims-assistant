@@ -1,4 +1,4 @@
-"""T-40 / R-01: the Alembic revision and models.py describe the same schema.
+"""T-40 / T-54 / R-01: the Alembic revision and models.py describe the same schema.
 
 S7a hand-writes revision 0001 rather than autogenerating it, because `chunks.tsv`
 is a GENERATED column and `chunks.embedding` is vector(1536) — neither survives
@@ -14,6 +14,12 @@ compares the column names it creates against `models.metadata`.
 Names only, deliberately — a renamed or forgotten column is the realistic drift,
 and comparing rendered type text would fail on spelling differences that do not
 matter (TEXT vs Text, DEFAULT '0' vs DEFAULT 0).
+
+The rendered SQL is the WHOLE chain, not revision 0001, so later revisions have
+to be applied to the picture the CREATE TABLE statements build. S11 added
+revision 0002, which is `ALTER TABLE citations ADD COLUMN` — invisible to a
+CREATE-only reader, so this test reported as missing the very columns the
+migration had just added.
 """
 
 from __future__ import annotations
@@ -26,7 +32,8 @@ from pathlib import Path
 from alembic import command
 from alembic.config import Config
 
-from app.storage.models import metadata
+from app.domain.models import TurnStatus
+from app.storage.models import MESSAGE_STATUS, metadata
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -56,12 +63,33 @@ def _columns_from_sql(body: str) -> set[str]:
     return columns
 
 
+_ALTER_COLUMN = re.compile(
+    r"ALTER TABLE (\w+) (ADD|DROP) COLUMN (\w+)\b", re.IGNORECASE
+)
+
+
+def _apply_alters(sql: str, rendered: dict[str, set[str]]) -> None:
+    """Replay ALTER TABLE ADD/DROP COLUMN onto the CREATE TABLE picture.
+
+    In the order they appear, so an add followed by a later drop leaves the
+    column absent — which is what running the chain actually does.
+    """
+    for table, action, column in _ALTER_COLUMN.findall(sql):
+        if table not in rendered:
+            continue
+        if action.upper() == "ADD":
+            rendered[table].add(column)
+        else:
+            rendered[table].discard(column)
+
+
 def test_migration_and_models_agree_on_every_column():
-    """T-40 / R-01: revision 0001 creates exactly the columns models.py declares."""
+    """T-40 / R-01: the whole revision chain creates exactly the columns models.py declares."""
     sql = _render_migration_sql()
     rendered = {
         name: _columns_from_sql(body) for name, body in _CREATE_TABLE.findall(sql)
     }
+    _apply_alters(sql, rendered)
     rendered.pop("alembic_version", None)
 
     assert set(rendered) == set(metadata.tables), (
@@ -88,3 +116,48 @@ def test_citations_has_no_foreign_key_to_chunks():
 
     assert "chunk_id TEXT" in citations
     assert "REFERENCES chunks" not in citations
+
+
+def test_the_drift_check_sees_alter_table_add_column():
+    """T-40 / R-01: the reader itself is checked, because a blind one passes everything.
+
+    A CREATE-TABLE-only reader does not FAIL on a revision that adds a column —
+    it silently stops seeing that column, and goes on passing while models.py and
+    the database diverge. Asserting the ALTER is picked up is the difference
+    between a guard and a formality.
+    """
+    sql = _render_migration_sql()
+    assert "ALTER TABLE citations ADD COLUMN source_kind" in sql
+
+    rendered = {
+        name: _columns_from_sql(body) for name, body in _CREATE_TABLE.findall(sql)
+    }
+    assert "source_kind" not in rendered["citations"]      # not in any CREATE TABLE
+    _apply_alters(sql, rendered)
+    assert "source_kind" in rendered["citations"]          # added by revision 0002
+    assert "superseded" in rendered["citations"]
+
+
+def test_the_status_enum_is_generated_from_the_literal():
+    """T-54 / R-01: MESSAGE_STATUS and TurnStatus carry the same five values.
+
+    `app/storage/models.py` claimed for two sessions that a test asserted this,
+    naming an id nobody had written. The claim was reasonable — the enum IS built
+    with `get_args(TurnStatus)`, so it cannot drift by being retyped — but a
+    source comment naming a test that does not exist is the same dishonesty the
+    register check now catches, in a file no register rule looks at.
+
+    The dead id is deliberately not spelled out here. `scripts/traceability.py`
+    harvests every `T-nn` it finds in a test file, so writing one in prose would
+    make that id look real to the very check that exists to say it is not.
+
+    Written rather than deleted because the property is worth pinning: the
+    generation could be replaced with a literal tuple in one careless edit, and
+    the failure mode is a status the database rejects at write time, on the
+    failure path, in production.
+    """
+    from typing import get_args
+
+    assert tuple(MESSAGE_STATUS.enums) == get_args(TurnStatus)
+    assert MESSAGE_STATUS.name == "message_status"
+    assert "failed" in MESSAGE_STATUS.enums   # the one only the error path uses
