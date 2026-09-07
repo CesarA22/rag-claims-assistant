@@ -22,6 +22,11 @@ class Completion(BaseModel):
     parsed: dict[str, Any] | None = None
     usage: Usage = Field(default_factory=Usage)
     model: str = "fake-1"
+    # The provider stopped at the output cap rather than finishing. Distinguishes
+    # our own budget policy biting from the provider breaking its schema contract
+    # — two failures that look identical at `parsed is None` and deserve
+    # different outcomes (a refusal, and a 502).
+    truncated: bool = False
 
 
 class LLMProvider(Protocol):

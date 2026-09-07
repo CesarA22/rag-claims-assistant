@@ -18,6 +18,7 @@ _STATUS = {
     "provider_unavailable": 503,
     "rate_limited": 429,
     "invalid_request": 400,
+    "model_contract": 502,
     "provider_degraded": 503,
     "circuit_open": 503,
 }
@@ -27,6 +28,7 @@ _TITLES = {
     "provider_unavailable": "Provider unavailable",
     "rate_limited": "Rate limited",
     "invalid_request": "Invalid request",
+    "model_contract": "Model contract violation",
     "provider_degraded": "Provider degraded",
     "circuit_open": "Circuit open",
     "internal_error": "Internal error",
@@ -37,6 +39,7 @@ _DETAILS = {
     "provider_unavailable": "The language-model provider is unavailable.",
     "rate_limited": "The language-model provider rate-limited the request.",
     "invalid_request": "The request was rejected.",
+    "model_contract": "The language-model provider returned an unusable response.",
     "provider_degraded": "The language-model provider could not complete the request.",
     "circuit_open": "The language-model provider circuit is open.",
     "internal_error": "The request could not be completed.",
@@ -50,6 +53,7 @@ _LOG_CONTEXT_KEYS = (
     "prompt_hash",
     "evidence_ids",
     "upstream_status",
+    "parsed_keys",
     "attempt",
     "latency_ms",
 )

@@ -31,6 +31,18 @@ class InvalidRequest(InsurCoError):
     code = "invalid_request"
 
 
+class ModelContract(InsurCoError):
+    """The provider returned a body that is not the schema it was given.
+
+    Not a retryable transport failure and not a refusal: the model broke the
+    structured-output contract. Surfaced as its own code so the turn fails
+    honestly, rather than shipping a refusal that blames citation validation for
+    something citation validation never saw.
+    """
+
+    code = "model_contract"
+
+
 class ProviderDegraded(InsurCoError):
     """Attempts exhausted on a retryable failure. ask.py may still render excerpts."""
 

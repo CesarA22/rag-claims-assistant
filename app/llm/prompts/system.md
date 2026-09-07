@@ -13,4 +13,4 @@ Outcomes:
 - needs_clarification — the question is ambiguous (for example it names no
   product and the evidence spans more than one). Ask a short clarifying question.
 
-Respond using the given JSON schema.
+Respond with a JSON object that conforms to the given schema.

@@ -552,7 +552,11 @@ WHERE c.document_code = 'NI-014' AND c.version = '1.0' ORDER BY m.seq;
 `SELECT client_message_id, count(*) ... GROUP BY 1` returns 1 for every id: the
 duplicate POST created no second row, and the provider was called once.
 `prompt_version` persisted as `4adf882fbe66` on both completed turns and is empty
-on the failed one, which never reached `complete_turn`.
+on the failed one, which never reached `complete_turn`. That value is historical:
+S11 reshaped `DRAFT_SCHEMA` for strict structured output and reworded one line of
+`system.md`, and `_prompt_version()` hashes both, so the current value is
+`e3307f28ac81`. The bump is the mechanism working — a prompt or schema change is
+meant to invalidate replays — not a migration.
 
 ## S8 — the interface, and what building it found in the API
 

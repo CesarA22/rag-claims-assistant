@@ -9,7 +9,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError
 
-from app.domain.errors import CircuitOpen, InsurCoError, ProviderDegraded
+from app.domain.errors import CircuitOpen, InsurCoError, ModelContract, ProviderDegraded
 from app.domain.models import (
     Answer,
     Citation,
@@ -28,6 +28,13 @@ from app.storage.base import ConversationRepository
 
 _PROMPTS = Path(__file__).resolve().parents[1] / "llm" / "prompts"
 
+# Shaped for OpenAI strict structured output: every object carries
+# `additionalProperties: false` and lists every one of its properties in
+# `required`. That is not stylistic — the adapter sends `strict: True` and the
+# API rejects a schema that omits either. `citations` is therefore required and
+# an empty list is how "no citations" is said; it is deliberately NOT nullable,
+# because `citations: null` fails `Draft` validation and reproduces the exact
+# spurious refusal strict mode was turned on to remove.
 DRAFT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -42,15 +49,21 @@ DRAFT_SCHEMA: dict[str, Any] = {
                 "type": "object",
                 "properties": {"evidence_id": {"type": "string"}},
                 "required": ["evidence_id"],
+                "additionalProperties": False,
             },
         },
     },
-    "required": ["outcome", "answer"],
+    "required": ["outcome", "answer", "citations"],
+    "additionalProperties": False,
 }
 
 _CITATION_REFUSAL = (
     "Não foi possível validar as citações da resposta. "
     "As fontes recuperadas não sustentam o que foi gerado."
+)
+_TRUNCATED_REFUSAL = (
+    "A resposta excedeu o limite de tamanho configurado e foi interrompida. "
+    "Refaça a pergunta de forma mais específica."
 )
 _DEGRADED_BANNER = (
     "Não foi possível gerar um resumo. Seguem os trechos recuperados das fontes."
@@ -253,10 +266,24 @@ def _format_evidence(evidence: list[Evidence]) -> str:
 
 
 def _parse_draft(completion: Completion) -> Draft:
+    """Two different failures hide behind one ValidationError. Separate them.
+
+    A body cut off at our own output cap is a budget decision biting, and a
+    refusal is the honest thing to ship for it. A body that is well-formed and
+    simply is not the schema — most often the JSON Schema echoed back — is the
+    provider breaking its contract, and returning `_CITATION_REFUSAL` for that
+    told the analyst that the sources did not support an answer the model never
+    actually produced. Fail the turn instead.
+    """
     try:
         return Draft.model_validate(completion.parsed)
-    except ValidationError:
-        return Draft(outcome="refused", answer=_CITATION_REFUSAL, citations=[])
+    except ValidationError as exc:
+        if completion.truncated:
+            return Draft(outcome="refused", answer=_TRUNCATED_REFUSAL, citations=[])
+        keys = sorted(completion.parsed) if isinstance(completion.parsed, dict) else []
+        # Keys only, never values: the body may quote the retrieved corpus, and
+        # ingest-time redaction does not remove policyholder names.
+        raise ModelContract(context={"parsed_keys": keys}) from exc
 
 
 def _from_turn(

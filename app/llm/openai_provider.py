@@ -76,12 +76,19 @@ class OpenAIProvider:
         if instructions is not None:
             kwargs["instructions"] = instructions
         if schema is not None:
+            # strict=True, not False. Measured against the live model, a
+            # non-strict schema is honoured on roughly one call in three; the
+            # other two echo the JSON Schema itself back as the answer, which
+            # the pipeline used to surface as a citation-validation refusal.
+            # Strict mode requires every schema object to carry
+            # `additionalProperties: false` and to list every property in
+            # `required` — see the invariant test over DRAFT_SCHEMA.
             kwargs["text"] = {
                 "format": {
                     "type": "json_schema",
                     "name": "answer",
                     "schema": schema,
-                    "strict": False,
+                    "strict": True,
                 }
             }
         if timeout_s is not None:
@@ -103,7 +110,8 @@ class OpenAIProvider:
                 raise ProviderUnavailable(context=ctx) from exc
             raise InvalidRequest(context=ctx) from exc
 
-        if response.status == "incomplete":
+        truncated = response.status == "incomplete"
+        if truncated:
             logger.warning("finish_reason=length model=%s", self.model)
 
         text = response.output_text
@@ -116,7 +124,13 @@ class OpenAIProvider:
             parsed = loaded
 
         usage = _usage_from(response.usage)
-        return Completion(text=text, parsed=parsed, usage=usage, model=response.model or self.model)
+        return Completion(
+            text=text,
+            parsed=parsed,
+            usage=usage,
+            model=response.model or self.model,
+            truncated=truncated,
+        )
 
 
 def _split_messages(messages: list[Message]) -> tuple[str | None, list[dict[str, str]]]:

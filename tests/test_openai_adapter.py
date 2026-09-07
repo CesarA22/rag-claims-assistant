@@ -1,4 +1,4 @@
-"""T-28 / T-34: adapter maps SDK errors; the output cap and reasoning pin cannot be dropped."""
+"""T-28 / T-34 / T-48: adapter maps SDK errors; the output cap, reasoning pin and strict flag cannot be dropped."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from openai import AsyncOpenAI
 from app.domain.errors import InvalidRequest, ProviderTimeout, ProviderUnavailable, RateLimited
 from app.llm.base import Message
 from app.llm.openai_provider import OpenAIProvider
+from app.services.ask import DRAFT_SCHEMA
 
 MSGS = [Message(role="system", content="You are an assistant."), Message(role="user", content="q")]
 URL = "https://api.openai.com/v1/responses"
@@ -102,3 +103,54 @@ async def test_adapter_always_sends_output_cap_and_reasoning_none():
     assert body["max_output_tokens"] == 800
     assert body["reasoning"]["effort"] == "none"
     assert body["temperature"] == 0
+
+
+@respx.mock
+async def test_a_schema_is_always_sent_strict():
+    """T-48 / R-01: `strict` is True on the wire whenever a schema is passed.
+
+    With strict False the live model honoured the schema on about one call in
+    three and otherwise echoed the JSON Schema back, which the pipeline surfaced
+    as a citation refusal. Nothing offline can reproduce that — FakeProvider
+    throws `schema` away — so the flag itself is what gets pinned.
+
+    Asserted on its own call, not bolted onto the cap/reasoning test above:
+    that one calls complete() with no schema, so `body["text"]` does not exist.
+    """
+    route = respx.post(URL).mock(return_value=httpx.Response(200, json=SUCCESS_BODY))
+    provider = _provider()
+    await provider.complete(MSGS, schema=DRAFT_SCHEMA)
+
+    body = json.loads(route.calls.last.request.content.decode())
+    fmt = body["text"]["format"]
+    assert fmt["strict"] is True
+    assert fmt["type"] == "json_schema"
+    assert fmt["schema"] == DRAFT_SCHEMA
+
+
+@respx.mock
+async def test_no_schema_means_no_text_format_block():
+    """T-48 / R-07: the schema-free call is unchanged — no `text` key at all."""
+    route = respx.post(URL).mock(return_value=httpx.Response(200, json=SUCCESS_BODY))
+    provider = _provider()
+    await provider.complete(MSGS)
+
+    assert "text" not in json.loads(route.calls.last.request.content.decode())
+
+
+@respx.mock
+async def test_an_incomplete_response_is_reported_as_truncated():
+    """T-48 / R-05: `status: incomplete` reaches the caller instead of only the log.
+
+    The output cap is our own budget policy. _parse_draft has to tell it apart
+    from the provider returning a body that is not the schema, and the provider's
+    own status is the only honest signal for that.
+    """
+    body = {**SUCCESS_BODY, "status": "incomplete"}
+    respx.post(URL).mock(return_value=httpx.Response(200, json=body))
+    provider = _provider()
+
+    assert (await provider.complete(MSGS)).truncated is True
+
+    respx.post(URL).mock(return_value=httpx.Response(200, json=SUCCESS_BODY))
+    assert (await _provider().complete(MSGS)).truncated is False

@@ -29,6 +29,10 @@ import asyncpg
 
 from app.llm.base import Message
 
+# Same strict shape as DRAFT_SCHEMA, and for the same reason: `strict` is a
+# property of the adapter, not of one caller's schema. A judge schema without
+# `additionalProperties: false` is rejected with a 400 → InvalidRequest →
+# judge_run.py exits 2 and the four `grade: judge` cases stay ungraded.
 VERDICT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -37,6 +41,7 @@ VERDICT_SCHEMA: dict[str, Any] = {
         "grounded": {"type": "boolean"},
     },
     "required": ["verdict", "reason", "grounded"],
+    "additionalProperties": False,
 }
 
 SYSTEM = """You grade one answer produced by an insurance claims assistant.
