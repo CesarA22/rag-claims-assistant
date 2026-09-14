@@ -8,7 +8,7 @@ explains what the project is and why it is shaped the way it is.
 
 ## What this is
 
-An internal web application for **Indicium InsurCo** claims analysts. An analyst
+An internal web application for **InsurCo** claims analysts. An analyst
 asks a question in natural language; the assistant answers **only** from two
 sources — a corpus of 13 controlled insurance documents and a read-only claims
 database — and **every answer cites where it came from**. When the sources do

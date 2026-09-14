@@ -1,6 +1,6 @@
 # InsurCo claims assistant
 
-An internal assistant for Indicium InsurCo claims analysts. An analyst asks a
+An internal assistant for InsurCo claims analysts. An analyst asks a
 question in natural language; the assistant answers **only** from two sources —
 a corpus of 13 controlled insurance documents and a read-only claims database —
 and **every answer cites where it came from**. When the sources do not contain

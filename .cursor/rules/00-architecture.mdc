@@ -5,8 +5,8 @@ alwaysApply: true
 
 # InsurCo claims assistant — architecture rules
 
-A grounded RAG assistant for insurance claims analysts (Indicium technical
-challenge). Stack: Python 3.12 + FastAPI, React + TypeScript + Vite,
+A grounded RAG assistant for insurance claims analysts (originally built as a
+technical assessment project). Stack: Python 3.12 + FastAPI, React + TypeScript + Vite,
 Postgres with pgvector for our data, read-only SQLite for the client's claims
 database, OpenAI `gpt-5.4-mini` as the LLM provider.
 

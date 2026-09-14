@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "insurco-assistant"
 version = "0.1.0"
-description = "Grounded RAG assistant for Indicium InsurCo claims analysts"
+description = "Grounded RAG assistant for InsurCo claims analysts"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
